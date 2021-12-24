@@ -4,9 +4,7 @@
 #include <algorithm>
 #include <set>
 using namespace std;
-using ll=long long;
 using pii=pair<int, int>;
-static char B[1<<16], *S=B, *T=B;
 stringstream ss("10 20 5\n"
                 "32 50 12 60\n"
                 "30 60 8 70\n"
