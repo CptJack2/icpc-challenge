@@ -1,3 +1,4 @@
+//from http://littledva.cn/article-33/
 #include <bits/stdc++.h>
 using namespace std;
 using ll=long long;
