@@ -48,6 +48,7 @@ int main(){
     for(int _=1; _<=N+N; _++){
         int i = X[_].second;
         nowx = X[_].first;
+        //从x轴左往右扫描, 遇到左端点插入到有序set中
         if(i>0) Set.insert(i);
         else{
             i=-i;
