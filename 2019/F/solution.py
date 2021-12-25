@@ -1,3 +1,5 @@
+from operator import attrgetter
+
 c=0
 def myinput(n):
     src=[
@@ -30,7 +32,7 @@ for i in range(1,N+1):
     data.append((x1,y1,x2,y2))
     allX.append(allX_stru(x1,i,"in"))
     allX.append(allX_stru(x2,i,"out"))
-allX.sort()
+allX.sort(key=attrgetter('x'))
 
 dependency=[[] for i in range(N+1)]
 scan_set=[]
@@ -39,7 +41,7 @@ class scan_set_stru:
         self.index=index
         self.height=height
 
-def cal_y(x,x1,x2,y1,y2):
+def cal_y(x,x1,y1,x2,y2):
     return float(y1-y2)/(x1-x2)*(x-x1)+y1
 for xi in allX:
     if xi.type=="in":
@@ -49,14 +51,41 @@ for xi in allX:
         i=0
         while i<len(scan_set) and scan_set[i].height<h:
             i+=1
-        scan_set.insert(i,scan_set_stru(xi.x,h))
+        scan_set.insert(i,scan_set_stru(xi.index,h))
         if i>0:
             dependency[xi.index].append(scan_set[i-1].index)
         if i<len(scan_set)-1:
             dependency[scan_set[i+1].index].append(xi.index)
     else:
-        ind=scan_set.index(xi.index)
-        scan_set.remove(xi.index)
-        if ind!=0:
+        ind=-1
+        for i,s in enumerate(scan_set):
+            if s.index==xi.index:
+                ind=i
+                break
+        scan_set.pop(ind)
+        if ind!=0 and ind<len(scan_set):
             dependency[scan_set[ind].index].append(scan_set[ind-1].index)
+
+def topo_sort(dep):
+    ret=[]
+    while len(ret)<len(dep):
+        noAllMet=True
+        for ind,dl in enumerate(dep):
+            if ind in ret:
+                continue
+            m=True
+            for d in dl:
+                if d not in ret:
+                    m=False
+                    break
+            if m:
+                noAllMet=False
+                ret.append(ind)
+        if noAllMet:
+            raise Exception("can't topology sort")
+    return ret
+
+sorted=topo_sort(dependency)
+
+
 print("hello")
