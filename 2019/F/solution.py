@@ -16,6 +16,7 @@ def myinput(n):
     return ret
 
 L,R,N=myinput(3)
+maxy=-1
 print(L,R,N)
 data=[(L,0,R,0)]
 class allX_stru:
@@ -28,13 +29,19 @@ allX=[allX_stru(L,0,"in"),allX_stru(R,0,"out")]
 for i in range(1,N+1):
     x1,y1,x2,y2=myinput(4)
     data.append((x1,y1,x2,y2))
+    if y2>maxy:
+        maxy=y2
     if x1>x2:
         x1,y1,x2,y2=x2,y2,x1,y1
     allX.append(allX_stru(x1,i,"in"))
     allX.append(allX_stru(x2,i,"out"))
+
+data.append((L,maxy+1,R,maxy+1))
+allX.append(allX_stru(L,N+1,"in"))
+allX.append(allX_stru(R,N+1,"out"))
 allX.sort(key=attrgetter('x'))
 
-dependency=[[] for i in range(N+1)]
+dependency=[[] for i in range(N+2)]
 scan_set=[]
 class scan_set_stru:
     def __init__(self, index, height):
@@ -91,7 +98,7 @@ inf=99999999999
 minx=allX[0].x
 maxx=allX[-1].x
 sorted.remove(0)
-dp=[[] for i in range(N+1)]
+dp=[[] for i in range(N+2)]
 dp[0]=[0 for i in range(R-L+1)]
 
 def get_under_line(x,ind):
@@ -136,4 +143,8 @@ for ind in sorted:
             ustep=1 if uxs<uxe else -1
             dp[ind][it]=min(dp[uind][int((x-uxs)/ustep)]+1,dp[ind][it-1])
 
-print("hello")
+min=9999999
+for i in dp[-1]:
+    if i<min:
+        min=i
+print(i,"\n")
