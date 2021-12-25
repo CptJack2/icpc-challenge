@@ -27,9 +27,9 @@ allX=[allX_stru(L,0,"in"),allX_stru(R,0,"out")]
 
 for i in range(1,N+1):
     x1,y1,x2,y2=myinput(4)
+    data.append((x1,y1,x2,y2))
     if x1>x2:
         x1,y1,x2,y2=x2,y2,x1,y1
-    data.append((x1,y1,x2,y2))
     allX.append(allX_stru(x1,i,"in"))
     allX.append(allX_stru(x2,i,"out"))
 allX.sort(key=attrgetter('x'))
@@ -87,5 +87,53 @@ def topo_sort(dep):
 
 sorted=topo_sort(dependency)
 
+inf=99999999999
+minx=allX[0].x
+maxx=allX[-1].x
+sorted.remove(0)
+dp=[[] for i in range(N+1)]
+dp[0]=[0 for i in range(R-L+1)]
+
+def get_under_line(x,ind):
+    dep=dependency[ind]
+    h=-1;i=-1
+    mh=cal_y(x,*data[ind])
+    for d in dep:
+        x1,x2=data[d][0],data[d][2]
+        if x1>x2:
+            x1,x2=x2,x1
+        if not (x1<=x<=x2):
+            continue
+        th=cal_y(x,*data[d])
+        if th>h and th<mh:
+            i=d
+            h=th
+    return i
+
+for ind in sorted:
+    xs=data[ind][0]
+    xe=data[ind][2]
+    step=1 if xs<xe else -1
+    uind=get_under_line(xs,ind)
+    dp[ind]=[inf for i in range(xs,xe+step,step)]
+    if uind==-1:
+        dp[ind][0]=inf
+    else:
+        uxs=data[uind][0]
+        uxe=data[uind][2]
+        ustep=1 if uxs<uxe else -1
+        #only down without drill
+        dp[ind][0]=dp[uind][int((xs-uxs)/ustep)]
+    for i,x in enumerate(range(xs+step,xe+step,step)):
+        #flow or down
+        it=i+1
+        uind=get_under_line(x,ind)
+        if uind==-1:
+            dp[ind][it]=dp[ind][it-1]
+        else:
+            uxs=data[uind][0]
+            uxe=data[uind][2]
+            ustep=1 if uxs<uxe else -1
+            dp[ind][it]=min(dp[uind][int((x-uxs)/ustep)]+1,dp[ind][it-1])
 
 print("hello")
