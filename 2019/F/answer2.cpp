@@ -37,7 +37,11 @@ struct Deltas {
     bool SubNearest(int x1, int x2, bool left) {
         auto it = left ? d.lower_bound(x1) : --d.upper_bound(x2);
         if (it->first < x1 || it->first > x2) return false;
-        if (--it->second == 0) { if (it == mid) --mid; d.erase(it); }
+        if (--it->second == 0) {
+            if (it == mid)
+                --mid;
+            d.erase(it);
+        }
         return true;
     }
     int Collect(int x1, int x2) {
@@ -71,7 +75,10 @@ int main() {
                 events.pop();
             }
             auto it = s.insert(T[i]).first;
-            if (it == s.begin()) succ[N].push_back(i); else succ[(--it)->idx].push_back(i);
+            if (it == s.begin())
+                succ[N].push_back(i);
+            else
+                succ[(--it)->idx].push_back(i);
             events.push({-T[i].X2, i});
         }
 
@@ -81,7 +88,8 @@ int main() {
                 const Tarp& t = T[succ[n][i]];
                 if (t.Y1 < t.Y2) {
                     if (t.X2 < d.MidR()) {
-                        if (d.SubNearest(t.X1, t.X2, true)) d.Add(t.X2, 1, true);
+                        if (d.SubNearest(t.X1, t.X2, true))
+                            d.Add(t.X2, 1, true);
                     } else if (t.X1 < d.MidL()) {
                         d.SubNearest(t.X1, t.X2, true);
                         d.base++;
@@ -91,7 +99,8 @@ int main() {
                     }
                 } else {
                     if (t.X1 > d.MidL()) {
-                        if (d.SubNearest(t.X1, t.X2, false)) d.Add(t.X1, 1, false);
+                        if (d.SubNearest(t.X1, t.X2, false))
+                            d.Add(t.X1, 1, false);
                     } else if (t.X2 > d.MidR()) {
                         d.SubNearest(t.X1, t.X2, false);
                         d.base++;
