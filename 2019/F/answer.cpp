@@ -3,6 +3,7 @@
 #include <sstream>
 #include <algorithm>
 #include <set>
+#include "iostream"
 using namespace std;
 using pii=pair<int, int>;
 stringstream ss("10 20 5\n"
@@ -13,7 +14,7 @@ stringstream ss("10 20 5\n"
                 "5 20 14 25");
 inline int read(){
     int res;
-    ss>>res;
+    cin>>res;
     return res;
 }
 int main(){
@@ -61,6 +62,7 @@ int main(){
             Set.erase(i);
         }
     }
+    int a=1;
     for(int x=1; x<=N+N; x++){
         int i = X[x].second;
         if(i>0)
