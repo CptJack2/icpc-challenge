@@ -87,6 +87,7 @@ def get_data_from_input():
         allX.append(allX_stru(x2,i,"out"))
 
     #天花板上加一个，作为最后的结果输出
+    if N==0 and maxy==-1:maxy=1
     data.append((L,maxy+1,R,maxy+1))
     allX.append(allX_stru(L,N+1,"in"))
     allX.append(allX_stru(R,N+1,"out"))
