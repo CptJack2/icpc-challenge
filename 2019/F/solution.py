@@ -103,7 +103,8 @@ if __name__=='__main__':
     L,R,N,data,allX=get_data_from_input()
 
     dependency=get_dep(N,allX,data)
-    sorted=topo_sort(dependency)
+    #天花板不参与拓扑排序
+    sorted=topo_sort(dependency[:-1])
 
     inf=99999999999
     #0号地板先特殊处理
