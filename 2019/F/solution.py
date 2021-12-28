@@ -15,16 +15,19 @@ def get_dep(N,allX,data):
     #沿着x轴从左到右扫描
     for xi in allX:
         if xi.type=="in":
-            for s in scan_set:
-                s.height=cal_y(xi.x,*data[s.index])
-            #根据在同一个垂直扫描线上的x坐标，计算每条tarp对应的y坐标，根据y坐标进行排序，并用插入排序把新加入的tarp放到正确的位置
-            h=cal_y(xi.x,*data[xi.index])
-            i=0
             #到尽头的tarp需要清出
             for t in scan_set:
                 x2=max(data[t.index][0],data[t.index][2])
                 if x2<=xi.x:
+                    #这个tarp的终结位置，它上面tarp的水可以直接滴到它下面的
+                    ind=scan_set.index(t)
+                    dependency[scan_set[ind].index].append(scan_set[ind-1].index)
                     scan_set.remove(t)
+            #根据在同一个垂直扫描线上的x坐标，计算每条tarp对应的y坐标，根据y坐标进行排序，并用插入排序把新加入的tarp放到正确的位置
+            for s in scan_set:
+                s.height=cal_y(xi.x,*data[s.index])
+            h=cal_y(xi.x,*data[xi.index])
+            i=0
             while i<len(scan_set) and scan_set[i].height<h:
                 i+=1
             scan_set.insert(i,scan_set_stru(xi.index,h))
@@ -33,16 +36,6 @@ def get_dep(N,allX,data):
                 dependency[xi.index].append(scan_set[i-1].index)
             if i<len(scan_set)-1:
                 dependency[scan_set[i+1].index].append(xi.index)
-        else:
-            ind=-1
-            for i,s in enumerate(scan_set):
-                if s.index==xi.index:
-                    ind=i
-                    break
-            scan_set.pop(ind)
-            #这个tarp的终结位置，它上面tarp的水可以直接滴到它下面的
-            if ind!=0 and ind<len(scan_set):
-                dependency[scan_set[ind].index].append(scan_set[ind-1].index)
     return dependency
 
     #按照tarp的依赖关系拓扑排序
