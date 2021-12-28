@@ -2,7 +2,7 @@
 import pdb
 from operator import attrgetter
 
-def get_dep(N,allX,data):
+def get_dep(N,data):
     #各个tarp之间的上下依赖关系
     dependency=[[] for i in range(N+2)]
     #从左到右扫描辅助数据
@@ -13,10 +13,19 @@ def get_dep(N,allX,data):
             self.height=height
 
     #沿着x轴从左到右扫描
-    for xi in allX:
+    data_i=0
+    while data_i<len(data):
+        cur_x=data[data_i][0]
+        for s in scan_set:
+            if data[s.index][2]<=cur_x:
+                scan_set.remove(s)
+            else:
+                s.height=cal_y(cur_x,*data[s.index])
+        scan_set.insert(i,)
+        scan_set.
+
         if xi.type=="in":
-            for s in scan_set:
-                s.height=cal_y(xi.x,*data[s.index])
+
             #根据在同一个垂直扫描线上的x坐标，计算每条tarp对应的y坐标，根据y坐标进行排序，并用插入排序把新加入的tarp放到正确的位置
             h=cal_y(xi.x,*data[xi.index])
             i=0
@@ -78,8 +87,6 @@ def get_data_from_input():
             self.x=x
             self.index=index
             self.type=type
-    #所有x坐标，排序后从左到右扫描
-    allX=[allX_stru(L,0,"in"),allX_stru(R,0,"out")]
 
     for i in range(1,N+1):
         x1,y1,x2,y2=[int(i) for i in input().split()]
@@ -88,26 +95,26 @@ def get_data_from_input():
             maxy=y2
         if x1>x2:
             x1,y1,x2,y2=x2,y2,x1,y1
-        allX.append(allX_stru(x1,i,"in"))
-        allX.append(allX_stru(x2,i,"out"))
+
+    #按照左端点x坐标排序
+    def sort_key(c):
+        return c[0]
+    data.sort(key=sort_key)
 
     #天花板上加一个，作为最后的结果输出
     if N==0 and maxy==-1:maxy=1
     data.append((L,maxy+1,R,maxy+1))
-    allX.append(allX_stru(L,N+1,"in"))
-    allX.append(allX_stru(R,N+1,"out"))
-    allX.sort(key=attrgetter('x'))
 
-    return L,R,N,data,allX
+    return L,R,N,data
 
 #计算x在直线上的y坐标
 def cal_y(x,x1,y1,x2,y2):
     return float(y1-y2)/(x1-x2)*(x-x1)+y1
 
 if __name__=='__main__':
-    L,R,N,data,allX=get_data_from_input()
+    L,R,N,data=get_data_from_input()
 
-    dependency=get_dep(N,allX,data)
+    dependency=get_dep(N,data)
     #天花板不参与拓扑排序
     sorted=topo_sort(dependency[:-1])
 
