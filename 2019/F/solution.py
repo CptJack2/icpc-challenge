@@ -20,6 +20,11 @@ def get_dep(N,allX,data):
             #根据在同一个垂直扫描线上的x坐标，计算每条tarp对应的y坐标，根据y坐标进行排序，并用插入排序把新加入的tarp放到正确的位置
             h=cal_y(xi.x,*data[xi.index])
             i=0
+            #到尽头的tarp需要清出
+            for t in scan_set:
+                x2=max(data[t.index][0],data[t.index][2])
+                if x2<=xi.x:
+                    scan_set.remove(t)
             while i<len(scan_set) and scan_set[i].height<h:
                 i+=1
             scan_set.insert(i,scan_set_stru(xi.index,h))
@@ -109,7 +114,7 @@ if __name__=='__main__':
     inf=99999999999
     #0号地板先特殊处理
     sorted.remove(0)
-    dp=[[] for i in range(N+2)]
+    dp=[[] for i in range(N+1)]
     dp[0]=[0 for i in range(R-L+1)]
 
     #获取序号为ind的tarp在x处下方的tarp，没有返回-1
