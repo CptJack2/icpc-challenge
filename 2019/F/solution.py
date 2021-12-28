@@ -168,4 +168,4 @@ if __name__=='__main__':
     for i in dp[-1]:
         if i<ans:
             ans=i
-    print(i,"\n")
+    print(ans,"\n")
