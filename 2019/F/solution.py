@@ -165,7 +165,8 @@ if __name__=='__main__':
 
     #最后从天花板找最小值就可以了
     ans=9999999
-    for i in dp[-1]:
-        if i<ans:
-            ans=i
+    for i in dependency[N+1]:
+        for j in dp[i]:
+            if j<ans:
+                ans=j
     print(ans,"\n")
