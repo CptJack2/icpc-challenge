@@ -32,7 +32,8 @@ struct Deltas {
     void Add(int x, int v, bool leftward) {
         if (v == 0) return;
         d[x] += v;
-        if (leftward && x > MidL()) ++mid;
+        if (leftward && x > MidL())
+            ++mid;
     }
     bool SubNearest(int x1, int x2, bool left) {
         auto it = left ? d.lower_bound(x1) : --d.upper_bound(x2);
@@ -48,7 +49,8 @@ struct Deltas {
         int tot = 0;
         for (auto it = d.lower_bound(x1); it->first <= x2; ) {
             tot += it->second;
-            if (it == mid) --mid;
+            if (it == mid)
+                --mid;
             d.erase(it++);
         }
         return tot;
