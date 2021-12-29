@@ -13,15 +13,19 @@ def get_dep(N,allX,data):
             self.height=height
 
     #沿着x轴从左到右扫描
-    for xi in allX:
-        if xi.type=="in":
+    allX_i=0
+    while allX_i<len(allX):
+        current_x=allX[allX_i].x
+        while allX_i<len(allX) and allX[allX_i].x==current_x:
+            xi=allX[allX_i]
             #到尽头的tarp需要清出
             for t in scan_set:
                 x2=max(data[t.index][0],data[t.index][2])
                 if x2<=xi.x:
                     #这个tarp的终结位置，它上面tarp的水可以直接滴到它下面的
-                    ind=scan_set.index(t)
-                    dependency[scan_set[ind].index].append(scan_set[ind-1].index)
+                    scan_set_ind=scan_set.index(t)
+                    if scan_set_ind>0 and scan_set_ind <len(scan_set)-1:
+                        dependency[scan_set[scan_set_ind+1].index].append(scan_set[scan_set_ind-1].index)
                     scan_set.remove(t)
             #根据在同一个垂直扫描线上的x坐标，计算每条tarp对应的y坐标，根据y坐标进行排序，并用插入排序把新加入的tarp放到正确的位置
             for s in scan_set:
@@ -36,6 +40,7 @@ def get_dep(N,allX,data):
                 dependency[xi.index].append(scan_set[i-1].index)
             if i<len(scan_set)-1:
                 dependency[scan_set[i+1].index].append(xi.index)
+            allX_i+=1
     return dependency
 
     #按照tarp的依赖关系拓扑排序
@@ -67,12 +72,11 @@ def get_data_from_input():
     #tarp位置数据
     data=[(L,0,R,0)]
     class allX_stru:
-        def __init__(self,x,index,type):
+        def __init__(self,x,index):
             self.x=x
             self.index=index
-            self.type=type
     #所有x坐标，排序后从左到右扫描
-    allX=[allX_stru(L,0,"in"),allX_stru(R,0,"out")]
+    allX=[allX_stru(L,0)]
 
     for i in range(1,N+1):
         x1,y1,x2,y2=[int(i) for i in input().split()]
@@ -81,14 +85,12 @@ def get_data_from_input():
             maxy=y2
         if x1>x2:
             x1,y1,x2,y2=x2,y2,x1,y1
-        allX.append(allX_stru(x1,i,"in"))
-        allX.append(allX_stru(x2,i,"out"))
+        allX.append(allX_stru(x1,i))
 
     #天花板上加一个，作为最后的结果输出
     if N==0 and maxy==-1:maxy=1
     data.append((L,maxy+1,R,maxy+1))
-    allX.append(allX_stru(L,N+1,"in"))
-    allX.append(allX_stru(R,N+1,"out"))
+    allX.append(allX_stru(L,N+1))
     allX.sort(key=attrgetter('x'))
 
     return L,R,N,data,allX
