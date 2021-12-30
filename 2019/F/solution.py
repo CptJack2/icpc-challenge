@@ -121,23 +121,33 @@ def get_data_from_input():
             self.x=x
             self.index=index
             self.type=type
+    def insertAllX(new_stru):
+        new_stru=allX_stru(new_stru)
+        insert_pos=0
+        for insert_pos in range(len(allX)):
+            if allX[insert_pos][0].x>=new_stru.x:break
+        if allX[insert_pos][0].x==new_stru.x:
+            allX[insert_pos].append(new_stru)
+        else:
+            allX.insert(insert_pos,[new_stru])
     #所有x坐标，排序后从左到右扫描
-    allX=[allX_stru(L,0,"in")]
-    allX.append(allX_stru(R,0,"out"))
+    allX=[]
+    insertAllX(allX_stru(L,0,"in"))
+    insertAllX(allX_stru(R,0,"out"))
 
     for i in range(1,N+1):
         x1,y1,x2,y2=[int(i) for i in input().split()]
         data.append((x1,y1,x2,y2))
         if y2>maxy:
             maxy=y2
-        allX.append(allX_stru(min(x1,x2),i,"in"))
-        allX.append(allX_stru(max(x1,x2),i,"out"))
+        insertAllX(allX_stru(min(x1,x2),i,"in"))
+        insertAllX(allX_stru(max(x1,x2),i,"out"))
 
     #天花板上加一个，作为最后的结果输出
     if N==0 and maxy==-1:maxy=1
     data.append((L,maxy+1,R,maxy+1))
-    allX.append(allX_stru(L,N+1,"in"))
-    allX.append(allX_stru(R,N+1,"out"))
+    insertAllX(allX_stru(L,N+1,"in"))
+    insertAllX(allX_stru(R,N+1,"out"))
     allX.sort(key=attrgetter('x'))
 
     return L,R,N,data,allX
