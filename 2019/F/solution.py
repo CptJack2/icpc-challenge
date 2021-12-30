@@ -148,7 +148,6 @@ def get_data_from_input():
     data.append((L,maxy+1,R,maxy+1))
     insertAllX(allX_stru(L,N+1,"in"))
     insertAllX(allX_stru(R,N+1,"out"))
-    allX.sort(key=attrgetter('x'))
 
     return L,R,N,data,allX
 
