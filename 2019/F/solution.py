@@ -83,9 +83,7 @@ def get_data_from_input():
         data.append((x1,y1,x2,y2))
         if y2>maxy:
             maxy=y2
-        if x1>x2:
-            x1,y1,x2,y2=x2,y2,x1,y1
-        allX.append(allX_stru(x1,i))
+        allX.append(allX_stru(min(x1,x2),i))
 
     #天花板上加一个，作为最后的结果输出
     if N==0 and maxy==-1:maxy=1
