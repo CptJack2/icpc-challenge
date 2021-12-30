@@ -72,23 +72,27 @@ def get_data_from_input():
     #tarp位置数据
     data=[(L,0,R,0)]
     class allX_stru:
-        def __init__(self,x,index):
+        def __init__(self,x,index,type):
             self.x=x
             self.index=index
+            self.type=type
     #所有x坐标，排序后从左到右扫描
-    allX=[allX_stru(L,0)]
+    allX=[allX_stru(L,0,"in")]
+    allX=[allX_stru(R,0,"out")]
 
     for i in range(1,N+1):
         x1,y1,x2,y2=[int(i) for i in input().split()]
         data.append((x1,y1,x2,y2))
         if y2>maxy:
             maxy=y2
-        allX.append(allX_stru(min(x1,x2),i))
+        allX.append(allX_stru(min(x1,x2),i,"in"))
+        allX.append(allX_stru(max(x1,x2),i,"out"))
 
     #天花板上加一个，作为最后的结果输出
     if N==0 and maxy==-1:maxy=1
     data.append((L,maxy+1,R,maxy+1))
-    allX.append(allX_stru(L,N+1))
+    allX.append(allX_stru(L,N+1,"in"))
+    allX.append(allX_stru(R,N+1,"out"))
     allX.sort(key=attrgetter('x'))
 
     return L,R,N,data,allX
