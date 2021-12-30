@@ -5,28 +5,58 @@ from operator import attrgetter
 def get_dep(N,allX,data):
     #各个tarp之间的上下依赖关系
     dependency=[set() for i in range(N+2)]
+    #边界点的类型
+    xtype_continuous=1;xtype_lowin=2;xtype_lowout=3;xtype_highin=4;xtype_highout=5;
+    def get_xtype(current_x,data_index):
+        x1, y1, x2, y2 = data[data_index]
+        if y1 < y2:
+            x1, y1, x2, y2 = x2, y2, x1, y1
+        if x1 == current_x:
+            if x1 < x2:
+                xtype = xtype_lowin
+            else:
+                xtype = xtype_lowout
+        elif x2 == current_x:
+            if x1 < x2:
+                xtype = xtype_highout
+            else:
+                xtype = xtype_highin
+        else:
+            xtype = xtype_continuous
+        return xtype
+
     #从左到右扫描辅助数据
     class scan_set_stru:
-        def __init__(self, index, height):
+        def __init__(self, index,type,height):
             self.index=index
+            self.type=type
             self.height=height
-
-    #沿着x轴从左到右扫描
-    scan_set=[allX[0].index]
-    start=allX[1]
-    #allX[0]-allX[1]的扫描结果就是上面两行的赋值
-    #循环里处理[start.x,end.x)这个区间
-    for allXList in allX:
-        current_x=allXList[0].x
-        #先将在a点要退出的tarp全部清理出去
-        #先过滤掉区间左端点，类型为out且端点为低端的，这类上面的水直接越过端点滴到下面
+    scan_set=[]
+    for xstru in allX[0]:
+        current_x=allX[0][0].x
+        scan_set.append(scan_set_stru(xstru.index,get_xtype(current_x,xstru.index)))
+    interval_left=allX[0][0].x
+    #沿着x轴从左到右扫描,循环里处理[start.x,end.x)这个区间
+    for allXList in allX[1:]:
+        interval_right=allXList[0].x
         for allx_stru in allXList:
             data_index=allx_stru.index
             x1,y1,x2,y2=data[data_index]
             if y1<y2:
                 x1,y1,x2,y2=x2,y2,x1,y1
-            if x1==current_x: low_out=True
-            else:low_out=False
+            if x1==interval_left:
+                if x1<x2:
+                    xtype=xtype_lowin
+                else:
+                    xtype=xtype_lowout
+            elif x2==interval_left:
+                if x1<x2:
+                    xtype=xtype_highout
+                else:
+                    xtype=xtype_highin
+            else:
+                xtype=xtype_continuous
+        depender=scan_set
             if allx_stru.type=="out" and low_out:
                 scan_set_index=scan_set.index(data_index)
                 allXList.remove(allx_stru)
