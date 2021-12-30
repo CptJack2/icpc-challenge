@@ -78,7 +78,7 @@ def get_data_from_input():
             self.type=type
     #所有x坐标，排序后从左到右扫描
     allX=[allX_stru(L,0,"in")]
-    allX=[allX_stru(R,0,"out")]
+    allX.append(allX_stru(R,0,"out"))
 
     for i in range(1,N+1):
         x1,y1,x2,y2=[int(i) for i in input().split()]
