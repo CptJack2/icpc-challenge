@@ -1,32 +1,60 @@
 # -*- coding:utf-8 -*-
-import pdb
+import bisect
 from operator import attrgetter
 
 def get_dep(N,allX,data):
     #各个tarp之间的上下依赖关系
-    dependency=[[] for i in range(N+2)]
+    dependency=[set() for i in range(N+2)]
     #从左到右扫描辅助数据
-    scan_set=[]
     class scan_set_stru:
         def __init__(self, index, height):
             self.index=index
             self.height=height
 
     #沿着x轴从左到右扫描
-    allX_i=0
+    scan_set=[allX[0].index]
+    start=allX[1]
+    #allX[0]-allX[1]的扫描结果就是上面两行的赋值
+    for end in allX[2:]:
+        for scan_set_i in scan_set:
+            x1=min(data[scan_set_i][0],data[scan_set_i][2])
+            x2=max(data[scan_set_i][0],data[scan_set_i][2])
+            #处理到end_x+1是因为要在这轮循环把tarp移入/出scan_set
+            y_by_x=[]
+            for x in range(max(x1,start.x+1),min(x2,end.x+1)):
+                y_by_x=[cal_y(x,*data[scan_set_i])]
+                #tarp移入/出scan_set
+                if x==end.x:
+                    if end.type=="in":
+                        h=cal_y(end,*data[end.index])
+                        for insert_pos in range(len(scan_set)):
+                            if scan_set[insert_pos].height>h:break
+                        scan_set.insert(insert_pos,end.index)
+                        y_by_x.insert(insert_pos,h)
+                    else:
+                        scan_set.remove(end.index)
+                #更新各个tarp的依赖
+                for scan_set_j in range(0,scan_set_i):
+                    x1=min(data[scan_set_j][0],data[scan_set_j][2])
+                    x2=max(data[scan_set_j][0],data[scan_set_j][2])
+                    for scan_x in range(last_x+1,current_x+1):
+                        if scan_x<x1 or scan_x>x2:continue
+
+
     while allX_i<len(allX):
         current_x=allX[allX_i].x
+        #处理current x坐标下所有的扇入
         while allX_i<len(allX) and allX[allX_i].x==current_x:
             xi=allX[allX_i]
             #到尽头的tarp需要清出
-            for t in scan_set:
-                x2=max(data[t.index][0],data[t.index][2])
+            for scan_stru in scan_set:
+                x2=max(data[scan_stru.index][0],data[scan_stru.index][2])
                 if x2<=xi.x:
                     #这个tarp的终结位置，它上面tarp的水可以直接滴到它下面的
-                    scan_set_ind=scan_set.index(t)
+                    scan_set_ind=scan_set.index(scan_stru)
                     if scan_set_ind>0 and scan_set_ind <len(scan_set)-1:
-                        dependency[scan_set[scan_set_ind+1].index].append(scan_set[scan_set_ind-1].index)
-                    scan_set.remove(t)
+                        dependency[scan_set[scan_set_ind+1].index].add(scan_set[scan_set_ind-1].index)
+                    scan_set.remove(scan_stru)
             #根据在同一个垂直扫描线上的x坐标，计算每条tarp对应的y坐标，根据y坐标进行排序，并用插入排序把新加入的tarp放到正确的位置
             for s in scan_set:
                 s.height=cal_y(xi.x,*data[s.index])
@@ -35,11 +63,28 @@ def get_dep(N,allX,data):
             while i<len(scan_set) and scan_set[i].height<h:
                 i+=1
             scan_set.insert(i,scan_set_stru(xi.index,h))
-            #新插入的tarp，处理它和直接相邻的上下两个tarp的依赖关系
-            if i>0:
-                dependency[xi.index].append(scan_set[i-1].index)
-            if i<len(scan_set)-1:
-                dependency[scan_set[i+1].index].append(xi.index)
+            #新插入的tarp，处理它和scan_set中已有tarp的dependency
+            if data[xi.index][1]<data[xi.index][3] and  i>0:#这里需要判断i>0是因为这个tarp可能是这条x垂直线上最底下的一个tarp
+                dependency[xi.index].add(scan_set[i-1].index)
+            #对scan_set中每个tarp, 从上次扫描的终止点扫描到此次扫描的起点
+            for scan_i,scan_stru in enumerate(scan_set):
+                x1=min(data[scan_stru.index][0],data[scan_stru.index][2])
+                x2=max(data[scan_stru.index][0],data[scan_stru.index][2])
+                for scan_x in range(last_x+1,current_x+1):
+                    if scan_x<x1 or scan_x>x2:continue
+
+                #如果左端点是这个tarp的较低点, 他的水可以直接滴到他下方的tarp上,
+
+                #往下搜寻新tarp依赖的
+                for j in range(i,0,-1):
+                    x2=max(data[j][0],data[j][2])
+                    if x2>current_x+1:
+
+                #往上搜寻依赖新tarp的
+
+                if i<len(scan_set)-1:
+                    dependency[scan_set[i+1].index].append(xi.index)
+            last_x=current_x
             allX_i+=1
     return dependency
 
