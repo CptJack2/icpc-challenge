@@ -15,24 +15,52 @@ def get_dep(N,allX,data):
     scan_set=[allX[0].index]
     start=allX[1]
     #allX[0]-allX[1]的扫描结果就是上面两行的赋值
-    for end in allX[2:]:
-        for scan_set_i in scan_set:
-            x1=min(data[scan_set_i][0],data[scan_set_i][2])
-            x2=max(data[scan_set_i][0],data[scan_set_i][2])
-            #处理到end_x+1是因为要在这轮循环把tarp移入/出scan_set
-            y_by_x=[]
-            for x in range(max(x1,start.x+1),min(x2,end.x+1)):
-                y_by_x=[cal_y(x,*data[scan_set_i])]
-                #tarp移入/出scan_set
-                if x==end.x:
-                    if end.type=="in":
-                        h=cal_y(end,*data[end.index])
-                        for insert_pos in range(len(scan_set)):
-                            if scan_set[insert_pos].height>h:break
-                        scan_set.insert(insert_pos,end.index)
-                        y_by_x.insert(insert_pos,h)
-                    else:
-                        scan_set.remove(end.index)
+    #循环里处理[start.x,end.x)这个区间
+    for allXList in allX:
+        current_x=allXList[0].x
+        #先将在a点要退出的tarp全部清理出去
+        #先过滤掉区间左端点，类型为out且端点为低端的，这类上面的水直接越过端点滴到下面
+        for allx_stru in allXList:
+            data_index=allx_stru.index
+            x1,y1,x2,y2=data[data_index]
+            if y1<y2:
+                x1,y1,x2,y2=x2,y2,x1,y1
+            if x1==current_x: low_out=True
+            else:low_out=False
+            if allx_stru.type=="out" and low_out:
+                scan_set_index=scan_set.index(data_index)
+                allXList.remove(allx_stru)
+                dep_index=scan_set_index
+                def get_under_line_in_group(x,li,group):
+                    possible=[]
+                    for lgi in group:
+                        possible.append(lgi)
+                        x1,y1,x2,y2=data[lgi]
+                while dep_index>=0 and
+                    dependency[allx_stru.index].append()
+        #剩下的tarp都是连续存在与区间[a,b)之内,水只能从上面的tarp滴到下面的tarp
+        for scan_set_i in range(len(scan_set)-1):
+            dependency[scan_set_i+1].add(scan_set_i)
+        #处理到end_x+1是因为要在这轮循环把tarp移入/出scan_set
+        y_by_x=[cal_y(x,*data[scan_set_i])]
+        if start.type=="in":
+            h=cal_y(start.x,*data[start.index])
+            for insert_pos in range(len(scan_set)):
+                if scan_set[insert_pos].height>h:break
+            scan_set.insert(insert_pos,start.index)
+        else:
+            scan_set.remove(end.index)
+        for x in range(max(x1,start.x+1),min(x2,end.x+1)):
+            #tarp移入/出scan_set
+            if x==end.x:
+                if end.type=="in":
+                    h=cal_y(end,*data[end.index])
+                    for insert_pos in range(len(scan_set)):
+                        if scan_set[insert_pos].height>h:break
+                    scan_set.insert(insert_pos,end.index)
+                    y_by_x.insert(insert_pos,h)
+                else:
+                    scan_set.remove(end.index)
                 #更新各个tarp的依赖
                 for scan_set_j in range(0,scan_set_i):
                     x1=min(data[scan_set_j][0],data[scan_set_j][2])
@@ -130,7 +158,7 @@ def get_data_from_input():
             allX[insert_pos].append(new_stru)
         else:
             allX.insert(insert_pos,[new_stru])
-    #所有x坐标，排序后从左到右扫描
+    #allX是一个二维数组，每一个子数组是allX_stru的数组，存放在这个x坐标下端点的信息
     allX=[]
     insertAllX(allX_stru(L,0,"in"))
     insertAllX(allX_stru(R,0,"out"))
