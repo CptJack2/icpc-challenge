@@ -46,15 +46,18 @@ def get_dep(N,allX,data):
     #         self.type=type
     scan_set=[]
     interval_left=allX[0][0].x
+    def add_dep(i,j):
+        dependency[i].add(j)
     #沿着x轴从左到右扫描,循环里处理[start.x,end.x)这个区间
     for i in range(1,len(allX)):
         allXList=allX[i-1]
         interval_right=allX[i][0].x
+        in_tarp= {}
+        out_tarp={}
         #加入in类型的tarp
         for allx_stru in allXList:
             data_index=allx_stru.index
-            xtype=get_seg_type(interval_left,data_index)
-            if xtype.direction==seg_type_in:
+            if allx_stru.direction=="in":
                 ys=[cal_y(interval_left,*data[s]) for s in scan_set]
                 h=cal_y(interval_left,*data[data_index])
                 insert_pos=0
@@ -64,32 +67,104 @@ def get_dep(N,allX,data):
                     scan_set.append(data_index)
                 else:
                     scan_set.insert(insert_pos,data_index)
-        #模拟水从上层滴落到下层计算dep
+                in_tarp[data_index]=allx_stru
+            else:
+                out_tarp[data_index]=allx_stru
+
+        #对于新加入的tarp,模拟水从上层滴落到下层计算dep
         debug=1
-        for i in range(len(scan_set)-1,-1,-1):
-            tup=scan_set[i]
-            #up_type=get_seg_type(interval_left,tup)
-            for j in range(i-1,-1,-1):
-                tdown=scan_set[j]
-                down_type=get_seg_type(interval_left,tdown)
-                if not (down_type.slant==seg_type_low and down_type.direction==seg_type_out):
-                    dependency[tup].add(tdown)
-                if down_type.direction!=seg_type_out:
+        for tnew in in_tarp:
+            tnew_scan_index=scan_set.index(tnew)
+            #向上处理需要依赖新tarp的, low out的tarp无需被依赖
+            if not (tnew in out_tarp and out_tarp[tnew].slant!="low"):
+                only_left=False
+                for j in range(tnew_scan_index+1,len(scan_set)):
+                    tup=scan_set[j]
+                    if in_tarp[tnew].slant!="low":
+                        add_dep(tup,tnew)
+                    #如果上面的tarp在[a,b)出, 不能阻挡水往下
+                    if tup in out_tarp:
+                        continue
+                    #如果上面的tarp在[a,b)进, 水只能在a点往下
+                    if not only_left and tup in in_tarp:
+                        only_left=True
+                        continue
                     break
+            #向下处理新tarp依赖的
+            only_left=False
+            for j in range(tnew_scan_index-1,-1,-1):
+                tdown=scan_set[j]
+                if (tdown in out_tarp and out_tarp[tdown].slant!="low") or\
+                    (tdown in in_tarp and in_tarp[tdown].slant!="low") or \
+                    (tdown not in out_tarp and tdown not in in_tarp):
+                    add_dep(tnew,tdown)
+                #如果下面的tarp在[a,b)出, 不能阻挡水往下
+                if tdown in out_tarp:
+                    continue
+                #如果下面的tarp在[a,b)进, 水只能在a点往下
+                if not only_left and tdown in in_tarp:
+                    only_left=True
+                    continue
+                break
+        #tarp移出的时候, 它挡住的位置向上可达和向下可达的tarp, 有依赖关系
+        for tout in out_tarp:
+            tout_scan_index=scan_set.index(tout)
+            up_reachable=set()
+            only_left=False
+            for j in range(tout_scan_index+1,len(scan_set)):
+                tup=scan_set[j]
+                up_reachable.add(tup)
+                #如果上面的tarp在[a,b)出, 不能阻挡水往下
+                if tup in out_tarp:
+                    continue
+                #如果上面的tarp在[a,b)进, 水只能在a点往下
+                if not only_left and tup in in_tarp:
+                    only_left=True
+                    continue
+                break
+            down_reachable=set()
+            only_left=False
+            for j in range(tout_scan_index-1,-1,-1):
+                tdown=scan_set[j]
+                if (tdown in out_tarp and out_tarp[tdown].slant!="low") or \
+                    (tdown in in_tarp and in_tarp[tdown].slant!="low") or \
+                    (tdown not in out_tarp and tdown not in in_tarp):
+                    down_reachable.add(tdown)
+                #如果下面的tarp在[a,b)出, 不能阻挡水往下
+                if tdown in out_tarp:
+                    continue
+                #如果下面的tarp在[a,b)进, 水只能在a点往下
+                if not only_left and tdown in in_tarp:
+                    only_left=True
+                    continue
+                break
+            #出tarp本身也可以在这个点被依赖
+            if out_tarp[tout].slant!="low":
+                down_reachable.add(tout)
+            for a in up_reachable:
+                for b in down_reachable:
+                    add_dep(a,b)
         #清退out类型的tarp
         for allx_stru in allXList:
             data_index=allx_stru.index
             xtype=get_seg_type(interval_left,data_index)
             if xtype.direction==seg_type_out:
-                scan_set.remove(scan_set_stru(data_index,xtype))
+                scan_set.remove(data_index)
         interval_left=interval_right
     #处理区间最右端点,这时候只剩下out类型的点了
+    # for i in allX[-1]:
+    #     for j in allX[-1]:
+    #         if i.index==j.index:continue
+    #         if i.slant!="low":
+    #             add_dep(j.index,i.index)
+
     for i in range(len(scan_set)-1,-1,-1):
         tup=scan_set[i]
         for j in range(i-1,-1,-1):
-            tdown=scan_set[j]
-            if tdown.type.slant==seg_type_high:
-                dependency[tdown.index].add(tup.index)
+            for str in allX[-1]:
+                if str.index==scan_set[j]:break
+            if str.slant!="low":
+                add_dep(tup,str.index)
 
     return dependency
 
@@ -161,8 +236,8 @@ def get_data_from_input():
     #天花板上加一个，作为最后的结果输出
     if N==0 and maxy==-1:maxy=1
     data.append((L,maxy+1,R,maxy+1))
-    insertAllX(allX_stru(L,N+1,"in"))
-    insertAllX(allX_stru(R,N+1,"out"))
+    insertAllX(allX_stru(L,N+1,"parallel","in"))
+    insertAllX(allX_stru(R,N+1,"parallel","out"))
 
     return L,R,N,data,allX
 
