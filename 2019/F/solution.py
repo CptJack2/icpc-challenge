@@ -122,10 +122,11 @@ def get_data_from_input():
     #tarp位置数据
     data=[(L,0,R,0)]
     class allX_stru:
-        def __init__(self,x,index,type):
+        def __init__(self,x,index,slant,direction):
             self.x=x
             self.index=index
-            self.type=type
+            self.slant=slant
+            self.direction=direction
     def insertAllX(new_stru):
         insert_pos=0
         for insert_pos in range(len(allX)):
@@ -138,16 +139,24 @@ def get_data_from_input():
             allX.insert(insert_pos,[new_stru])
     #allX是一个二维数组，每一个子数组是allX_stru的数组，存放在这个x坐标下端点的信息
     allX=[]
-    insertAllX(allX_stru(L,0,"in"))
-    insertAllX(allX_stru(R,0,"out"))
+    insertAllX(allX_stru(L,0,"parallel","in"))
+    insertAllX(allX_stru(R,0,"parallel","out"))
 
     for i in range(1,N+1):
         x1,y1,x2,y2=[int(i) for i in input().split()]
         data.append((x1,y1,x2,y2))
         if y2>maxy:
             maxy=y2
-        insertAllX(allX_stru(min(x1,x2),i,"in"))
-        insertAllX(allX_stru(max(x1,x2),i,"out"))
+        if x1>x2:
+            x1,y1,x2,y2=x2,y2,x1,y1
+        if y1<y2:
+            left="low"
+            right="high"
+        else:
+            left="high"
+            right="low"
+        insertAllX(allX_stru(x1,i,left,"in"))
+        insertAllX(allX_stru(x2,i,right,"out"))
 
     #天花板上加一个，作为最后的结果输出
     if N==0 and maxy==-1:maxy=1
