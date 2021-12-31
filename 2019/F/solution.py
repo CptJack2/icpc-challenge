@@ -91,19 +91,16 @@ def get_dep(N,allX,data):
                         continue
                     break
             #向下处理新tarp依赖的
-            only_left=False
             for j in range(tnew_scan_index-1,-1,-1):
                 tdown=scan_set[j]
-                if (tdown in out_tarp and out_tarp[tdown].slant!="low") or\
+                #直接下方的tarp、有一个端点在a上，可以直接穿过，但不是低点、直接横穿[a,b)的tarp
+                if j==tnew_scan_index-1 or \
+                    (tdown in out_tarp and out_tarp[tdown].slant!="low") or\
                     (tdown in in_tarp and in_tarp[tdown].slant!="low") or \
-                    (tdown not in out_tarp and tdown not in in_tarp):
+                    (tdown not in out_tarp and tdown not in in_tarp) :
                     add_dep(tnew,tdown)
                 #如果下面的tarp在[a,b)出, 不能阻挡水往下
-                if tdown in out_tarp:
-                    continue
-                #如果下面的tarp在[a,b)进, 水只能在a点往下
-                if not only_left and tdown in in_tarp:
-                    only_left=True
+                if tdown in out_tarp or tdown in in_tarp:
                     continue
                 break
         #tarp移出的时候, 它挡住的位置向上可达和向下可达的tarp, 有依赖关系
@@ -123,7 +120,6 @@ def get_dep(N,allX,data):
                     continue
                 break
             down_reachable=set()
-            only_left=False
             for j in range(tout_scan_index-1,-1,-1):
                 tdown=scan_set[j]
                 if (tdown in out_tarp and out_tarp[tdown].slant!="low") or \
@@ -131,11 +127,7 @@ def get_dep(N,allX,data):
                     (tdown not in out_tarp and tdown not in in_tarp):
                     down_reachable.add(tdown)
                 #如果下面的tarp在[a,b)出, 不能阻挡水往下
-                if tdown in out_tarp:
-                    continue
-                #如果下面的tarp在[a,b)进, 水只能在a点往下
-                if not only_left and tdown in in_tarp:
-                    only_left=True
+                if tdown in out_tarp or tdown in in_tarp:
                     continue
                 break
             #出tarp本身也可以在这个点被依赖
