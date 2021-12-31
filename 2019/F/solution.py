@@ -5,45 +5,7 @@ from operator import attrgetter
 def get_dep(N,allX,data):
     #各个tarp之间的上下依赖关系
     dependency=[set() for i in range(N+2)]
-    #边界点的类型
-    class seg_type:
-        def __init__(self,slant,direction):
-            self.slant=slant
-            self.direction=direction
-    seg_type_in="in"
-    seg_type_out="out"
-    seg_type_continuous="continuous"
-    seg_type_low="low"
-    seg_type_high="high"
-    seg_type_ceiling="ceiling"
-    seg_type_floor="floor"
-    def get_seg_type(current_x, seg_data_index):
-        x1, y1, x2, y2 = data[seg_data_index]
-        if current_x==min(x1,x2):
-            dirRet=seg_type_in
-        elif current_x==max(x1,x2):
-            dirRet=seg_type_out
-        else:
-            dirRet=seg_type_continuous
-        if seg_data_index==0:
-            typeRet=seg_type_floor
-        elif seg_data_index==N+1:
-            typeRet=seg_type_ceiling
-        else:
-            if current_x!=x1:
-                x1, y1, x2, y2=x2, y2,x1, y1
-            if y1>y2:
-                typeRet=seg_type_high
-            else:
-                typeRet=seg_type_low
-
-        return seg_type(typeRet,dirRet)
-
-    #从左到右扫描辅助数据
-    # class scan_set_stru:
-    #     def __init__(self, index,type):
-    #         self.index=index
-    #         self.type=type
+    #从左到右扫描,加入集合
     scan_set=[]
     interval_left=allX[0][0].x
     def add_dep(i,j):
@@ -72,7 +34,6 @@ def get_dep(N,allX,data):
                 out_tarp[data_index]=allx_stru
 
         #对于新加入的tarp,模拟水从上层滴落到下层计算dep
-        debug=1
         for tnew in in_tarp:
             tnew_scan_index=scan_set.index(tnew)
             #向上处理需要依赖新tarp的, low out的tarp无需被依赖
@@ -122,6 +83,7 @@ def get_dep(N,allX,data):
             down_reachable=set()
             for j in range(tout_scan_index-1,-1,-1):
                 tdown=scan_set[j]
+                #todo 确认是不是跟上面一样
                 if (tdown in out_tarp and out_tarp[tdown].slant!="low") or \
                     (tdown in in_tarp and in_tarp[tdown].slant!="low") or \
                     (tdown not in out_tarp and tdown not in in_tarp):
@@ -139,8 +101,7 @@ def get_dep(N,allX,data):
         #清退out类型的tarp
         for allx_stru in allXList:
             data_index=allx_stru.index
-            xtype=get_seg_type(interval_left,data_index)
-            if xtype.direction==seg_type_out:
+            if allx_stru.direction=="out":
                 scan_set.remove(data_index)
         interval_left=interval_right
     #处理区间最右端点,这时候只剩下out类型的点了
