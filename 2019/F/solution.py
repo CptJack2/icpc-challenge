@@ -6,60 +6,90 @@ def get_dep(N,allX,data):
     #各个tarp之间的上下依赖关系
     dependency=[set() for i in range(N+2)]
     #边界点的类型
-    xtype_continuous=1;xtype_lowin=2;xtype_lowout=3;xtype_highin=4;xtype_highout=5;
-    def get_xtype(current_x,data_index):
-        x1, y1, x2, y2 = data[data_index]
-        if y1 < y2:
-            x1, y1, x2, y2 = x2, y2, x1, y1
-        if x1 == current_x:
-            if x1 < x2:
-                xtype = xtype_lowin
-            else:
-                xtype = xtype_lowout
-        elif x2 == current_x:
-            if x1 < x2:
-                xtype = xtype_highout
-            else:
-                xtype = xtype_highin
+    class seg_type:
+        def __init__(self,slant,direction):
+            self.slant=slant
+            self.direction=direction
+    seg_type_in="in"
+    seg_type_out="out"
+    seg_type_continuous="continuous"
+    seg_type_low="low"
+    seg_type_high="high"
+    seg_type_ceiling="ceiling"
+    seg_type_floor="floor"
+    def get_seg_type(current_x, seg_data_index):
+        x1, y1, x2, y2 = data[seg_data_index]
+        if current_x==min(x1,x2):
+            dirRet=seg_type_in
+        elif current_x==max(x1,x2):
+            dirRet=seg_type_out
         else:
-            xtype = xtype_continuous
-        return xtype
+            dirRet=seg_type_continuous
+        if seg_data_index==0:
+            typeRet=seg_type_floor
+        elif seg_data_index==N+1:
+            typeRet=seg_type_ceiling
+        else:
+            if current_x!=x1:
+                x1, y1, x2, y2=x2, y2,x1, y1
+            if y1>y2:
+                typeRet=seg_type_high
+            else:
+                typeRet=seg_type_low
+
+        return seg_type(typeRet,dirRet)
 
     #从左到右扫描辅助数据
-    class scan_set_stru:
-        def __init__(self, index,type,height):
-            self.index=index
-            self.type=type
-            self.height=height
+    # class scan_set_stru:
+    #     def __init__(self, index,type):
+    #         self.index=index
+    #         self.type=type
     scan_set=[]
-    for xstru in allX[0]:
-        current_x=allX[0][0].x
-        scan_set.append(scan_set_stru(xstru.index,get_xtype(current_x,xstru.index)))
     interval_left=allX[0][0].x
     #沿着x轴从左到右扫描,循环里处理[start.x,end.x)这个区间
-    for allXList in allX[1:]:
-        interval_right=allXList[0].x
+    for i in range(1,len(allX)):
+        allXList=allX[i-1]
+        interval_right=allX[i][0].x
         #加入in类型的tarp
         for allx_stru in allXList:
             data_index=allx_stru.index
-            xtype=get_xtype(interval_left,data_index)
-            if xtype==xtype_lowin or xtype==xtype_highin:
-                scan_set.append(scan_set_stru(data_index,xtype))
+            xtype=get_seg_type(interval_left,data_index)
+            if xtype.direction==seg_type_in:
+                ys=[cal_y(interval_left,*data[s]) for s in scan_set]
+                h=cal_y(interval_left,*data[data_index])
+                insert_pos=0
+                for insert_pos in range(len(ys)):
+                    if ys[insert_pos]>h:break
+                if insert_pos==len(ys)-1 and h>ys[-1]:
+                    scan_set.append(data_index)
+                else:
+                    scan_set.insert(insert_pos,data_index)
         #模拟水从上层滴落到下层计算dep
+        debug=1
         for i in range(len(scan_set)-1,-1,-1):
             tup=scan_set[i]
+            #up_type=get_seg_type(interval_left,tup)
             for j in range(i-1,-1,-1):
                 tdown=scan_set[j]
-                if tdown.type!=xtype_lowin and tdown.type!=xtype_lowout:
-                    dependency[tdown.index].add(tup.index)
-                if tdown.type==xtype_continuous:
+                down_type=get_seg_type(interval_left,tdown)
+                if not (down_type.slant==seg_type_low and down_type.direction==seg_type_out):
+                    dependency[tup].add(tdown)
+                if down_type.direction!=seg_type_out:
                     break
         #清退out类型的tarp
         for allx_stru in allXList:
             data_index=allx_stru.index
-            xtype=get_xtype(interval_left,data_index)
-            if xtype==xtype_lowout or xtype==xtype_highout:
+            xtype=get_seg_type(interval_left,data_index)
+            if xtype.direction==seg_type_out:
                 scan_set.remove(scan_set_stru(data_index,xtype))
+        interval_left=interval_right
+    #处理区间最右端点,这时候只剩下out类型的点了
+    for i in range(len(scan_set)-1,-1,-1):
+        tup=scan_set[i]
+        for j in range(i-1,-1,-1):
+            tdown=scan_set[j]
+            if tdown.type.slant==seg_type_high:
+                dependency[tdown.index].add(tup.index)
 
     return dependency
 
@@ -97,12 +127,13 @@ def get_data_from_input():
             self.index=index
             self.type=type
     def insertAllX(new_stru):
-        new_stru=allX_stru(new_stru)
         insert_pos=0
         for insert_pos in range(len(allX)):
             if allX[insert_pos][0].x>=new_stru.x:break
-        if allX[insert_pos][0].x==new_stru.x:
+        if insert_pos<len(allX) and allX[insert_pos][0].x==new_stru.x:
             allX[insert_pos].append(new_stru)
+        elif insert_pos==len(allX)-1 and allX[-1][0].x< new_stru.x:
+            allX.append([new_stru])
         else:
             allX.insert(insert_pos,[new_stru])
     #allX是一个二维数组，每一个子数组是allX_stru的数组，存放在这个x坐标下端点的信息
