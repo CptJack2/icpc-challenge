@@ -197,55 +197,38 @@ if __name__=='__main__':
     #获取序号为ind的tarp在x处下方的tarp，没有返回-1
     def get_under_line(x,ind):
         dep=dependency[ind]
-        h=-1;i=-1
-        mh=cal_y(x,*data[ind])
-        for d in dep:
-            x1,x2=data[d][0],data[d][2]
-            if x1>x2:
-                x1,x2=x2,x1
-            if not (x1<=x<=x2):
-                continue
-            th=cal_y(x,*data[d])
-            if th>h and th<mh:
-                i=d
-                h=th
-        return i
+        ret=[]
+        for dependee,intervals in dep.items():
+            for interval in intervals:
+                if interval[0]<=x<interval[1] or interval[0]==x:
+                    ret.append(dependee)
+                    break
+        return ret
 
     #根据拓扑排序结果
     for ind in sorted:
-        xs=data[ind][0]
-        xe=data[ind][2]
+        xs,yl,xe,yh=data[ind]
+        if yl>yh:
+            xs,yl,xe,yh=xe,yh,xs,yl
         #沿着水流的逆向进行动态规划
         step=1 if xs<xe else -1
-        uind=get_under_line(xs,ind)
         dp[ind]=[inf for i in range(xs,xe+step,step)]
-        #tarp的前端只能往下流
-        if uind==-1:
-            #下面没有tarp接着，无解
-            dp[ind][0]=inf
-        else:
-            #下面有tarp，取它的解
-            uxs=data[uind][0]
-            uxe=data[uind][2]
-            ustep=1 if uxs<uxe else -1
-            #only down without drill
-            dp[ind][0]=dp[uind][int((xs-uxs)/ustep)]
-        #tarp的其余点，可以选择打洞往下或者沿着tarp流下
-        for i,x in enumerate(range(xs+step,xe+step,step)):
+        uinds=get_under_line(xs,ind)
+        for i,x in enumerate(range(xs,xe+step,step)):
             #flow or down
             it=i+1
-            uind=get_under_line(x,ind)
-            #下面没有tarp只能往前流
-            if uind==-1:
+            uinds=get_under_line(x,ind)
+            dp[ind][0]=inf
+            if x!=xs:
                 dp[ind][it]=dp[ind][it-1]
-            else:
-                #下面有tarp则取打洞往下和往前的较小代价
-                uxs=data[uind][0]
-                uxe=data[uind][2]
-                ustep=1 if uxs<uxe else -1
-                #dp数组的序号0-n对应tarp沿水流逆向的起点到终点
-                dp[ind][it]=min(dp[uind][int((x-uxs)/ustep)]+1,dp[ind][it-1])
-
+            if len(uind)!=0:
+                for uind in uinds:
+                    #下面有tarp则取打洞往下和往前的较小代价
+                    uxs=data[uind][0]
+                    uxe=data[uind][2]
+                    ustep=1 if uxs<uxe else -1
+                    #dp数组的序号0-n对应tarp沿水流逆向的起点到终点
+                    dp[ind][it]=min(dp[uind][int((x-uxs)/ustep)]+1,dp[ind][it])
     #最后从天花板找最小值就可以了
     ans=9999999
     for i in dependency[N+1]:
