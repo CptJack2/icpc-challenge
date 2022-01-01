@@ -4,18 +4,23 @@ from operator import attrgetter
 
 def get_dep(N,allX,data):
     #各个tarp之间的上下依赖关系, 内层dict：key：被依赖index，val：依赖的多个区间， 区间左闭右开
-    dependency=[{[]} for i in range(N+2)]
+    dependency=[{} for i in range(N+2)]
     #从左到右扫描,加入集合
     scan_set=[]
     interval_left=allX[0][0].x
     #interval为依赖区间[a,b)
     def add_dep(i,j,interval):
+        if j not in dependency[i]:
+            dependency[i][j]=[]
         intervals=dependency[i][j]
-        old_interval=intervals[-1]
-        if old_interval[1]>=interval[0]:
-            interval=(min(interval[0],old_interval[0]),max(interval[1],old_interval[1]))
-        intervals.append(interval)
+        #区间合并
+        if len(intervals)>0 and intervals[-1][1]>=interval[0] and interval[0]!=interval[1]:
+            interval=(min(interval[0],intervals[-1][0]),max(interval[1],intervals[-1][1]))
+            intervals[-1]=interval
+        else:
+            intervals.append(interval)
         dependency[i][j]=intervals
+        return
     #沿着x轴从左到右扫描,循环里处理[start.x,end.x)这个区间
     for i in range(1,len(allX)):
         allXList=allX[i-1]
@@ -71,21 +76,20 @@ def get_dep(N,allX,data):
         for tout in out_tarp:
             if out_tarp[tout].slant=="low":continue
             dep_at_a(tout,(interval_left,interval_left))
-        #tarp移出的时候, 它挡住的位置向上可达和向下可达的tarp, 有依赖关系
-        depender=-1;dependee=-1;interval=(interval_left,interval_right)
-        for t in reversed(scan_set):
-            if t in in_tarp :
-                interval=(interval_left,interval_left)
-                continue
-            if t in out_tarp:
-                continue
-            if depender==-1:
-                depender=t
-            else:
-                dependee=t
-                add_dep(depender,dependee,interval)
-                interval=(interval_left,interval_right)
-                depender=-1
+            #tarp移出的时候, 它挡住的位置向上可达和向下可达的tarp, 有依赖关系
+            depender=dependee=scan_set.index(tout)
+            interval=(interval_left,interval_right)
+            while depender<len(scan_set) and (scan_set[depender] in out_tarp or scan_set[depender] in in_tarp):
+                if scan_set[depender] in in_tarp:
+                    interval=(interval_left,interval_left)
+                depender+=1
+            while dependee>=0 and  scan_set[dependee] in out_tarp or scan_set[dependee] in in_tarp:
+                if scan_set[dependee] in in_tarp:
+                    interval=(interval_left,interval_left)
+                dependee-=1
+            if depender<len(scan_set) and dependee>=0:
+                add_dep(scan_set[depender],scan_set[dependee],interval)
+
         #清退out类型的tarp
         for allx_stru in allXList:
             data_index=allx_stru.index
@@ -100,7 +104,7 @@ def get_dep(N,allX,data):
             for str in allX[-1]:
                 if str.index==scan_set[j]:break
             if str.slant!="low":
-                add_dep(tup,str.index)
+                add_dep(tup,str.index,(str.x,str.x))
 
     return dependency
 
@@ -216,12 +220,12 @@ if __name__=='__main__':
         uinds=get_under_line(xs,ind)
         for i,x in enumerate(range(xs,xe+step,step)):
             #flow or down
-            it=i+1
+            it=i
             uinds=get_under_line(x,ind)
             dp[ind][0]=inf
             if x!=xs:
                 dp[ind][it]=dp[ind][it-1]
-            if len(uind)!=0:
+            if len(uinds)!=0:
                 for uind in uinds:
                     #下面有tarp则取打洞往下和往前的较小代价
                     uxs=data[uind][0]
