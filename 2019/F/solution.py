@@ -3,23 +3,14 @@ import bisect
 from operator import attrgetter
 
 def get_dep(N,allX,data):
-    #各个tarp之间的上下依赖关系, 内层dict：key：被依赖index，val：依赖的多个区间， 区间左闭右开
-    dependency=[{} for i in range(N+2)]
+    #各个tarp之间的上下依赖关系, 内层数组元素是tuple，0为依赖发生的x坐标，1为依赖的index
+    dependency=[[] for i in range(N+2)]
     #从左到右扫描,加入集合
     scan_set=[]
     interval_left=allX[0][0].x
     #interval为依赖区间[a,b)
-    def add_dep(i,j,interval):
-        if j not in dependency[i]:
-            dependency[i][j]=[]
-        intervals=dependency[i][j]
-        #区间合并
-        if len(intervals)>0 and intervals[-1][1]>=interval[0] and interval[0]!=interval[1]:
-            interval=(min(interval[0],intervals[-1][0]),max(interval[1],intervals[-1][1]))
-            intervals[-1]=interval
-        else:
-            intervals.append(interval)
-        dependency[i][j]=intervals
+    def add_dep(i,j,x):
+        dependency[i].append((x,j))
         return
     #沿着x轴从左到右扫描,循环里处理[start.x,end.x)这个区间
     for i in range(1,len(allX)):
@@ -45,50 +36,36 @@ def get_dep(N,allX,data):
                 out_tarp[data_index]=allx_stru
 
         #在a点出入的tarp，遍历scan_set，看哪些tarp依赖它
-        def dep_at_a(tnew,initial_interval):
+        def dep_at_a(tnew, x):
             tnew_scan_index=scan_set.index(tnew)
             #逐层向上处理，哪些tarp需要依赖此tarp
-            interval=initial_interval
             for j in range(tnew_scan_index+1,len(scan_set)):
                 tup=scan_set[j]
-                add_dep(tup,tnew,interval)
-                #如果上面的tarp在[a,b)进, 水只能在a点往下
-                if tup in in_tarp:
-                    interval=(interval_left,interval_left)
+                add_dep(tup,tnew,x)
                 #当前tarp在[a,b)内连续,雨水无法越过
                 if tup not in in_tarp and tup not in out_tarp:
                     break
             #逐层向下处理新tarp要依赖哪些tarp
-            interval=(interval_left,interval_right)
             for j in range(tnew_scan_index-1,-1,-1):
                 tdown=scan_set[j]
-                add_dep(tnew,tdown,interval)
-                #如果上面的tarp在[a,b)进, 水只能在a点往下
-                if tdown in in_tarp:
-                    interval=(interval_left,interval_left)
+                add_dep(tnew,tdown,x)
                 #当前tarp在[a,b)内连续,雨水无法越过
                 if tdown not in out_tarp and tdown not in in_tarp:
                     break
         #对于新加入的tarp,模拟水从上层滴落到下层计算dep
         for tnew in in_tarp:
-            dep_at_a(tnew,(interval_left,interval_right))
+            dep_at_a(tnew,interval_left)
         #移出的tarp可以在a点被其他tarp依赖，向上下扫
         for tout in out_tarp:
-            if out_tarp[tout].slant=="low":continue
-            dep_at_a(tout,(interval_left,interval_left))
+            dep_at_a(tout,interval_left)
             #tarp移出的时候, 它挡住的位置向上可达和向下可达的tarp, 有依赖关系
             depender=dependee=scan_set.index(tout)
-            interval=(interval_left,interval_right)
             while depender<len(scan_set) and (scan_set[depender] in out_tarp or scan_set[depender] in in_tarp):
-                if scan_set[depender] in in_tarp:
-                    interval=(interval_left,interval_left)
                 depender+=1
             while dependee>=0 and  scan_set[dependee] in out_tarp or scan_set[dependee] in in_tarp:
-                if scan_set[dependee] in in_tarp:
-                    interval=(interval_left,interval_left)
                 dependee-=1
             if depender<len(scan_set) and dependee>=0:
-                add_dep(scan_set[depender],scan_set[dependee],interval)
+                add_dep(scan_set[depender],scan_set[dependee],interval_left)
 
         #清退out类型的tarp
         for allx_stru in allXList:
@@ -103,10 +80,28 @@ def get_dep(N,allX,data):
         for j in range(i-1,-1,-1):
             for str in allX[-1]:
                 if str.index==scan_set[j]:break
-            if str.slant!="low":
-                add_dep(tup,str.index,(str.x,str.x))
+            add_dep(tup,str.index,str.x)
 
-    return dependency
+    def merge_dependency():
+        dep_ret=[]
+        for dep in dependency:
+            dep_dict={}
+            prev_index=-1
+            for tu in dep:
+                index=tu[1]
+                if index in dep_dict:
+                    dep_dict[index]=(dep_dict[index],tu[0])
+                else:
+                    dep_dict[index]=tu[0]
+                if prev_index!=-1 and type(dep_dict[prev_index])!=tuple:
+                    dep_dict[prev_index]=(dep_dict[prev_index],tu[0])
+                prev_index=index
+            dep_ret.append(dep_dict)
+        return dep_ret
+
+    dep_dict=merge_dependency()
+
+    return dep_dict
 
     #按照tarp的依赖关系拓扑排序
 def topo_sort(dep):
