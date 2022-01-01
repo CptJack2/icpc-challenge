@@ -69,20 +69,23 @@ def get_dep(N,allX,data):
             dep_at_a(tnew,(interval_left,interval_right))
         #移出的tarp可以在a点被其他tarp依赖，向上下扫
         for tout in out_tarp:
-            if out_tarp[tout].slant!="low":continue
+            if out_tarp[tout].slant=="low":continue
             dep_at_a(tout,(interval_left,interval_left))
         #tarp移出的时候, 它挡住的位置向上可达和向下可达的tarp, 有依赖关系
-        scan_set_copy=[]
-        for s in scan_set:
-            if s in in_tarp:continue
-            if s not in out_tarp:
-                scan_set_copy.append(s)
-            elif len(scan_set_copy)==0 or scan_set_copy[-1] not in out_tarp:
-                scan_set_copy.append(s)
-        for ind,s in enumerate(scan_set_copy):
-            if s not in out_tarp:continue
-            if ind>=1 and ind<=len(scan_set_copy)-2:
-                add_dep(ind+1,ind-1,(interval_left,interval_right))
+        depender=-1;dependee=-1;interval=(interval_left,interval_right)
+        for t in reversed(scan_set):
+            if t in in_tarp :
+                interval=(interval_left,interval_left)
+                continue
+            if t in out_tarp:
+                continue
+            if depender==-1:
+                depender=t
+            else:
+                dependee=t
+                add_dep(depender,dependee,interval)
+                interval=(interval_left,interval_right)
+                depender=-1
         #清退out类型的tarp
         for allx_stru in allXList:
             data_index=allx_stru.index
