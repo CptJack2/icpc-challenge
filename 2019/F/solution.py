@@ -41,7 +41,7 @@ def get_dep(N,allX,data):
                 only_left=False
                 for j in range(tnew_scan_index+1,len(scan_set)):
                     tup=scan_set[j]
-                    if in_tarp[tnew].slant!="low":
+                    if j==tnew_scan_index+1 or in_tarp[tnew].slant!="low":
                         add_dep(tup,tnew)
                     #如果上面的tarp在[a,b)出, 不能阻挡水往下
                     if tup in out_tarp:
