@@ -3,13 +3,19 @@ import bisect
 from operator import attrgetter
 
 def get_dep(N,allX,data):
-    #各个tarp之间的上下依赖关系
-    dependency=[set() for i in range(N+2)]
+    #各个tarp之间的上下依赖关系, 内层dict：key：被依赖index，val：依赖的多个区间， 区间左闭右开
+    dependency=[{[]} for i in range(N+2)]
     #从左到右扫描,加入集合
     scan_set=[]
     interval_left=allX[0][0].x
-    def add_dep(i,j):
-        dependency[i].add(j)
+    #interval为依赖区间[a,b)
+    def add_dep(i,j,interval):
+        intervals=dependency[i][j]
+        old_interval=intervals[-1]
+        if old_interval[1]>=interval[0]:
+            interval=(min(interval[0],old_interval[0]),max(interval[1],old_interval[1]))
+        intervals.append(interval)
+        dependency[i][j]=intervals
     #沿着x轴从左到右扫描,循环里处理[start.x,end.x)这个区间
     for i in range(1,len(allX)):
         allXList=allX[i-1]
@@ -33,72 +39,50 @@ def get_dep(N,allX,data):
             else:
                 out_tarp[data_index]=allx_stru
 
-        #对于新加入的tarp,模拟水从上层滴落到下层计算dep
-        for tnew in in_tarp:
+        #在a点出入的tarp，遍历scan_set，看哪些tarp依赖它
+        def dep_at_a(tnew,initial_interval):
             tnew_scan_index=scan_set.index(tnew)
-            #向上处理需要依赖新tarp的, low out的tarp无需被依赖
-            if not (tnew in out_tarp and out_tarp[tnew].slant!="low"):
-                only_left=False
-                for j in range(tnew_scan_index+1,len(scan_set)):
-                    tup=scan_set[j]
-                    if j==tnew_scan_index+1 or in_tarp[tnew].slant!="low":
-                        add_dep(tup,tnew)
-                    #如果上面的tarp在[a,b)出, 不能阻挡水往下
-                    if tup in out_tarp:
-                        continue
-                    #如果上面的tarp在[a,b)进, 水只能在a点往下
-                    if not only_left and tup in in_tarp:
-                        only_left=True
-                        continue
+            #逐层向上处理，哪些tarp需要依赖此tarp
+            interval=initial_interval
+            for j in range(tnew_scan_index+1,len(scan_set)):
+                tup=scan_set[j]
+                add_dep(tup,tnew,interval)
+                #如果上面的tarp在[a,b)进, 水只能在a点往下
+                if tup in in_tarp:
+                    interval=(interval_left,interval_left)
+                #当前tarp在[a,b)内连续,雨水无法越过
+                if tup not in in_tarp and tup not in out_tarp:
                     break
-            #向下处理新tarp依赖的
+            #逐层向下处理新tarp要依赖哪些tarp
+            interval=(interval_left,interval_right)
             for j in range(tnew_scan_index-1,-1,-1):
                 tdown=scan_set[j]
-                #直接下方的tarp、有一个端点在a上，可以直接穿过，但不是低点、直接横穿[a,b)的tarp
-                if j==tnew_scan_index-1 or \
-                    (tdown in out_tarp and out_tarp[tdown].slant!="low") or\
-                    (tdown in in_tarp and in_tarp[tdown].slant!="low") or \
-                    (tdown not in out_tarp and tdown not in in_tarp) :
-                    add_dep(tnew,tdown)
-                #如果下面的tarp在[a,b)出, 不能阻挡水往下
-                if tdown in out_tarp or tdown in in_tarp:
-                    continue
-                break
-        #tarp移出的时候, 它挡住的位置向上可达和向下可达的tarp, 有依赖关系
-        for tout in out_tarp:
-            tout_scan_index=scan_set.index(tout)
-            up_reachable=set()
-            only_left=False
-            for j in range(tout_scan_index+1,len(scan_set)):
-                tup=scan_set[j]
-                up_reachable.add(tup)
-                #如果上面的tarp在[a,b)出, 不能阻挡水往下
-                if tup in out_tarp:
-                    continue
+                add_dep(tnew,tdown,interval)
                 #如果上面的tarp在[a,b)进, 水只能在a点往下
-                if not only_left and tup in in_tarp:
-                    only_left=True
-                    continue
-                break
-            down_reachable=set()
-            for j in range(tout_scan_index-1,-1,-1):
-                tdown=scan_set[j]
-                #todo 确认是不是跟上面一样
-                if j==tout_scan_index-1 or\
-                    (tdown in out_tarp and out_tarp[tdown].slant!="low") or \
-                    (tdown in in_tarp and in_tarp[tdown].slant!="low") or \
-                    (tdown not in out_tarp and tdown not in in_tarp):
-                    down_reachable.add(tdown)
-                #如果下面的tarp在[a,b)出, 不能阻挡水往下
-                if tdown in out_tarp or tdown in in_tarp:
-                    continue
-                break
-            #出tarp本身也可以在这个点被依赖
-            if out_tarp[tout].slant!="low":
-                down_reachable.add(tout)
-            for a in up_reachable:
-                for b in down_reachable:
-                    add_dep(a,b)
+                if tdown in in_tarp:
+                    interval=(interval_left,interval_left)
+                #当前tarp在[a,b)内连续,雨水无法越过
+                if tdown not in out_tarp and tdown not in in_tarp:
+                    break
+        #对于新加入的tarp,模拟水从上层滴落到下层计算dep
+        for tnew in in_tarp:
+            dep_at_a(tnew,(interval_left,interval_right))
+        #移出的tarp可以在a点被其他tarp依赖，向上下扫
+        for tout in out_tarp:
+            if out_tarp[tout].slant!="low":continue
+            dep_at_a(tout,(interval_left,interval_left))
+        #tarp移出的时候, 它挡住的位置向上可达和向下可达的tarp, 有依赖关系
+        scan_set_copy=[]
+        for s in scan_set:
+            if s in in_tarp:continue
+            if s not in out_tarp:
+                scan_set_copy.append(s)
+            elif len(scan_set_copy)==0 or scan_set_copy[-1] not in out_tarp:
+                scan_set_copy.append(s)
+        for ind,s in enumerate(scan_set_copy):
+            if s not in out_tarp:continue
+            if ind>=1 and ind<=len(scan_set_copy)-2:
+                add_dep(ind+1,ind-1,(interval_left,interval_right))
         #清退out类型的tarp
         for allx_stru in allXList:
             data_index=allx_stru.index
