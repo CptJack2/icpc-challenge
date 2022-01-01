@@ -105,13 +105,8 @@ def get_dep(N,allX,data):
             if allx_stru.direction=="out":
                 scan_set.remove(data_index)
         interval_left=interval_right
-    #处理区间最右端点,这时候只剩下out类型的点了
-    # for i in allX[-1]:
-    #     for j in allX[-1]:
-    #         if i.index==j.index:continue
-    #         if i.slant!="low":
-    #             add_dep(j.index,i.index)
 
+    #处理区间最右端点,这时候只剩下out类型的点了
     for i in range(len(scan_set)-1,-1,-1):
         tup=scan_set[i]
         for j in range(i-1,-1,-1):
