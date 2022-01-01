@@ -84,7 +84,8 @@ def get_dep(N,allX,data):
             for j in range(tout_scan_index-1,-1,-1):
                 tdown=scan_set[j]
                 #todo 确认是不是跟上面一样
-                if (tdown in out_tarp and out_tarp[tdown].slant!="low") or \
+                if j==tout_scan_index-1 or\
+                    (tdown in out_tarp and out_tarp[tdown].slant!="low") or \
                     (tdown in in_tarp and in_tarp[tdown].slant!="low") or \
                     (tdown not in out_tarp and tdown not in in_tarp):
                     down_reachable.add(tdown)
