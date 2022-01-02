@@ -11,7 +11,6 @@ def get_dep(N,allX,data):
     #interval为依赖区间[a,b)
     def add_dep(i,j,x):
         dependency[i].append((x,j))
-        return
     #沿着x轴从左到右扫描,循环里处理[start.x,end.x)这个区间
     for i in range(1,len(allX)):
         allXList=allX[i-1]
@@ -41,7 +40,9 @@ def get_dep(N,allX,data):
             #逐层向上处理，哪些tarp需要依赖此tarp
             for j in range(tnew_scan_index+1,len(scan_set)):
                 tup=scan_set[j]
-                add_dep(tup,tnew,x)
+                #上下的连个tarp如果是同在x点处理会添加两次依赖
+                if tup not in in_tarp and tup not in out_tarp:
+                    add_dep(tup,tnew,x)
                 #当前tarp在[a,b)内连续,雨水无法越过
                 if tup not in in_tarp and tup not in out_tarp:
                     break
