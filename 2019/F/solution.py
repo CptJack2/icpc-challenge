@@ -29,6 +29,14 @@ def get_dep(N,allX,data):
                 if insert_pos==len(ys)-1 and h>ys[-1]:
                     scan_set.append(data_index)
                 else:
+                    #todo 整个依赖区间计算要底朝天地改。。。
+                    #新插入的tarp打断了又依赖关系的两个连续tarp
+                    if insert_pos>0:
+                        inserted=scan_set[insert_pos]
+                        inserted_under=scan_set[insert_pos-1]
+                        if inserted not in in_tarp and inserted not in out_tarp and \
+                            inserted_under not in in_tarp and inserted_under not in out_tarp:
+                            add_dep(inserted,inserted_under,interval_left)
                     scan_set.insert(insert_pos,data_index)
                 in_tarp[data_index]=allx_stru
             else:
@@ -87,16 +95,12 @@ def get_dep(N,allX,data):
         dep_ret=[]
         for dep in dependency:
             dep_dict={}
-            prev_index=-1
             for tu in dep:
                 index=tu[1]
                 if index in dep_dict:
                     dep_dict[index]=(dep_dict[index],tu[0])
                 else:
                     dep_dict[index]=tu[0]
-                if prev_index!=-1 and type(dep_dict[prev_index])!=tuple:
-                    dep_dict[prev_index]=(dep_dict[prev_index],tu[0])
-                prev_index=index
             dep_ret.append(dep_dict)
         return dep_ret
 
