@@ -12,7 +12,6 @@ def get_dep(N,allX,data):
     def add_dep(i,j,x):
         dependency[i].append((x,j))
     #沿着x轴从左到右扫描,循环里处理[start.x,end.x)这个区间
-    clouded={}
     for i in range(1,len(allX)):
         allXList=allX[i-1]
         interval_right=allX[i][0].x
@@ -30,9 +29,6 @@ def get_dep(N,allX,data):
                 if insert_pos==len(ys)-1 and h>ys[-1]:
                     scan_set.append(data_index)
                 else:
-                    if 0<=insert_pos<len(scan_set) and scan_set[insert_pos] in clouded:
-                        add_dep(*clouded[scan_set[insert_pos]],interval_left)
-                        clouded.pop(scan_set[insert_pos])
                     scan_set.insert(insert_pos,data_index)
                 in_tarp[data_index]=allx_stru
             else:
@@ -71,7 +67,6 @@ def get_dep(N,allX,data):
                 dependee-=1
             if depender<len(scan_set) and dependee>=0:
                 add_dep(scan_set[depender],scan_set[dependee],interval_left)
-                clouded[scan_set[depender]]=(scan_set[depender],scan_set[dependee])
 
         #清退out类型的tarp
         for allx_stru in allXList:
@@ -92,12 +87,16 @@ def get_dep(N,allX,data):
         dep_ret=[]
         for dep in dependency:
             dep_dict={}
+            prev_index=-1
             for tu in dep:
                 index=tu[1]
                 if index in dep_dict:
                     dep_dict[index]=(dep_dict[index],tu[0])
                 else:
                     dep_dict[index]=tu[0]
+                if prev_index!=-1 and type(dep_dict[prev_index])!=tuple:
+                    dep_dict[prev_index]=(dep_dict[prev_index],tu[0])
+                prev_index=index
             dep_ret.append(dep_dict)
         return dep_ret
 
