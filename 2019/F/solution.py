@@ -197,11 +197,9 @@ if __name__=='__main__':
     def get_under_line(x,ind):
         dep=dependency[ind]
         ret=[]
-        for dependee,intervals in dep.items():
-            for interval in intervals:
-                if interval[0]<=x<interval[1] or interval[0]==x:
-                    ret.append(dependee)
-                    break
+        for dependee,interval in dep.items():
+            if interval[0]<=x<=interval[1]:
+                ret.append(dependee)
         return ret
 
     #根据拓扑排序结果
@@ -212,26 +210,34 @@ if __name__=='__main__':
         #沿着水流的逆向进行动态规划
         step=1 if xs<xe else -1
         dp[ind]=[inf for i in range(xs,xe+step,step)]
-        uinds=get_under_line(xs,ind)
         for i,x in enumerate(range(xs,xe+step,step)):
             #flow or down
             it=i
             uinds=get_under_line(x,ind)
-            dp[ind][0]=inf
             if x!=xs:
                 dp[ind][it]=dp[ind][it-1]
-            if len(uinds)!=0:
-                for uind in uinds:
-                    #下面有tarp则取打洞往下和往前的较小代价
-                    uxs=data[uind][0]
-                    uxe=data[uind][2]
-                    ustep=1 if uxs<uxe else -1
-                    #dp数组的序号0-n对应tarp沿水流逆向的起点到终点
-                    dp[ind][it]=min(dp[uind][int((x-uxs)/ustep)]+1,dp[ind][it])
+            min_cost_down=inf
+            for uind in uinds:
+                #下面有tarp则取打洞往下和往前的较小代价
+                uxs=data[uind][0]
+                uxe=data[uind][2]
+                ustep=1 if uxs<uxe else -1
+                #dp数组的序号0-n对应tarp沿水流逆向的起点到终点
+                if x==xs or x==xe:
+                    down_cost=0
+                else:
+                    down_cost=1
+                cost_down=dp[uind][int((x-uxs)/ustep)]+down_cost
+                min_cost_down=min(cost_down,min_cost_down)
+            dp[ind][it]=min(min_cost_down,dp[ind][it])
+
     #最后从天花板找最小值就可以了
-    ans=9999999
-    for i in dependency[N+1]:
-        for j in dp[i]:
-            if j<ans:
-                ans=j
+    ans=inf
+    for x in range(L,R+1):
+        uinds=get_under_line(x,N+1)
+        for uind in uinds:
+            uxs=data[uind][0]
+            uxe=data[uind][2]
+            ustep=1 if uxs<uxe else -1
+            ans=min(dp[uind][int((x-uxs)/ustep)],ans)
     print(ans,"\n")
