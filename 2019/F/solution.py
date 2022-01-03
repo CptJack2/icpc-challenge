@@ -1,6 +1,4 @@
 # -*- coding:utf-8 -*-
-import bisect
-from operator import attrgetter
 
 def get_dep(N,allX,data):
     #各个tarp之间的上下依赖关系, 内层数组元素是tuple，0为依赖发生的x坐标，1为依赖的index
@@ -9,12 +7,18 @@ def get_dep(N,allX,data):
     scan_set=[]
     interval_left=allX[0][0].x
     #interval为依赖区间[a,b)
-    def add_dep(i,j,x):
-        dependency[i].append((x,j))
-    #沿着x轴从左到右扫描,循环里处理[start.x,end.x)这个区间
+    def add_dep(i,j,x,dep_type):
+        dependency[i].append((x,j,dep_type))
+
+    #用一个空区间特殊处理一下最右端的x坐标
+    allX.append([])
+    #沿着x轴从左到右扫描,循环里处理[a,b)这个区间
     for i in range(1,len(allX)):
         allXList=allX[i-1]
-        interval_right=allX[i][0].x
+        if i!=len(allX)-1:
+            interval_right=allX[i][0].x
+        else:#整个图的最右点特殊处理一下
+            interval_right=interval_left
         in_tarp= {}
         out_tarp={}
         #加入in类型的tarp
@@ -36,45 +40,70 @@ def get_dep(N,allX,data):
                         inserted_under=scan_set[insert_pos-1]
                         if inserted not in in_tarp and inserted not in out_tarp and \
                             inserted_under not in in_tarp and inserted_under not in out_tarp:
-                            add_dep(inserted,inserted_under,interval_left)
+                            add_dep(inserted,inserted_under,interval_left,"interval_end")
                     scan_set.insert(insert_pos,data_index)
                 in_tarp[data_index]=allx_stru
             else:
                 out_tarp[data_index]=allx_stru
 
         #在a点出入的tarp，遍历scan_set，看哪些tarp依赖它
-        def dep_at_a(tnew, x):
+        def dep_at_a(tnew, x,inOrOut):
             tnew_scan_index=scan_set.index(tnew)
             #逐层向上处理，哪些tarp需要依赖此tarp
+            interval_type="interval_begin" if inOrOut else "interval_end"
             for j in range(tnew_scan_index+1,len(scan_set)):
                 tup=scan_set[j]
-                #上下的连个tarp如果是同在x点处理会添加两次依赖
+                diff=True if tup in in_tarp and inOrOut==False or \
+                             tup in out_tarp and inOrOut==True \
+                    else False
+                #上下的两个tarp如果是同在x点处理会添加两次依赖
                 if tup not in in_tarp and tup not in out_tarp:
-                    add_dep(tup,tnew,x)
+                    if diff==False:
+                        add_dep(tup,tnew,x,interval_type)
+                    else:
+                        add_dep(tup,tnew,x,"interval_single_point")
+                if inOrOut and tup not in out_tarp or \
+                    not inOrOut and tup not in in_tarp:
+                    interval_type="interval_single_point"
                 #当前tarp在[a,b)内连续,雨水无法越过
                 if tup not in in_tarp and tup not in out_tarp:
                     break
             #逐层向下处理新tarp要依赖哪些tarp
+            interval_type="interval_begin" if inOrOut else "interval_end"
             for j in range(tnew_scan_index-1,-1,-1):
                 tdown=scan_set[j]
-                add_dep(tnew,tdown,x)
+                diff=True if tdown in in_tarp and inOrOut==False or\
+                            tdown in out_tarp and inOrOut==True \
+                            else False
+                if diff==False:
+                    add_dep(tnew,tdown,x,interval_type)
+                else:
+                    add_dep(tnew,tdown,x,"interval_single_point")
+                if inOrOut and tdown not in out_tarp or\
+                    not inOrOut and tdown not in in_tarp:
+                    interval_type="interval_single_point"
                 #当前tarp在[a,b)内连续,雨水无法越过
                 if tdown not in out_tarp and tdown not in in_tarp:
                     break
         #对于新加入的tarp,模拟水从上层滴落到下层计算dep
         for tnew in in_tarp:
-            dep_at_a(tnew,interval_left)
+            dep_at_a(tnew,interval_left,True)
         #移出的tarp可以在a点被其他tarp依赖，向上下扫
         for tout in out_tarp:
-            dep_at_a(tout,interval_left)
-            #tarp移出的时候, 它挡住的位置向上可达和向下可达的tarp, 有依赖关系
+            dep_at_a(tout,interval_left,False)
+            #tarp移出的时候, 它挡住的位置向上可达和向下可达的连续tarp, 有依赖关系，因为出入tarp的依赖关系在前面处理了
             depender=dependee=scan_set.index(tout)
+            interval_type="interval_begin"
             while depender<len(scan_set) and (scan_set[depender] in out_tarp or scan_set[depender] in in_tarp):
+                if scan_set[depender] in in_tarp:
+                    interval_type="interval_single_point"
                 depender+=1
             while dependee>=0 and  scan_set[dependee] in out_tarp or scan_set[dependee] in in_tarp:
+                if scan_set[dependee] in in_tarp:
+                    interval_type="interval_single_point"
                 dependee-=1
             if depender<len(scan_set) and dependee>=0:
-                add_dep(scan_set[depender],scan_set[dependee],interval_left)
+                add_dep(scan_set[depender],scan_set[dependee],interval_left,interval_type)
 
         #清退out类型的tarp
         for allx_stru in allXList:
@@ -83,24 +112,34 @@ def get_dep(N,allX,data):
                 scan_set.remove(data_index)
         interval_left=interval_right
 
-    #处理区间最右端点,这时候只剩下out类型的点了
-    for i in range(len(scan_set)-1,-1,-1):
-        tup=scan_set[i]
-        for j in range(i-1,-1,-1):
-            for str in allX[-1]:
-                if str.index==scan_set[j]:break
-            add_dep(tup,str.index,str.x)
-
     def merge_dependency():
         dep_ret=[]
         for dep in dependency:
             dep_dict={}
+            interval_open=False
+            last_dep_index=-1
+            #依赖排一下序
+            type_sort={
+                "interval_begin":0,
+                "interval_end":1,
+                "interval_single_point":2,
+            }
+            dep.sort(key=lambda t:(t[1],t[0],type_sort[t[2]]))
             for tu in dep:
                 index=tu[1]
-                if index in dep_dict:
-                    dep_dict[index]=(dep_dict[index],tu[0])
-                else:
-                    dep_dict[index]=tu[0]
+                dep_type=tu[2]
+                if index not in dep_dict:dep_dict[index]=[]
+                if dep_type=="interval_begin":
+                    dep_dict[index].append(tu[0])
+                    if interval_open:
+                        dep_dict[last_dep_index][-1]=(dep_dict[last_dep_index],tu[0])
+                    interval_open=True
+                    last_dep_index=index
+                elif dep_type=="interval_end":
+                    dep_dict[index][-1]=(dep_dict[index][-1],tu[0])
+                    interval_open=False
+                elif dep_type=="interval_single_point":
+                    dep_dict[index].append((tu[0],tu[0]))
             dep_ret.append(dep_dict)
         return dep_ret
 
@@ -202,9 +241,10 @@ if __name__=='__main__':
     def get_under_line(x,ind):
         dep=dependency[ind]
         ret=[]
-        for dependee,interval in dep.items():
-            if interval[0]<=x<=interval[1]:
-                ret.append(dependee)
+        for dependee,intervals in dep.items():
+            for interval in intervals:
+                if interval[0]<=x<=interval[1]:
+                    ret.append(dependee)
         return ret
 
     #根据拓扑排序结果
