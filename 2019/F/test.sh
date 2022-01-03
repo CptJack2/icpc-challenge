@@ -8,10 +8,21 @@ function cmp() {
   return $res
 }
 
-if [ $1 == "gen" ];then
+function gen() {
   python3 test_gen.py
   cmp && echo succ || echo fail
   echo "ac" $AC; echo "am" $AM
+}
+
+if [ $1 == "gen_loop" ];then
+  for((;;));do
+    gen
+    if [ $AC != $AM ];then exit;fi
+  done
+fi
+
+if [ $1 == "gen" ];then
+  gen
 fi
 
 if [ $1 == "roll" ];then
