@@ -50,19 +50,27 @@ def get_dep(N,allX,data):
         #在a点出入的tarp，遍历scan_set，看哪些tarp依赖它
         def dep_at_a(tnew, x,inOrOut):
             tnew_scan_index=scan_set.index(tnew)
+            def cal_tarp_relation(tnew,texist):
+                if tnew in in_tarp and texist in in_tarp or\
+                    tnew in out_tarp and texist in out_tarp:
+                    return "same_direction"
+                elif tnew in in_tarp and texist in out_tarp or \
+                        tnew in out_tarp and texist in in_tarp:
+                    return "different_direction"
+                else:
+                    return "other"
             #逐层向上处理，哪些tarp需要依赖此tarp
             interval_type="interval_begin" if inOrOut else "interval_end"
             for j in range(tnew_scan_index+1,len(scan_set)):
                 tup=scan_set[j]
-                diff=True if tup in in_tarp and inOrOut==False or \
-                             tup in out_tarp and inOrOut==True \
-                    else False
+                tarp_rela=cal_tarp_relation(tnew,tup)
                 #上下的两个tarp如果是同在x点处理会添加两次依赖
                 if tup not in in_tarp and tup not in out_tarp:
-                    if diff==False:
-                        add_dep(tup,tnew,x,interval_type)
-                    else:
+                    #方向相反的两个tarp只能单点依赖
+                    if tarp_rela=="different_direction":
                         add_dep(tup,tnew,x,"interval_single_point")
+                    else:
+                        add_dep(tup,tnew,x,interval_type)
                 if inOrOut and tup not in out_tarp or \
                     not inOrOut and tup not in in_tarp:
                     interval_type="interval_single_point"
@@ -73,13 +81,11 @@ def get_dep(N,allX,data):
             interval_type="interval_begin" if inOrOut else "interval_end"
             for j in range(tnew_scan_index-1,-1,-1):
                 tdown=scan_set[j]
-                diff=True if tdown in in_tarp and inOrOut==False or\
-                            tdown in out_tarp and inOrOut==True \
-                            else False
-                if diff==False:
-                    add_dep(tnew,tdown,x,interval_type)
-                else:
+                tarp_rela=cal_tarp_relation(tnew,tdown)
+                if tarp_rela=="different_direction":
                     add_dep(tnew,tdown,x,"interval_single_point")
+                else:
+                    add_dep(tnew,tdown,x,interval_type)
                 if inOrOut and tdown not in out_tarp or\
                     not inOrOut and tdown not in in_tarp:
                     interval_type="interval_single_point"
@@ -102,7 +108,7 @@ def get_dep(N,allX,data):
             multi_out_tarp_between_two_continious=False
             while dependee>=0 and (scan_set[dependee] in out_tarp or scan_set[dependee] in in_tarp):
                 #如果往下遍历遇到一个out tarp，说明是两个连续tarp夹住多个out tarp的情况，这两个连续tarp的依赖在上一个out tarp已经处理了
-                if scan_set[dependee] in out_tarp:
+                if scan_set[dependee]!=tout and scan_set[dependee] in out_tarp:
                     multi_out_tarp_between_two_continious=True
                     break
                 if scan_set[dependee] in in_tarp:
