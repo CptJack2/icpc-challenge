@@ -21,7 +21,12 @@ def get_dep(N,allX,data):
             interval_right=interval_left
         in_tarp= {}
         out_tarp={}
-        #加入in类型的tarp
+        #tarp分类，后面插入in tarp的时候判断打断关系需要完整的tarp类型
+        for allx_stru in allXList:
+            if allx_stru.direction=="in":
+                in_tarp[allx_stru.index]=allx_stru
+            else:
+                out_tarp[allx_stru.index]=allx_stru
         for allx_stru in allXList:
             data_index=allx_stru.index
             if allx_stru.direction=="in":
@@ -33,7 +38,6 @@ def get_dep(N,allX,data):
                 if insert_pos==len(ys)-1 and h>ys[-1]:
                     scan_set.append(data_index)
                 else:
-                    #todo 整个依赖区间计算要底朝天地改。。。
                     #新插入的tarp打断了又依赖关系的两个连续tarp
                     if insert_pos>0:
                         inserted=scan_set[insert_pos]
@@ -42,9 +46,6 @@ def get_dep(N,allX,data):
                             inserted_under not in in_tarp and inserted_under not in out_tarp:
                             add_dep(inserted,inserted_under,interval_left,"interval_end")
                     scan_set.insert(insert_pos,data_index)
-                in_tarp[data_index]=allx_stru
-            else:
-                out_tarp[data_index]=allx_stru
 
         #在a点出入的tarp，遍历scan_set，看哪些tarp依赖它
         def dep_at_a(tnew, x,inOrOut):
@@ -91,18 +92,24 @@ def get_dep(N,allX,data):
         #移出的tarp可以在a点被其他tarp依赖，向上下扫
         for tout in out_tarp:
             dep_at_a(tout,interval_left,False)
-            #tarp移出的时候, 它挡住的位置向上可达和向下可达的连续tarp, 有依赖关系，因为出入tarp的依赖关系在前面处理了
+            #tarp移出的时候, 它挡住的位置向上可达和向下可达的连续tarp, 有依赖关系(出入tarp的依赖关系在前面处理了,只剩连续tarp)
             depender=dependee=scan_set.index(tout)
             interval_type="interval_begin"
             while depender<len(scan_set) and (scan_set[depender] in out_tarp or scan_set[depender] in in_tarp):
                 if scan_set[depender] in in_tarp:
                     interval_type="interval_single_point"
                 depender+=1
-            while dependee>=0 and  scan_set[dependee] in out_tarp or scan_set[dependee] in in_tarp:
+            multi_out_tarp_between_two_continious=False
+            while dependee>=0 and (scan_set[dependee] in out_tarp or scan_set[dependee] in in_tarp):
+                #如果往下遍历遇到一个out tarp，说明是两个连续tarp夹住多个out tarp的情况，这两个连续tarp的依赖在上一个out tarp已经处理了
+                if scan_set[dependee] in out_tarp:
+                    multi_out_tarp_between_two_continious=True
+                    break
                 if scan_set[dependee] in in_tarp:
                     interval_type="interval_single_point"
                 dependee-=1
-            if depender<len(scan_set) and dependee>=0:
+            if not multi_out_tarp_between_two_continious and\
+                    depender<len(scan_set) and dependee>=0:
                 add_dep(scan_set[depender],scan_set[dependee],interval_left,interval_type)
 
         #清退out类型的tarp
@@ -114,7 +121,7 @@ def get_dep(N,allX,data):
 
     def merge_dependency():
         dep_ret=[]
-        for dep in dependency:
+        for i,dep in enumerate(dependency):
             dep_dict={}
             interval_open=False
             last_dep_index=-1
@@ -136,6 +143,8 @@ def get_dep(N,allX,data):
                     interval_open=True
                     last_dep_index=index
                 elif dep_type=="interval_end":
+                    if type(dep_dict[index][-1])!=int:
+                        raise Exception("dep type error")
                     dep_dict[index][-1]=(dep_dict[index][-1],tu[0])
                     interval_open=False
                 elif dep_type=="interval_single_point":
