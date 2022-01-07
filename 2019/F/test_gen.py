@@ -1,7 +1,8 @@
 import random
+import math
 
 L,R=10,20
-N=random.randint(100,500)
+N=random.randint(50,100)
 
 def multiply(v1, v2):
     """
@@ -55,19 +56,26 @@ class Segment:
     def cross(self, another_segment):
         return self.is_cross(another_segment)
 
+x_set= {L, R}
 def gen_line():
-    x_ran=(0,50)
-    y_ran=(1,1000)
-    x1,x2=0,0
-    while x1==x2:
-        x1=random.randint(*x_ran)
-        x2=random.randint(*x_ran)
-    y1,y2=0,0
-    while y1==y2:
+    x_ran=(0,300)
+    y_ran=(1,500)
+    l_ran=(1,30)
+
+    while 1:
+        while 1:
+            x1=random.randint(*x_ran)
+            if not x1 in x_set:break
         y1=random.randint(*y_ran)
-        y2=random.randint(*y_ran)
+        l=random.randint(*l_ran)
+        rad=random.random()*math.pi
+        x2=math.ceil(x1+l*math.cos(rad))
+        y2=math.ceil(y1+l*math.sin(rad))
+        if x1==x2 or y1==y2:continue
+        else:break
+
     if y1>y2:
-        y1,y2=y2,y1
+        x1,x2,y1,y2=x2,x1,y2,y1
     return x1,y1,x2,y2
 
 tarp=[gen_line()]
@@ -83,6 +91,8 @@ while len(tarp)<N:
             break
     if ok:
         tarp.append(l)
+        x_set.add(l[0])
+        x_set.add(l[2])
 
 output=f"{L} {R} {N}\n"
 for t in tarp:
