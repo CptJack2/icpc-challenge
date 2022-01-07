@@ -59,68 +59,68 @@ struct Deltas {
 
 int main() {
     int L, R, N;
-    while (cin >> L >> R >> N) {
-        vector<Tarp> T(N);
-        for (int i = 0; i < N; i++) {
-            cin >> T[i].X1 >> T[i].Y1 >> T[i].X2 >> T[i].Y2;
-            if (T[i].X1 > T[i].X2) { swap(T[i].X1, T[i].X2); swap(T[i].Y1, T[i].Y2); }
-        }
-        sort(T.begin(), T.end(), [] (const Tarp& a, const Tarp& b) { return a.X1 < b.X1; });
-        for (int i = 0; i < N; i++) T[i].idx = i;
-
-        vector<vector<int>> succ(N+1);
-        set<Tarp> s;
-        priority_queue<pair<int, int>> events;
-        for (int i = 0; i < N; i++) {
-            while (events.size() && -events.top().first < T[i].X1) {
-                s.erase(T[events.top().second]);
-                events.pop();
-            }
-            auto it = s.insert(T[i]).first;
-            if (it == s.begin())
-                succ[N].push_back(i);
-            else
-                succ[(--it)->idx].push_back(i);
-            events.push({-T[i].X2, i});
-        }
-
-        Deltas d(L, R);
-        function<void(int)> doit = [&] (int n) {
-            for (int i = succ[n].size()-1; i >= 0; i--) {
-                const Tarp& t = T[succ[n][i]];
-                if (t.Y1 < t.Y2) {
-                    if (t.X2 < d.MidR()) {
-                        if (d.SubNearest(t.X1, t.X2, true))
-                            d.Add(t.X2, 1, true);
-                    } else if (t.X1 < d.MidL()) {
-                        d.SubNearest(t.X1, t.X2, true);
-                        d.base++;
-                        d.Add(t.X2, d.Collect(d.MidR(), t.X2)-1, false);
-                    } else {
-                        d.Add(t.X2, d.Collect(t.X1, t.X2), false);
-                    }
-                } else {
-                    if (t.X1 > d.MidL()) {
-                        if (d.SubNearest(t.X1, t.X2, false))
-                            d.Add(t.X1, 1, false);
-                    } else if (t.X2 > d.MidR()) {
-                        d.SubNearest(t.X1, t.X2, false);
-                        d.base++;
-                        d.Add(t.X1, d.Collect(t.X1, d.MidL())-1, true);
-                    } else {
-                        d.Add(t.X1, d.Collect(t.X1, t.X2), true);
-                    }
-                }
-                doit(t.idx);
-            }
-        };
-        doit(N);
-
-        auto it = d.mid;
-        int ret = d.base;
-        while (it->first >= R) { ret += it->second; --it; }
-        ++it;
-        while (it->first <= L) { ret += it->second; ++it; }
-        cout << ret << endl;
+    cin >> L >> R >> N;
+    vector<Tarp> T(N);
+    for (int i = 0; i < N; i++) {
+        cin >> T[i].X1 >> T[i].Y1 >> T[i].X2 >> T[i].Y2;
+        if (T[i].X1 > T[i].X2) { swap(T[i].X1, T[i].X2); swap(T[i].Y1, T[i].Y2); }
     }
+    sort(T.begin(), T.end(), [] (const Tarp& a, const Tarp& b) { return a.X1 < b.X1; });
+    for (int i = 0; i < N; i++) T[i].idx = i;
+
+    vector<vector<int>> succ(N+1);
+    set<Tarp> s;
+    priority_queue<pair<int, int>> events;
+    for (int i = 0; i < N; i++) {
+        while (events.size() && -events.top().first < T[i].X1) {
+            s.erase(T[events.top().second]);
+            events.pop();
+        }
+        auto it = s.insert(T[i]).first;
+        if (it == s.begin())
+            succ[N].push_back(i);
+        else
+            succ[(--it)->idx].push_back(i);
+        events.push({-T[i].X2, i});
+    }
+
+    Deltas d(L, R);
+    function<void(int)> doit = [&] (int n) {
+        for (int i = succ[n].size()-1; i >= 0; i--) {
+            const Tarp& t = T[succ[n][i]];
+            if (t.Y1 < t.Y2) {
+                if (t.X2 < d.MidR()) {
+                    if (d.SubNearest(t.X1, t.X2, true))
+                        d.Add(t.X2, 1, true);
+                } else if (t.X1 < d.MidL()) {
+                    d.SubNearest(t.X1, t.X2, true);
+                    d.base++;
+                    d.Add(t.X2, d.Collect(d.MidR(), t.X2)-1, false);
+                } else {
+                    d.Add(t.X2, d.Collect(t.X1, t.X2), false);
+                }
+            } else {
+                if (t.X1 > d.MidL()) {
+                    if (d.SubNearest(t.X1, t.X2, false))
+                        d.Add(t.X1, 1, false);
+                } else if (t.X2 > d.MidR()) {
+                    d.SubNearest(t.X1, t.X2, false);
+                    d.base++;
+                    d.Add(t.X1, d.Collect(t.X1, d.MidL())-1, true);
+                } else {
+                    d.Add(t.X1, d.Collect(t.X1, t.X2), true);
+                }
+            }
+            doit(t.idx);
+        }
+    };
+    doit(N);
+
+    auto it = d.mid;
+    int ret = d.base;
+    while (it->first >= R) { ret += it->second; --it; }
+    ++it;
+    while (it->first <= L) { ret += it->second; ++it; }
+    cout << ret << endl;
+
 }
