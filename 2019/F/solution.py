@@ -103,8 +103,6 @@ def find_solution_dp():
                 dp[i+step]=dp[i]
             if dp[i]!=inf:
                 dp[i]+=1
-        # for i in range(x2,x1-step,step):
-        #     dp[i]+=1
 
     return min(dp[L:R+1])
 
