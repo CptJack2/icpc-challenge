@@ -149,19 +149,20 @@ def find_solution_dp():
                     i-=1
                     start=self.deltas[i].x
         def add(self,start,end):
-            if start<end:
-                i=find_ge(self.deltas, dp_ele(start, 0))
+            def update(x,delta):
+                i=bisect.bisect_left(self.deltas, dp_ele(x, 0))
                 if self.deltas[i].x==start:
-                    self.deltas[i]+=1
+                    self.deltas[i]+=delta
                 else:
-                    self.deltas.insert(i,dp_ele(start,1))
-                i=find_gt(self.deltas, dp_ele(end, 0))
-                if self.deltas[i].x==end:
-                    self.deltas[i]+=1
-                else:
-                    self.deltas.insert(i,dp_ele(start,1))
+                    self.deltas.insert(i,dp_ele(start,delta))
+            if start<end:
+                update(start,1)
+                update(end+1,-1)
             else:
-                i
+                update(start+1,1)
+                update(end,-1)
+        def find_min(self,L,R):
+            return
 
     minx,maxx=allX[0].x,allX[-1].x
     dp=[inf for i in range(minx,maxx+1)]
