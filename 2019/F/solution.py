@@ -101,6 +101,9 @@ def find_solution_dp():
     class dp_solver:
         def __init__(self,L,R):
             self.deltas=[dp_ele(L,-inf),dp_ele(R+1,inf)]
+            self.dp_L_actual=0
+            self.x_L=L
+            self.x_R=R
         def roll(self, start, end):
             if start<end:
                 i=bisect.bisect_left(self.deltas, dp_ele(start+1, 0))
@@ -143,7 +146,15 @@ def find_solution_dp():
             else:
                 update(start+1,1)
                 update(end,-1)
-        def find_min(self,L,R):
+            if start<=self.x_L<=end:
+                self.dp_L_actual+=1
+        def find_min(self):
+            i=bisect.bisect_left(self.deltas,dp_ele(L,0))
+            j=bisect.bisect_left(self.deltas,dp_ele(R,0))-1
+            actual=ret=self.dp_L_actual
+            for k in range(i,j+1):
+                actual+=self.deltas[k].delta
+                ret=min(actual,ret)
             return
 
     minx,maxx=allX[0].x,allX[-1].x
