@@ -92,25 +92,6 @@ def cal_y(x,x1,y1,x2,y2):
 
 def find_solution_dp():
     inf=999999999999
-    def find_ge(a, x):
-        'Find leftmost item greater than or equal to x'
-        i = bisect.bisect_left(a, x)
-        if i != len(a):
-            return a[i]
-        raise ValueError
-    def find_le(a, x):
-        'Find rightmost value less than or equal to x'
-        i = bisect.bisect_right(a, x)
-        if i:
-            return a[i-1]
-        raise ValueError
-    def find_gt(a, x):
-        'Find leftmost value greater than x'
-        i = bisect.bisect_right(a, x)
-        if i != len(a):
-            return a[i]
-        #todo what if x greater than all value in a
-        raise ValueError
     class dp_ele:
         def __init__(self,x,delta):
             self.x=x
@@ -122,31 +103,32 @@ def find_solution_dp():
             self.deltas=[dp_ele(L,-inf),dp_ele(R+1,inf)]
         def roll(self, start, end):
             if start<end:
-                i=find_gt(self.deltas, dp_ele(start, 0))
+                i=bisect.bisect_left(self.deltas, dp_ele(start+1, 0))
+                if i>=len(self.deltas): return
                 start=self.deltas[i].x
                 while start<=end:
                     if self.deltas[i].delta>0:
-                        if i<=len(self.deltas)-2:
-                            if self.deltas[i]==inf or self.deltas[i]==-inf:
-                                self.deltas[i+1].delta=self.deltas[i].delta
-                            else:
-                                self.deltas[i+1].delta+=self.deltas[i]
-                            self.deltas[i].pop(i)
+                        if i+1<len(self.deltas) and self.deltas[i+1].x<=end+1:
+                            self.deltas[i+1].delta+=self.deltas[i].delta
+                        else:
+                            self.deltas.insert(i+1,dp_ele(end+1,self.deltas[i].delta))
+                        self.deltas[i].pop(i)
                     else:
                         i+=1
                     start=self.deltas[i].x
             else:
-                i=find_le(self.deltas, dp_ele(start, 0))
+                i=bisect.bisect_left(self.deltas, dp_ele(start, 0))-1
+                if i<0: return
                 start=self.deltas[i].x
                 while start>=end:
                     if self.deltas[i].delta<0:
-                        if i>=1:
-                            if self.deltas[i]==inf or self.deltas[i]==-inf:
-                                self.deltas[i-1].delta=self.deltas[i]
-                            else:
-                                self.deltas[i-1].delta+=self.deltas[i]
-                            self.deltas[i].pop(i)
-                    i-=1
+                        if i-1>0 and self.deltas[i-1].x>=end:
+                            self.deltas[i-1].delta+=self.deltas[i].delta
+                        else:
+                            self.deltas.insert(i-1,dp_ele(end,self.deltas[i].delta))
+                        self.deltas[i].pop(i)
+                    else:
+                        i-=1
                     start=self.deltas[i].x
         def add(self,start,end):
             def update(x,delta):
