@@ -157,20 +157,16 @@ def find_solution_dp():
                 ret=min(actual,ret)
             return
 
-    minx,maxx=allX[0].x,allX[-1].x
-    dp=[inf for i in range(minx,maxx+1)]
-    dp[L:R+1]=[0 for i in range(L,R+1)]
-    for tarp_index in reversed(sorted):
-        #y1<y2
-        x1,x2=data[tarp_index][0],data[tarp_index][2]
-        step=1 if x1>x2 else -1
-        for i in range(x2,x1,step):
-            if dp[i+step]>dp[i]:
-                dp[i+step]=dp[i]
-            if dp[i]!=inf:
-                dp[i]+=1
+    solver=dp_solver(L,R)
+    for s in reversed(sorted):
+        x1,x2=data[s][0],data[s][2]
+        solver.roll(x2,x1)
+        if x2<x1:
+            solver.add(x2,x1-1)
+        else:
+            solver.add(x2,x1+1)
 
-    return min(dp[L:R+1])
+    return solver.find_min()
 
 if __name__=='__main__':
     L,R,N,data,allX=get_data_from_input()
