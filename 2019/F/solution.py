@@ -158,40 +158,14 @@ def find_solution_dp():
                 ret=min(actual,ret)
             return ret
 
-    def restore_dp():
-        i=j=bisect.bisect_left(solver.deltas,dp_ele(L,0))
-        dp[L-minx]=solver.dp_L_actual
-        while i>=0:
-            ei=solver.deltas[i].x-1-minx
-            if i>0:
-                si=solver.deltas[i-1].x-minx
-            else:
-                si=0
-            dp[si:ei+1]=[dp[ei+1]-solver.deltas[i].delta for k in range(si,ei+1)]
-            i-=1
-        while j<len(solver.deltas):
-            si=solver.deltas[j].x-minx
-            if j+1<len(solver.deltas)-1:
-                ei=solver.deltas[j+1].x-1-minx
-                dp[ei+1]=dp[si]+solver.deltas[j+1].delta
-            else:
-                ei=maxx
-            dp[si:ei+1]=[dp[si] for k in range(si,ei+1)]
-            j+=1
     solver=dp_solver(L,R)
-    minx,maxx=allX[0].x,allX[-1].x
-    dp=[inf for i in range(minx,maxx+1)]
-    dp[L:R+1]=[0 for i in range(L,R+1)]
     for s in reversed(sorted):
         x1,x2=data[s][0],data[s][2]
         solver.roll(x2,x1)
-        restore_dp()
         if x2<x1:
             solver.add(x2,x1-1)
         else:
             solver.add(x2,x1+1)
-        restore_dp()
-        #print("1")
 
     return solver.find_min()
 
