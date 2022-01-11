@@ -119,6 +119,7 @@ def find_solution_dp():
                         self.deltas.pop(i)
                     else:
                         i+=1
+                        if i>=len(self.deltas):break
                     start=self.deltas[i].x
             else:
                 i=bisect.bisect_left(self.deltas, dp_ele(start, 0))-1
@@ -133,11 +134,12 @@ def find_solution_dp():
                             self.deltas.insert(i,dp_ele(end,self.deltas[i].delta))
                             self.deltas.pop(i+1)
                     i-=1
+                    if i<0:break
                     start=self.deltas[i].x
         def add(self,start,end):
             def update(x,delta):
                 i=bisect.bisect_left(self.deltas, dp_ele(x, 0))
-                if self.deltas[i].x==x:
+                if i<len(self.deltas) and self.deltas[i].x==x:
                     self.deltas[i].delta+=delta
                 else:
                     self.deltas.insert(i,dp_ele(x,delta))
