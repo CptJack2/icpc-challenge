@@ -123,23 +123,23 @@ def find_solution_dp():
                 i=bisect.bisect_left(self.deltas, dp_ele(start, 0))-1
                 if i<0: return
                 start=self.deltas[i].x
-                while start>=end:
+                while start>end:
                     if self.deltas[i].delta<0:
-                        if i-1>0 and self.deltas[i-1].x>=end:
+                        if i-1>=0 and self.deltas[i-1].x>=end:
                             self.deltas[i-1].delta+=self.deltas[i].delta
+                            self.deltas.pop(i)
                         else:
-                            self.deltas.insert(i-1,dp_ele(end,self.deltas[i].delta))
-                        self.deltas.pop(i)
-                    else:
-                        i-=1
+                            self.deltas.insert(i,dp_ele(end,self.deltas[i].delta))
+                            self.deltas.pop(i+1)
+                    i-=1
                     start=self.deltas[i].x
         def add(self,start,end):
             def update(x,delta):
                 i=bisect.bisect_left(self.deltas, dp_ele(x, 0))
-                if self.deltas[i].x==start:
+                if self.deltas[i].x==x:
                     self.deltas[i].delta+=delta
                 else:
-                    self.deltas.insert(i,dp_ele(start,delta))
+                    self.deltas.insert(i,dp_ele(x,delta))
             if start<end:
                 update(start,1)
                 update(end+1,-1)
@@ -155,7 +155,9 @@ def find_solution_dp():
             for k in range(i,j+1):
                 actual+=self.deltas[k].delta
                 ret=min(actual,ret)
-            return
+            return ret
+        def restore_dp(self):
+            self.dp
 
     solver=dp_solver(L,R)
     for s in reversed(sorted):
@@ -165,6 +167,7 @@ def find_solution_dp():
             solver.add(x2,x1-1)
         else:
             solver.add(x2,x1+1)
+        print("1")
 
     return solver.find_min()
 
