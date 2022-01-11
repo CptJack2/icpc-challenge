@@ -27,8 +27,11 @@ struct Deltas {
         mid = d.find(l);
     }
 
-    int MidL() { return mid->first; }
-    int MidR() { auto it = mid; return (++it)->first; }
+    int MidL() {
+        return mid->first; }
+    int MidR() {
+        auto it = mid;
+        return (++it)->first; }
     void Add(int x, int v, bool leftward) {
         if (v == 0) return;
         d[x] += v;
@@ -118,9 +121,13 @@ int main() {
 
     auto it = d.mid;
     int ret = d.base;
-    while (it->first >= R) { ret += it->second; --it; }
+    while (it->first >= R) {
+        ret += it->second;
+        --it; }
     ++it;
-    while (it->first <= L) { ret += it->second; ++it; }
+    while (it->first <= L) {
+        ret += it->second;
+        ++it; }
     cout << ret << endl;
 
 }
