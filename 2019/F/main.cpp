@@ -164,7 +164,7 @@ int main(){
         x1=data[*it].X1;
         x2=data[*it].X2;
         solver.roll(x2,x1);
-        solver.add(x2,x1+x2<x1?1:-1);
+        solver.add(x2,x1+x2<x1?-1:1);
     }
     int ans=solver.find_min();
     cout<<ans;
