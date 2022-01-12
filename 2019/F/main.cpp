@@ -22,12 +22,6 @@ struct allx_stru{
     direction_enum direction;
     allx_stru(int x,int index,enum direction_enum dir): x(x), direction(dir), index(index){}
 };
-class dp_ele{
-public:
-    int x,delta;
-    dp_ele(int x,int d):x(x),delta(d){}
-};
-auto deltas_cmp=[](const dp_ele& a,const dp_ele& b){return a.x<b.x;};
 class dp_solver{
 public:
 	//X cord->delta
