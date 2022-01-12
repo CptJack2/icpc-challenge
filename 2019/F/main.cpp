@@ -40,7 +40,7 @@ public:
 				for(int k=start;k<=end-1;++k)
 					if(dp[k-minx+1]>=dp[k-minx])
 						dp[k-minx+1]=dp[k-minx];
-            auto it= deltas.find(start+1);
+            auto it= deltas.lower_bound(start+1);
             if(it==deltas.end())return;
             start=it->first;
             while(start<=end){
@@ -63,7 +63,7 @@ public:
 				for(int k=start;k>=end+1;--k)
 					if(dp[k-minx-1]>=dp[k-minx])
 						dp[k-minx-1]=dp[k-minx];
-            auto it=deltas.find(start+1);
+            auto it=deltas.lower_bound(start+1);
             if(it==deltas.begin())return;
             --it;
             start=it->first;
@@ -87,7 +87,7 @@ public:
     }
     void add(int start, int end){
         auto update=[&](int x,int delta){
-            auto it= deltas.find(x);
+            auto it= deltas.lower_bound(x);
             if(it!=deltas.end() && it->first==x)
                 it->second+=delta;
             else
