@@ -22,6 +22,8 @@ struct allx_stru{
     direction_enum direction;
     allx_stru(int x,int index,enum direction_enum dir): x(x), direction(dir), index(index){}
 };
+vector<int> dp;
+bool debug_dp=true;
 class dp_solver{
 public:
 	//X cord->delta
@@ -33,6 +35,10 @@ public:
     }
     void roll(int start,int end){
         if(start<end){
+        	if(debug_dp)
+				for(int k=start;k<=end-1;++k)
+					if(dp[k+1]>=dp[k])
+						dp[k+1]=dp[k];
             auto it= deltas.find(start+1);
             if(it==deltas.end())return;
             start=it->first;
@@ -52,6 +58,10 @@ public:
                 start=it->first;
             }
         } else{
+        	if(debug_dp)
+				for(int k=start;k>=end+1;--k)
+					if(dp[k-1]>=dp[k])
+						dp[k-1]=dp[k];
             auto it=deltas.find(start+1);
             if(it==deltas.begin())return;
             --it;
@@ -87,11 +97,17 @@ public:
             update(end+1,-1);
 			if(start<=x_L && x_L<=end)
 				dp_L_actual+=1;
+			if(debug_dp)
+				for(int k=start;k<=end;++k)
+					dp[k]+=1;
         } else{
             update(start+1,-1);
             update(end,1);
 			if( end<=x_L && x_L<=start)
 				dp_L_actual+=1;
+			if(debug_dp)
+				for(int k=start;k>=end;--k)
+					dp[k]+=1;
         }
     }
     int find_min(){
@@ -170,7 +186,14 @@ int main(){
 				deg0que.push(dependency[top][i]);
 		}
 	}
-
+	if(debug_dp){
+		int minx,maxx;
+		if(!allX.empty())
+			minx=allX[0].x,maxx=allX.back().x;
+		else
+			minx=L,maxx=R;
+		dp.resize(maxx+1-minx,inf);
+	}
     dp_solver solver(L,R);
 	for(auto it=topo_sorted.rbegin();it!=topo_sorted.rend();it++){
         int x1,x2;
