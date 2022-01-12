@@ -90,8 +90,8 @@ public:
 			if(start<=x_L && x_L<=end)
 				dp_L_actual+=1;
         } else{
-            update(start+1,1);
-            update(end,-1);
+            update(start+1,-1);
+            update(end,1);
 			if( end<=x_L && x_L<=start)
 				dp_L_actual+=1;
         }
