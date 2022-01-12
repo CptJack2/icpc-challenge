@@ -3,6 +3,7 @@
 #include "queue"
 #include "algorithm"
 #include "set"
+#include "map"
 using namespace std;
 
 int inf=1e8;
@@ -29,57 +30,63 @@ public:
 auto deltas_cmp=[](const dp_ele& a,const dp_ele& b){return a.x<b.x;};
 class dp_solver{
 public:
-    vector<dp_ele> deltas;
+	//X cord->delta
+    map<int, int> deltas;
     int dp_L_actual,x_L,x_R;
     dp_solver(int L,int R): x_L(L), x_R(R),dp_L_actual(0){
-    	deltas.emplace_back(L, -inf);
-    	deltas.emplace_back(R + 1, inf);
+    	deltas[L]=-inf;
+    	deltas[R + 1]= inf;
     }
     void roll(int start,int end){
         if(start<end){
-            int i= lower_bound(deltas.begin(),deltas.end(),dp_ele(start+1,0),deltas_cmp)-deltas.begin();
-            if(i>=deltas.size())return;
-            start=deltas[i].x;
+            auto it= deltas.find(start+1);
+            if(it==deltas.end())return;
+            start=it->first;
             while(start<=end){
-                if(deltas[i].delta>0) {
-                    if (i + 1 < deltas.size() && deltas[i + 1].x <= end + 1)
-                        deltas[i + 1].delta += deltas[i].delta;
+                if(it->second>0) {
+                    if (next(it) !=deltas.end() && next(it)->first <= end + 1)
+						next(it)->second += it->second;
                     else
-                        deltas.insert(deltas.begin() + i + 1, dp_ele(end + 1, deltas[i].delta));
-                    deltas.erase(deltas.begin()+i);
+                    	deltas[end + 1]=it->second;
+                    auto tit=next(it);
+                    deltas.erase(it);
+                    it=tit;
                 } else{
-                    i+=1;
-                    if(i>= deltas.size())break;
+                    ++it;
+                    if(it== deltas.end())break;
                 }
-                start=deltas[i].x;
+                start=it->first;
             }
         } else{
-            int i= lower_bound(deltas.begin(),deltas.end(),dp_ele(start+1,0),deltas_cmp)-deltas.begin()-1;
-            if(i<0)return;
-            start=deltas[i].x;
+            auto it=deltas.find(start+1);
+            if(it==deltas.begin())return;
+            --it;
+            start=it->first;
             while(start>end){
-                if(deltas[i].delta<0) {
-                    if (i - 1 >= 0 && deltas[i - 1].x >= end) {
-                        deltas[i - 1].delta += deltas[i].delta;
-                        deltas.erase(deltas.begin() + i);
+                if(it->second<0) {
+                    if (it!=deltas.begin() && prev(it)->first >= end) {
+                        prev(it)->second += it->second;
+                        auto tit= next(it);
+                        deltas.erase(it);
+                        it=tit;
                     } else {
-                        deltas.insert(deltas.begin() + i, dp_ele(end, deltas[i].delta));
-                        deltas.erase(deltas.begin() + i + 1);
+                        deltas[end]= it->second;
+                        deltas.erase(next(it));
                     }
                 }
-                i-=1;
-                if(i<0)break;
-                start=deltas[i].x;
+				if(it==deltas.begin())break;
+				--it;
+                start=it->first;
             }
         }
     }
     void add(int start, int end){
         auto update=[&](int x,int delta){
-            int i= lower_bound(deltas.begin(),deltas.end(),dp_ele(x,0),deltas_cmp)-deltas.begin();
-            if(i<deltas.size() && deltas[i].x==x)
-                deltas[i].delta+=delta;
+            auto it= deltas.find(x);
+            if(it!=deltas.end() && it->first==x)
+                it->second+=delta;
             else
-                deltas.insert(deltas.begin()+i,dp_ele(x,delta));
+                deltas[x]=delta;
         };
         if(start<end){
             update(start,1);
@@ -94,12 +101,12 @@ public:
         }
     }
     int find_min(){
-        int i= lower_bound(deltas.begin(),deltas.end(),dp_ele(x_L+1,0),deltas_cmp)-deltas.begin();
-        int j= lower_bound(deltas.begin(),deltas.end(),dp_ele(x_R,0),deltas_cmp)-deltas.begin()-1;
+        auto itb= deltas.lower_bound(x_L+1);
+        auto ite= deltas.lower_bound(x_R);
         int actual,ret;
         actual=ret=dp_L_actual;
-        for(int k=i;k<=j;k++){
-            actual+=deltas[k].delta;
+        for(auto k=itb;k!=ite;k++){
+            actual+=k->second;
             ret=min(actual,ret);
         }
         return ret;
