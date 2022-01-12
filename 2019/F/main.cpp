@@ -21,9 +21,6 @@ struct allx_stru{
     direction_enum direction;
     allx_stru(int x,int index,enum direction_enum dir): x(x), direction(dir), index(index){}
 };
-float cal_y(int x,int x1,int y1,int x2,int y2){
-    return float(y1-y2)/(x1-x2)*(x-x1)+y1;
-}
 class dp_ele{
 public:
     int x,delta;
@@ -124,28 +121,30 @@ int main(){
     std::sort(allX.begin(), allX.end(), [] (const allx_stru& a, const allx_stru& b) { return a.x < b.x; });
 
     vector<vector<int>> dependency(N+1);
-    vector<int>scan_set;
+	auto cal_y=[&](int x,int x1,int y1,int x2,int y2){
+		return float(y1-y2)/(x1-x2)*(x-x1)+y1;
+	};
+	int nowx;
+	auto cmp_Set = [&](const int& t1,const int& t2){
+		float h1= cal_y(nowx,data[t1].X1,data[t1].Y1,data[t1].X2,data[t1].Y2);
+		float h2= cal_y(nowx,data[t2].X1,data[t2].Y1,data[t2].X2,data[t2].Y2);
+		return h1<h2;
+	};
+    set<int, decltype(cmp_Set)>scan_set(cmp_Set);
     for(auto xstru : allX){
+    	nowx=xstru.x;
         if(xstru.direction==in){
-            int insert_pos=lower_bound(scan_set.begin(),scan_set.end(),xstru.index,
-				[&](const int& t1,const int& t2){
-            		float h1= cal_y(xstru.x,data[t1].X1,data[t1].Y1,data[t1].X2,data[t1].Y2);
-            		float h2= cal_y(xstru.x,data[t2].X1,data[t2].Y1,data[t2].X2,data[t2].Y2);
-            		return h1<h2;
-            	})-scan_set.begin();
-            scan_set.insert(scan_set.begin()+insert_pos,xstru.index);
-            if(insert_pos+1< scan_set.size())
-                dependency[scan_set[insert_pos+1]].push_back(xstru.index);
-            if(insert_pos-1>=0)
-                dependency[xstru.index].push_back(scan_set[insert_pos-1]);
+            auto pitb=scan_set.insert(xstru.index);
+            auto insert_pos=pitb.first;
+			if(next(insert_pos)!=scan_set.end())
+                dependency[*next(insert_pos)].push_back(xstru.index);
+			if(insert_pos!=scan_set.begin())
+                dependency[xstru.index].push_back(*prev(insert_pos));
         } else{
-            int index=0;
-            for(auto s:scan_set)
-                if(s==xstru.index)break;
-                else ++index;
-            if(index-1>=0 && index+1<scan_set.size())
-                dependency[scan_set[index+1]].push_back(scan_set[index-1]);
-            scan_set.erase(scan_set.begin()+index);
+        	auto it=scan_set.find(xstru.index);
+            if(it!=scan_set.begin() && next(it)!=scan_set.end())
+                dependency[*next(it)].push_back(*prev(it));
+            scan_set.erase(it);
         }
     }
 
