@@ -1,6 +1,6 @@
 #include <vector>
 #include "iostream"
-#include "string"
+#include "queue"
 #include "algorithm"
 #include "set"
 using namespace std;
@@ -121,6 +121,7 @@ int main(){
     std::sort(allX.begin(), allX.end(), [] (const allx_stru& a, const allx_stru& b) { return a.x < b.x; });
 
     vector<vector<int>> dependency(N+1);
+    vector<int> dep_degree(N+1,0);
 	auto cal_y=[&](int x,int x1,int y1,int x2,int y2){
 		return float(y1-y2)/(x1-x2)*(x-x1)+y1;
 	};
@@ -134,33 +135,41 @@ int main(){
     for(auto xstru : allX){
     	nowx=xstru.x;
         if(xstru.direction==in){
-            auto pitb=scan_set.insert(xstru.index);
-            auto insert_pos=pitb.first;
-			if(next(insert_pos)!=scan_set.end())
-                dependency[*next(insert_pos)].push_back(xstru.index);
-			if(insert_pos!=scan_set.begin())
-                dependency[xstru.index].push_back(*prev(insert_pos));
+            auto insert_pos=scan_set.insert(xstru.index).first;
+			if(next(insert_pos)!=scan_set.end()){
+                dependency[xstru.index].push_back(*next(insert_pos));
+				++dep_degree[*next(insert_pos)];
+			}
+			if(insert_pos!=scan_set.begin()){
+                dependency[*prev(insert_pos)].push_back(xstru.index);
+				++dep_degree[xstru.index];
+			}
         } else{
         	auto it=scan_set.find(xstru.index);
-            if(it!=scan_set.begin() && next(it)!=scan_set.end())
-                dependency[*next(it)].push_back(*prev(it));
+            if(it!=scan_set.begin() && next(it)!=scan_set.end()) {
+				dependency[*prev(it)].push_back(*next(it));
+				++dep_degree[*next(it)];
+			}
             scan_set.erase(it);
         }
     }
 
     vector<int> topo_sorted;
-    set<int> sorted;
-    while(topo_sorted.size()<dependency.size()-1){
-        bool noAllMet= true;
-        for(int i=1;i<dependency.size();i++){
-            bool m= true;
-            if(sorted.find(i)!=sorted.end())continue;
-            for(auto dep : dependency[i])
-                if(sorted.find(dep)==sorted.end()){m= false;break;}
-            if(m){noAllMet= false; topo_sorted.push_back(i); sorted.insert(i);}
-        }
-        if(noAllMet)throw runtime_error("can't topology sort");
-    }
+    queue<int> deg0que;
+    for(int i=1;i<=N;++i)
+    	if(dep_degree[i]==0)
+    		deg0que.push(i);
+	while(!deg0que.empty()){
+		int top=deg0que.front();
+		topo_sorted.push_back(top);
+		deg0que.pop();
+		for(int i=0;i<dependency[top].size();++i){
+			--dep_degree[dependency[top][i]];
+			if(dep_degree[dependency[top][i]]==0)
+				deg0que.push(dependency[top][i]);
+		}
+	}
+
     dp_solver solver(L,R);
 	for(auto it=topo_sorted.rbegin();it!=topo_sorted.rend();it++){
         int x1,x2;
