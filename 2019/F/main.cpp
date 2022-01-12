@@ -127,12 +127,12 @@ int main(){
     vector<int>scan_set;
     for(auto xstru : allX){
         if(xstru.direction==in){
-            vector<float> ys;
-            for(auto s:scan_set)ys.push_back(cal_y(xstru.x,data[s].X1,data[s].Y1,data[s].X2,data[s].Y2));
-            const Tarp& t=data[xstru.index];
-            float h=cal_y(xstru.x,t.X1,t.Y1,t.X2,t.Y2);
-            auto it=lower_bound(ys.begin(),ys.end(),h);
-            int insert_pos=it-ys.begin();
+            int insert_pos=lower_bound(scan_set.begin(),scan_set.end(),xstru.index,
+				[&](const int& t1,const int& t2){
+            		float h1= cal_y(xstru.x,data[t1].X1,data[t1].Y1,data[t1].X2,data[t1].Y2);
+            		float h2= cal_y(xstru.x,data[t2].X1,data[t2].Y1,data[t2].X2,data[t2].Y2);
+            		return h1<h2;
+            	})-scan_set.begin();
             scan_set.insert(scan_set.begin()+insert_pos,xstru.index);
             if(insert_pos+1< scan_set.size())
                 dependency[scan_set[insert_pos+1]].push_back(xstru.index);
