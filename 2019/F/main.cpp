@@ -34,21 +34,28 @@ public:
     	deltas[L]=-inf;
     	deltas[R + 1]= inf;
     }
-    void roll(int start,int end){
-        if(start<end){
+    void roll(int start, int end){
+        int interval_start=start;
+    	if(interval_start < end){
         	if(debug_dp)
-				for(int k=start;k<=end-1;++k)
+				for(int k=interval_start; k <= end - 1; ++k)
 					if(dp[k-minx+1]>=dp[k-minx])
 						dp[k-minx+1]=dp[k-minx];
-            auto it= deltas.lower_bound(start+1);
+            auto it= deltas.lower_bound(interval_start + 1);
             if(it==deltas.end())return;
-            start=it->first;
-            while(start<=end){
+			interval_start=it->first;
+            while(interval_start <= end){
                 if(it->second>0) {
-                    if (next(it) !=deltas.end() && next(it)->first <= end + 1)
+                	int interval_end;
+                    if (next(it) !=deltas.end() && next(it)->first <= end + 1) {
 						next(it)->second += it->second;
-                    else
-                    	deltas[end + 1]=it->second;
+						interval_end= next(it)->second-1;
+					}else{
+						deltas[end + 1]=it->second;
+						interval_end= end;
+					}
+                    if(interval_start<=x_L && interval_end>=x_L)
+                    	dp_L_actual-=it->second;
                     auto tit=next(it);
                     deltas.erase(it);
                     it=tit;
@@ -56,34 +63,39 @@ public:
                     ++it;
                     if(it== deltas.end())break;
                 }
-                start=it->first;
+				interval_start=it->first;
             }
         } else{
         	if(debug_dp)
-				for(int k=start;k>=end+1;--k)
+				for(int k=interval_start; k >= end + 1; --k)
 					if(dp[k-minx-1]>=dp[k-minx])
 						dp[k-minx-1]=dp[k-minx];
-            auto it=deltas.lower_bound(start+1);
+            auto it=deltas.lower_bound(interval_start + 1);
             if(it==deltas.begin())return;
             --it;
-            start=it->first;
-            while(start>end){
+			interval_start=it->first;
+            while(interval_start > end){
+				int interval_end;
                 if(it->second<0) {
                     if (it!=deltas.begin() && prev(it)->first >= end) {
                         prev(it)->second += it->second;
+                        interval_end=prev(it)->first;
                         auto tit= next(it);
                         deltas.erase(it);
                         it=tit;
                     } else {
                         deltas[end]= it->second;
+						interval_end=end;
                         auto tit= next(it);
                         deltas.erase(it);
                         it=tit;
                     }
+                    if(interval_start-1>=x_L && interval_end<=x_L)
+						dp_L_actual+=it->second;
                 }
 				if(it==deltas.begin())break;
 				--it;
-                start=it->first;
+				interval_start=it->first;
             }
         }
     }
