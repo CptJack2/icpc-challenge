@@ -34,7 +34,10 @@ class dp_solver{
 public:
     vector<dp_ele> deltas;
     int dp_L_actual,x_L,x_R;
-    dp_solver(int L,int R): x_L(L), x_R(R){deltas.emplace_back(L, -inf);deltas.emplace_back(R + 1, inf);}
+    dp_solver(int L,int R): x_L(L), x_R(R),dp_L_actual(0){
+    	deltas.emplace_back(L, -inf);
+    	deltas.emplace_back(R + 1, inf);
+    }
     void roll(int start,int end){
         if(start<end){
             int i= lower_bound(deltas.begin(),deltas.end(),dp_ele(start+1,0),deltas_cmp)-deltas.begin();
@@ -84,12 +87,14 @@ public:
         if(start<end){
             update(start,1);
             update(end+1,-1);
+			if(start<=x_L && x_L<=end)
+				dp_L_actual+=1;
         } else{
             update(start+1,1);
             update(end,-1);
+			if( end<=x_L && x_L<=start)
+				dp_L_actual+=1;
         }
-        if(start<=x_L<=end)
-            dp_L_actual+=1;
     }
     int find_min(){
         int i= lower_bound(deltas.begin(),deltas.end(),dp_ele(x_L+1,0),deltas_cmp)-deltas.begin();
@@ -157,15 +162,47 @@ int main(){
         }
         if(noAllMet)throw runtime_error("can't topology sort");
     }
-
+    int minx=allX[0].x,maxx=allX.back().x;
+	vector<int> dp(maxx+1-minx,inf);
+	for(int i=L;i<=R;i++)
+		dp[i]=0;
     dp_solver solver(L,R);
+	auto restore_dp=[&]() {
+		int i,j;
+		i = j = lower_bound(solver.deltas.begin(),solver.deltas.end(), dp_ele(solver.x_L, 0),deltas_cmp)-solver.deltas.begin();
+		dp[L - minx] = solver.dp_L_actual;
+		while(i >= 0) {
+			int ei = solver.deltas[i].x - 1 - minx,si;
+			if (i > 0)
+				si = solver.deltas[i - 1].x - minx;
+			else
+				si = 0;
+			for (int k=si;k<=ei;k++)
+				dp[k]=dp[ei+1]-solver.deltas[i].delta;
+			i -= 1;
+		}
+		while (j < solver.deltas.size()){
+			int si = solver.deltas[j].x - minx,ei;
+			if (j + 1 < solver.deltas.size()) {
+				ei = solver.deltas[j + 1].x - 1 - minx;
+				if(ei+1<dp.size())
+					dp[ei + 1] = dp[si] + solver.deltas[j + 1].delta;
+			}else
+				ei = maxx;
+			for(int k=si;k<=ei;k++)
+				dp[k]=dp[si];
+			j += 1;
+		}
+	};
     for(auto it=topo_sorted.rbegin();it!=topo_sorted.rend();it++){
         int x1,x2;
         x1=data[*it].X1;
         x2=data[*it].X2;
         solver.roll(x2,x1);
-        solver.add(x2,x1+(x2<x1?-1:1));
-    }
+		restore_dp();
+		solver.add(x2,x1+(x2<x1?-1:1));
+		restore_dp();
+	}
     int ans=solver.find_min();
     cout<<ans;
 }
