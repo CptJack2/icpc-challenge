@@ -76,7 +76,9 @@ public:
                         it=tit;
                     } else {
                         deltas[end]= it->second;
-                        deltas.erase(next(it));
+                        auto tit= next(it);
+                        deltas.erase(it);
+                        it=tit;
                     }
                 }
 				if(it==deltas.begin())break;
@@ -87,8 +89,8 @@ public:
     }
     void add(int start, int end){
         auto update=[&](int x,int delta){
-            auto it= deltas.lower_bound(x);
-            if(it!=deltas.end() && it->first==x)
+            auto it= deltas.find(x);
+            if(it!=deltas.end())
                 it->second+=delta;
             else
                 deltas[x]=delta;
