@@ -24,6 +24,7 @@ struct allx_stru{
 };
 vector<int> dp;
 bool debug_dp=true;
+int minx,maxx;
 class dp_solver{
 public:
 	//X cord->delta
@@ -37,8 +38,8 @@ public:
         if(start<end){
         	if(debug_dp)
 				for(int k=start;k<=end-1;++k)
-					if(dp[k+1]>=dp[k])
-						dp[k+1]=dp[k];
+					if(dp[k-minx+1]>=dp[k-minx])
+						dp[k-minx+1]=dp[k-minx];
             auto it= deltas.find(start+1);
             if(it==deltas.end())return;
             start=it->first;
@@ -60,8 +61,8 @@ public:
         } else{
         	if(debug_dp)
 				for(int k=start;k>=end+1;--k)
-					if(dp[k-1]>=dp[k])
-						dp[k-1]=dp[k];
+					if(dp[k-minx-1]>=dp[k-minx])
+						dp[k-minx-1]=dp[k-minx];
             auto it=deltas.find(start+1);
             if(it==deltas.begin())return;
             --it;
@@ -99,7 +100,7 @@ public:
 				dp_L_actual+=1;
 			if(debug_dp)
 				for(int k=start;k<=end;++k)
-					dp[k]+=1;
+					dp[k-minx]+=1;
         } else{
             update(start+1,-1);
             update(end,1);
@@ -107,7 +108,7 @@ public:
 				dp_L_actual+=1;
 			if(debug_dp)
 				for(int k=start;k>=end;--k)
-					dp[k]+=1;
+					dp[k-minx]+=1;
         }
     }
     int find_min(){
@@ -187,12 +188,13 @@ int main(){
 		}
 	}
 	if(debug_dp){
-		int minx,maxx;
-		if(!allX.empty())
+		if(!allX.empty()) {
 			minx=allX[0].x,maxx=allX.back().x;
-		else
-			minx=L,maxx=R;
-		dp.resize(maxx+1-minx,inf);
+			dp.resize(maxx+1-minx,inf);
+		}
+		else {
+			debug_dp= false;
+		}
 	}
     dp_solver solver(L,R);
 	for(auto it=topo_sorted.rbegin();it!=topo_sorted.rend();it++){
