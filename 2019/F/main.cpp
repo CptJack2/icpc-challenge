@@ -193,6 +193,8 @@ int main(){
 		if(!allX.empty()) {
 			minx=allX[0].x,maxx=allX.back().x;
 			dp.resize(maxx+1-minx,inf);
+			for(int i=L;i<=R;++i)
+				dp[i-minx]=0;
 		}
 		else {
 			debug_dp= false;
