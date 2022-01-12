@@ -204,5 +204,5 @@ int main(){
 		restore_dp();
 	}
     int ans=solver.find_min();
-    cout<<ans;
+    cout<<ans<<endl;
 }
