@@ -1,4 +1,5 @@
 #include <vector>
+#include <list>
 #include "iostream"
 #include "queue"
 #include "algorithm"
@@ -27,12 +28,26 @@ bool debug_dp=true;
 int minx,maxx;
 class dp_solver{
 public:
-	//X cord->delta
-    map<int, int> deltas;
+	//X cord->delta storage pointer
+    map<int, list<pair<int,int>>::iterator> delta_index;
+    list<pair<int,int>> delta_storage;
     int dp_L_actual,x_L,x_R;
+    void update_delta(int x, int delta){
+        auto it=delta_index.lower_bound(x)->second;
+        if(it->first==x)
+            it->second=delta;
+        else
+            delta_storage.insert(it, make_pair(x,delta));
+    }
+    list<pair<int,int>>::iterator delete_delta(list<pair<int,int>>::iterator where){//return next iter of deleted
+        auto tit=next(where);
+        delta_storage.erase(where);
+        delta_index.erase(where->first);
+        return tit;
+    }
     dp_solver(int L,int R): x_L(L), x_R(R),dp_L_actual(0){
-    	deltas[L]=-inf;
-    	deltas[R + 1]= inf;
+        update_delta(L, -inf);
+        update_delta(R, inf);
     }
     void roll(int start, int end){
         int interval_start=start;
@@ -41,71 +56,65 @@ public:
 				for(int k=interval_start; k <= end - 1; ++k)
 					if(dp[k-minx+1]>=dp[k-minx])
 						dp[k-minx+1]=dp[k-minx];
-            auto it= deltas.lower_bound(interval_start + 1);
-            if(it==deltas.end())return;
-			interval_start=it->first;
+            auto storage_iter= delta_index.lower_bound(interval_start + 1)->second;
+            if(storage_iter==delta_storage.end())return;
+			interval_start=storage_iter->first;
             while(interval_start <= end){
-                if(it->second>0) {
+                if(storage_iter->second>0) {
                 	int interval_end;
-                    if (next(it) !=deltas.end() && next(it)->first <= end + 1) {
-						next(it)->second += it->second;
-						interval_end= next(it)->second-1;
+                    if (next(storage_iter) !=delta_storage.end() && next(storage_iter)->first <= end + 1) {
+						next(storage_iter)->second += storage_iter->second;
+						interval_end= next(storage_iter)->second-1;
 					}else{
-						deltas[end + 1]=it->second;
+                        update_delta(end + 1, storage_iter->second);
 						interval_end= end;
 					}
                     if(interval_start<=x_L && interval_end>=x_L)
-                    	dp_L_actual-=it->second;
-                    auto tit=next(it);
-                    deltas.erase(it);
-                    it=tit;
+                    	dp_L_actual-=storage_iter->second;
+                    storage_iter= delete_delta(storage_iter);
                 } else{
-                    ++it;
-                    if(it== deltas.end())break;
+                    ++storage_iter;
+                    if(storage_iter== delta_storage.end())break;
                 }
-				interval_start=it->first;
+				interval_start=storage_iter->first;
             }
         } else{
         	if(debug_dp)
 				for(int k=interval_start; k >= end + 1; --k)
 					if(dp[k-minx-1]>=dp[k-minx])
 						dp[k-minx-1]=dp[k-minx];
-            auto it=deltas.lower_bound(interval_start + 1);
-            if(it==deltas.begin())return;
-            --it;
-			interval_start=it->first;
+            auto storage_iter=delta_index.lower_bound(interval_start + 1)->second;
+            if(storage_iter==delta_storage.begin())return;
+            --storage_iter;
+			interval_start=storage_iter->first;
             while(interval_start > end){
 				int interval_end;
-                if(it->second<0) {
-                    if (it!=deltas.begin() && prev(it)->first >= end) {
-                        prev(it)->second += it->second;
-                        interval_end=prev(it)->first;
-                        auto tit= next(it);
-                        deltas.erase(it);
-                        it=tit;
+                if(storage_iter->second<0) {
+                    if (storage_iter!=delta_storage.begin() && prev(storage_iter)->first >= end) {
+                        prev(storage_iter)->second += storage_iter->second;
+                        interval_end=prev(storage_iter)->first;
+                        storage_iter= delete_delta(storage_iter);
                     } else {
-                        deltas[end]= it->second;
+                        update_delta(end, storage_iter->second);
 						interval_end=end;
-                        auto tit= next(it);
-                        deltas.erase(it);
-                        it=tit;
+                        storage_iter= delete_delta(storage_iter);
                     }
                     if(interval_start-1>=x_L && interval_end<=x_L)
-						dp_L_actual+=it->second;
+						dp_L_actual+=storage_iter->second;
                 }
-				if(it==deltas.begin())break;
-				--it;
-				interval_start=it->first;
+				if(storage_iter==delta_storage.begin())break;
+				--storage_iter;
+				interval_start=storage_iter->first;
             }
         }
     }
     void add(int start, int end){
         auto update=[&](int x,int delta){
-            auto it= deltas.find(x);
-            if(it!=deltas.end())
+            auto it= delta_index.find(x)->second;
+            if(it!=delta_storage.end())
                 it->second+=delta;
             else
-                deltas[x]=delta;
+                update_delta(x,delta);
         };
         if(start<end){
             update(start,1);
@@ -126,8 +135,8 @@ public:
         }
     }
     int find_min(){
-        auto itb= deltas.lower_bound(x_L+1);
-        auto ite= deltas.lower_bound(x_R);
+        auto itb= delta_index.lower_bound(x_L+1)->second;
+        auto ite= delta_index.lower_bound(x_R)->second;
         int actual,ret;
         actual=ret=dp_L_actual;
         for(auto k=itb;k!=ite;k++){
@@ -213,10 +222,10 @@ int main(){
 		}
 	}
     dp_solver solver(L,R);
-	for(auto it=topo_sorted.rbegin();it!=topo_sorted.rend();it++){
+	for(int i=topo_sorted.size()-1;i>=0;--i){
         int x1,x2;
-        x1=data[*it].X1;
-        x2=data[*it].X2;
+        x1=data[topo_sorted[i]].X1;
+        x2=data[topo_sorted[i]].X2;
         solver.roll(x2,x1);
 		solver.add(x2+(x2<x1?1:-1),x1+(x2<x1?-1:1));
 	}
