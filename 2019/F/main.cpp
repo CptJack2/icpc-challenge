@@ -43,35 +43,37 @@ public:
     }
     dp_solver(int L,int R): x_L(L), x_R(R),dp_L_actual(0){
 		insert_delta(L,-inf);
-		insert_delta(R,-inf);
+		insert_delta(R,inf);
     }
     //对deltas内已有值进行加法操作
     void add_delta(map<int,int>::iterator where,int num){
         int old_delta=where->second;
-        auto& old_delta_map= old_delta>0 ? positive_delta_x : negative_delta_x;
-        auto& new_delta_map= old_delta<0 ? positive_delta_x : negative_delta_x;
+        auto& old_delta_set= old_delta > 0 ? positive_delta_x : negative_delta_x;
+        auto& new_delta_set= old_delta < 0 ? positive_delta_x : negative_delta_x;
         where->second+=num;
-        //判断delta修改后是否异号. int二进制,负数最高位是1,正数0。负数^正数最高位为1
+        //delta修改后为0，需要移出
         if(where->second==0){
-            old_delta_map.erase(where->first);
-        } else if((old_delta ^ where->second) < 0){
-            new_delta_map.insert(where->first);
-            old_delta_map.erase(where->first);
+			old_delta_set.erase(where->first);
+			deltas.erase(where);
+		} else if((old_delta ^ where->second) < 0){//判断delta修改后是否异号. int二进制,负数最高位是1,正数0。负数^正数最高位为1
+			//delta变号更新缓存
+			new_delta_set.insert(where->first);
+            old_delta_set.erase(where->first);
         }
     }
     //滚动区间[start,end]，将前面高的抹平
     void roll(int start, int end){
         int interval_start=start;
     	if(interval_start < end){//从横坐标小往大滚动
-            //找出>start的第一个正delta的x坐标
+            //找出 > start的第一个正delta的x坐标
     		auto it= positive_delta_x.lower_bound(interval_start + 1);
             if(it == positive_delta_x.end())return;
             interval_start=deltas[*it];
-            while(interval_start <= end){//每个循环内滚动[interval_start,interval_end]的区间
+            while(interval_start <= end){//每个循环内滚动区间[interval_start,interval_end]
                 int interval_end;
                 //从缓存转到实际的delta区间的位置关系
                 auto delta_it=deltas.find(*it);
-                //将[interval_start,interval_end]的值用interval_start推平，要将interval_start的delta加到下一个区间的delta上
+                //将[interval_start,interval_end]的值用interval_start的值推平，要将interval_start的delta加到下一个区间的delta上
                 if (next(delta_it) != deltas.end() && next(delta_it)->first <= end + 1) {
                     add_delta(next(delta_it),delta_it->second);
                     interval_end = next(delta_it)->second - 1;
@@ -95,8 +97,8 @@ public:
 					if(dp[k+1]>=dp[k])
 						dp[k+1]=dp[k];
         } else{//从横坐标大往小滚动，跟上面对称
-            ////找出<start的第一个正delta的x坐标
-    		auto it=negative_delta_x.lower_bound(interval_start + 1);
+            ////找出 <= start的第一个负delta的x坐标
+    		auto it=negative_delta_x.upper_bound(interval_start);
             if(it == negative_delta_x.begin())return;
             --it;
 			interval_start=deltas[*it];
