@@ -33,16 +33,26 @@ public:
     list<pair<int,int>> delta_storage;
     int dp_L_actual,x_L,x_R;
     void update_delta(int x, int delta){
-        auto it=delta_index.lower_bound(x)->second;
-        if(it->first==x)
-            it->second=delta;
-        else
-            delta_storage.insert(it, make_pair(x,delta));
+        auto index_it=delta_index.lower_bound(x);
+        if(index_it==delta_index.end()){
+            delta_storage.emplace_back(make_pair(x,delta));
+            auto tailIt=prev(delta_storage.end());
+            delta_index[x]=tailIt;
+            return;
+        }
+        auto sotrage_it=index_it->second;
+        if(sotrage_it->first == x)
+            sotrage_it->second=delta;
+        else{
+            auto newIt=delta_storage.insert(sotrage_it, make_pair(x, delta));
+            delta_index[x]=newIt;
+        }
     }
     list<pair<int,int>>::iterator delete_delta(list<pair<int,int>>::iterator where){//return next iter of deleted
         auto tit=next(where);
+        int x=where->first;
         delta_storage.erase(where);
-        delta_index.erase(where->first);
+        delta_index.erase(x);
         return tit;
     }
     dp_solver(int L,int R): x_L(L), x_R(R),dp_L_actual(0){
@@ -56,9 +66,10 @@ public:
 				for(int k=interval_start; k <= end - 1; ++k)
 					if(dp[k-minx+1]>=dp[k-minx])
 						dp[k-minx+1]=dp[k-minx];
-            auto storage_iter= delta_index.lower_bound(interval_start + 1)->second;
-            if(storage_iter==delta_storage.end())return;
-			interval_start=storage_iter->first;
+            auto index_iter= delta_index.lower_bound(interval_start + 1);
+            if(index_iter==delta_index.end())return;
+            auto storage_iter=index_iter->second;
+            interval_start=storage_iter->first;
             while(interval_start <= end){
                 if(storage_iter->second>0) {
                 	int interval_end;
@@ -83,9 +94,13 @@ public:
 				for(int k=interval_start; k >= end + 1; --k)
 					if(dp[k-minx-1]>=dp[k-minx])
 						dp[k-minx-1]=dp[k-minx];
-            auto storage_iter=delta_index.lower_bound(interval_start + 1)->second;
+            list<pair<int,int>>::iterator storage_iter;
+            auto index_iter=delta_index.lower_bound(interval_start + 1);
+            if(index_iter==delta_index.end())
+                storage_iter=prev(delta_storage.end());
+            else
+                storage_iter=prev(index_iter->second);
             if(storage_iter==delta_storage.begin())return;
-            --storage_iter;
 			interval_start=storage_iter->first;
             while(interval_start > end){
 				int interval_end;
@@ -110,9 +125,9 @@ public:
     }
     void add(int start, int end){
         auto update=[&](int x,int delta){
-            auto it= delta_index.find(x)->second;
-            if(it!=delta_storage.end())
-                it->second+=delta;
+            auto it= delta_index.find(x);
+            if(it!=delta_index.end())
+                it->second->second+=delta;
             else
                 update_delta(x,delta);
         };
