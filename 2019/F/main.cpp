@@ -28,11 +28,25 @@ int minx,maxx;
 class dp_solver{
 public:
 	//X cord->delta
-    map<int, int> deltas;
+    map<int, int> pos_deltas;
+    map<int, int> neg_deltas;
     int dp_L_actual,x_L,x_R;
     dp_solver(int L,int R): x_L(L), x_R(R),dp_L_actual(0){
-    	deltas[L]=-inf;
-    	deltas[R + 1]= inf;
+    	neg_deltas[L]=-inf;
+    	pos_deltas[R + 1]= inf;
+    }
+    void add_delta(map<int,int>::iterator where,int num){
+        int old_delta=where->second;
+        auto& old_delta_map= old_delta>0?pos_deltas:neg_deltas;
+        auto& new_delta_map= old_delta<0?pos_deltas:neg_deltas;
+        where->second+=num;
+        //判断delta修改后是否异号. int二进制,负数最高位是1,正数0。负数^正数最高位为1
+        if(where->second==0){
+            old_delta_map.erase(where);
+        } else if((old_delta ^ where->second) < 0){
+            new_delta_map[where->first]=where->second;
+            old_delta_map.erase(where);
+        }
     }
     void roll(int start, int end){
         int interval_start=start;
@@ -41,71 +55,72 @@ public:
 				for(int k=interval_start; k <= end - 1; ++k)
 					if(dp[k-minx+1]>=dp[k-minx])
 						dp[k-minx+1]=dp[k-minx];
-            auto it= deltas.lower_bound(interval_start + 1);
-            if(it==deltas.end())return;
+            auto it= pos_deltas.lower_bound(interval_start + 1);
+            if(it==pos_deltas.end())return;
 			interval_start=it->first;
             while(interval_start <= end){
-                if(it->second>0) {
-                	int interval_end;
-                    if (next(it) !=deltas.end() && next(it)->first <= end + 1) {
-						next(it)->second += it->second;
-						interval_end= next(it)->second-1;
-					}else{
-						deltas[end + 1]=it->second;
-						interval_end= end;
-					}
-                    if(interval_start<=x_L && interval_end>=x_L)
-                    	dp_L_actual-=it->second;
-                    auto tit=next(it);
-                    deltas.erase(it);
-                    it=tit;
-                } else{
-                    ++it;
-                    if(it== deltas.end())break;
+                int interval_end;
+                if (next(it) != pos_deltas.end() && next(it)->first <= end + 1) {
+                    add_delta(next(it),it->second);
+                    interval_end = next(it)->second - 1;
+                } else {
+                    pos_deltas[end + 1] = it->second;
+                    interval_end = end;
                 }
-				interval_start=it->first;
+                if (interval_start <= x_L && interval_end >= x_L)
+                    dp_L_actual -= it->second;
+                auto tit = next(it);
+                pos_deltas.erase(it);
+                it = tit;
+                interval_start=it->first;
             }
         } else{
         	if(debug_dp)
 				for(int k=interval_start; k >= end + 1; --k)
 					if(dp[k-minx-1]>=dp[k-minx])
 						dp[k-minx-1]=dp[k-minx];
-            auto it=deltas.lower_bound(interval_start + 1);
-            if(it==deltas.begin())return;
+            auto it=neg_deltas.lower_bound(interval_start + 1);
+            if(it==neg_deltas.begin())return;
             --it;
 			interval_start=it->first;
             while(interval_start > end){
 				int interval_end;
-                if(it->second<0) {
-                    if (it!=deltas.begin() && prev(it)->first >= end) {
-                        prev(it)->second += it->second;
-                        interval_end=prev(it)->first;
-                        auto tit= next(it);
-                        deltas.erase(it);
-                        it=tit;
-                    } else {
-                        deltas[end]= it->second;
-						interval_end=end;
-                        auto tit= next(it);
-                        deltas.erase(it);
-                        it=tit;
-                    }
-                    if(interval_start-1>=x_L && interval_end<=x_L)
-						dp_L_actual+=it->second;
+                if (it != neg_deltas.begin() && prev(it)->first >= end) {
+                    //更新前一区间delta
+                    add_delta(prev(it),it->second);
+                    interval_end = prev(it)->first;
+                    auto tit = next(it);
+                    neg_deltas.erase(it);
+                    it = tit;
+                } else {
+                    neg_deltas[end] = it->second;
+                    interval_end = end;
+                    auto tit = next(it);
+                    neg_deltas.erase(it);
+                    it = tit;
                 }
-				if(it==deltas.begin())break;
+                if (interval_start - 1 >= x_L && interval_end <= x_L)
+                    dp_L_actual += it->second;
+                if(it==neg_deltas.begin())break;
 				--it;
 				interval_start=it->first;
             }
         }
     }
     void add(int start, int end){
-        auto update=[&](int x,int delta){
-            auto it= deltas.find(x);
-            if(it!=deltas.end())
-                it->second+=delta;
-            else
-                deltas[x]=delta;
+        auto update=[&](int x,int delta){//delta could only be +1 or -1
+            auto it= pos_deltas.find(x);
+            if(it==pos_deltas.end()){
+                it=neg_deltas.find(x);
+                if(it==neg_deltas.end()){
+                    if(delta>0)
+                        pos_deltas[x]=delta;
+                    else
+                        neg_deltas[x]=delta;
+                    return ;
+                }
+            }
+            add_delta(it,delta);
         };
         if(start<end){
             update(start,1);
@@ -126,8 +141,11 @@ public:
         }
     }
     int find_min(){
-        auto itb= deltas.lower_bound(x_L+1);
-        auto ite= deltas.lower_bound(x_R);
+        //先把neg_delta对应区间的copy到pos delta里
+        for(auto it=neg_deltas.lower_bound(x_L); it!=neg_deltas.upper_bound(x_R); ++it)
+            pos_deltas[it->first]=it->second;
+        auto itb= pos_deltas.lower_bound(x_L+1);
+        auto ite= pos_deltas.lower_bound(x_R);
         int actual,ret;
         actual=ret=dp_L_actual;
         for(auto k=itb;k!=ite;k++){
