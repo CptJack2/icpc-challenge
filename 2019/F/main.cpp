@@ -53,8 +53,8 @@ public:
     	if(interval_start < end){
         	if(debug_dp)
 				for(int k=interval_start; k <= end - 1; ++k)
-					if(dp[k-minx+1]>=dp[k-minx])
-						dp[k-minx+1]=dp[k-minx];
+					if(dp[k+1]>=dp[k])
+						dp[k+1]=dp[k];
             auto it= pos_deltas.lower_bound(interval_start + 1);
             if(it==pos_deltas.end())return;
 			interval_start=it->first;
@@ -77,8 +77,8 @@ public:
         } else{
         	if(debug_dp)
 				for(int k=interval_start; k >= end + 1; --k)
-					if(dp[k-minx-1]>=dp[k-minx])
-						dp[k-minx-1]=dp[k-minx];
+					if(dp[k-1]>=dp[k])
+						dp[k-1]=dp[k];
             auto it=neg_deltas.lower_bound(interval_start + 1);
             if(it==neg_deltas.begin())return;
             --it;
@@ -128,16 +128,16 @@ public:
 			if(start<=x_L && x_L<=end)
 				dp_L_actual+=1;
 			if(debug_dp)
-				for(int k=start;k<=end;++k)
-					dp[k-minx]+=1;
+				for(int k=start+1;k<=end;++k)
+					dp[k]+=1;
         } else{
             update(start+1,-1);
             update(end,1);
 			if( end<=x_L && x_L<=start)
 				dp_L_actual+=1;
 			if(debug_dp)
-				for(int k=start;k>=end;--k)
-					dp[k-minx]+=1;
+				for(int k=start-1;k>=end;--k)
+					dp[k]+=1;
         }
     }
     int find_min(){
@@ -222,9 +222,9 @@ int main(){
 	if(debug_dp){
 		if(!allX.empty()) {
 			minx=allX[0].x,maxx=allX.back().x;
-			dp.resize(maxx+1-minx,inf);
+			dp.resize(maxx+1,inf);
 			for(int i=L;i<=R;++i)
-				dp[i-minx]=0;
+				dp[i]=0;
 		}
 		else {
 			debug_dp= false;
