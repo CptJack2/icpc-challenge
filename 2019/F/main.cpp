@@ -51,10 +51,6 @@ public:
     void roll(int start, int end){
         int interval_start=start;
     	if(interval_start < end){
-        	if(debug_dp)
-				for(int k=interval_start; k <= end - 1; ++k)
-					if(dp[k+1]>=dp[k])
-						dp[k+1]=dp[k];
             auto it= pos_deltas.lower_bound(interval_start + 1);
             if(it==pos_deltas.end())return;
 			interval_start=it->first;
@@ -74,11 +70,11 @@ public:
                 it = tit;
                 interval_start=it->first;
             }
+			if(debug_dp)
+				for(int k=start; k <= end - 1; ++k)
+					if(dp[k+1]>=dp[k])
+						dp[k+1]=dp[k];
         } else{
-        	if(debug_dp)
-				for(int k=interval_start; k >= end + 1; --k)
-					if(dp[k-1]>=dp[k])
-						dp[k-1]=dp[k];
             auto it=neg_deltas.lower_bound(interval_start + 1);
             if(it==neg_deltas.begin())return;
             --it;
@@ -105,6 +101,10 @@ public:
 				--it;
 				interval_start=it->first;
             }
+			if(debug_dp)
+				for(int k=start; k >= end + 1; --k)
+					if(dp[k-1]>=dp[k])
+						dp[k-1]=dp[k];
         }
     }
     void add(int start, int end){
