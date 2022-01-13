@@ -23,85 +23,107 @@ struct allx_stru{
     allx_stru(int x,int index,enum direction_enum dir): x(x), direction(dir), index(index){}
 };
 vector<int> dp;
-bool debug_dp=true;
+bool debug_dp= true;
 int minx,maxx;
 class dp_solver{
 public:
 	//X cord->delta
-    map<int, int> pos_deltas;
-    map<int, int> neg_deltas;
+	map<int,int>deltas;
+	//存储delta为正和负的位置的加速缓存
+    set<int> positive_delta_x;
+    set<int> negative_delta_x;
     int dp_L_actual,x_L,x_R;
-    dp_solver(int L,int R): x_L(L), x_R(R),dp_L_actual(0){
-    	neg_deltas[L]=-inf;
-    	pos_deltas[R + 1]= inf;
+    //插入deltas内没有的新值
+    void insert_delta(int x,int delta){
+    	deltas[x]=delta;
+    	if(delta>0)
+    		positive_delta_x.insert(x);
+		else
+			negative_delta_x.insert(x);
     }
+    dp_solver(int L,int R): x_L(L), x_R(R),dp_L_actual(0){
+		insert_delta(L,-inf);
+		insert_delta(R,-inf);
+    }
+    //对deltas内已有值进行加法操作
     void add_delta(map<int,int>::iterator where,int num){
         int old_delta=where->second;
-        auto& old_delta_map= old_delta>0?pos_deltas:neg_deltas;
-        auto& new_delta_map= old_delta<0?pos_deltas:neg_deltas;
+        auto& old_delta_map= old_delta>0 ? positive_delta_x : negative_delta_x;
+        auto& new_delta_map= old_delta<0 ? positive_delta_x : negative_delta_x;
         where->second+=num;
         //判断delta修改后是否异号. int二进制,负数最高位是1,正数0。负数^正数最高位为1
         if(where->second==0){
-            old_delta_map.erase(where);
+            old_delta_map.erase(where->first);
         } else if((old_delta ^ where->second) < 0){
-            new_delta_map[where->first]=where->second;
-            old_delta_map.erase(where);
+            new_delta_map.insert(where->first);
+            old_delta_map.erase(where->first);
         }
     }
+    //滚动区间[start,end]，将前面高的抹平
     void roll(int start, int end){
         int interval_start=start;
-    	if(interval_start < end){
-            auto it= pos_deltas.lower_bound(interval_start + 1);
-            if(it==pos_deltas.end())return;
-			interval_start=it->first;
-            while(interval_start <= end){
+    	if(interval_start < end){//从横坐标小往大滚动
+            //找出>start的第一个正delta的x坐标
+    		auto it= positive_delta_x.lower_bound(interval_start + 1);
+            if(it == positive_delta_x.end())return;
+            interval_start=deltas[*it];
+            while(interval_start <= end){//每个循环内滚动[interval_start,interval_end]的区间
                 int interval_end;
-                if (next(it) != pos_deltas.end() && next(it)->first <= end + 1) {
-                    add_delta(next(it),it->second);
-                    interval_end = next(it)->second - 1;
+                //从缓存转到实际的delta区间的位置关系
+                auto delta_it=deltas.find(*it);
+                //将[interval_start,interval_end]的值用interval_start推平，要将interval_start的delta加到下一个区间的delta上
+                if (next(delta_it) != deltas.end() && next(delta_it)->first <= end + 1) {
+                    add_delta(next(delta_it),delta_it->second);
+                    interval_end = next(delta_it)->second - 1;
                 } else {
-                    pos_deltas[end + 1] = it->second;
+                	//如果下一个delta区间已经在滚动范围end之外了，或者从end往后都是平的，直接在end+1上插进去一个新delta
+					insert_delta(end+1,delta_it->second);
                     interval_end = end;
                 }
+                //如果滚动的区间包含了L，要更新一下它的真实值
                 if (interval_start <= x_L && interval_end >= x_L)
-                    dp_L_actual -= it->second;
+                    dp_L_actual -= delta_it->second;
+                //这个正值的delta被推平了，置为0，从deltas清除
                 auto tit = next(it);
-                pos_deltas.erase(it);
+                positive_delta_x.erase(it);
+                deltas.erase(delta_it);
                 it = tit;
-                interval_start=it->first;
+                interval_start=deltas[*it];
             }
 			if(debug_dp)
 				for(int k=start; k <= end - 1; ++k)
 					if(dp[k+1]>=dp[k])
 						dp[k+1]=dp[k];
-        } else{
-            auto it=neg_deltas.lower_bound(interval_start + 1);
-            if(it==neg_deltas.begin())return;
+        } else{//从横坐标大往小滚动，跟上面对称
+            ////找出<start的第一个正delta的x坐标
+    		auto it=negative_delta_x.lower_bound(interval_start + 1);
+            if(it == negative_delta_x.begin())return;
             --it;
-			interval_start=it->first;
+			interval_start=deltas[*it];
             while(interval_start > end){
 				int interval_end;
-				//如果到达end之前还有delta，将这个区间抹平，delta需要移到前一个
-                if (it != neg_deltas.begin() && prev(it)->first >= end) {
+				auto delta_it=deltas.find(*it);
+				//将[interval_start,interval_end]的值用interval_start推平，要将interval_start的delta加到下一个区间的delta上
+                if (delta_it != deltas.begin() && prev(delta_it)->first >= end) {
                     //更新前一区间delta
-                    add_delta(prev(it),it->second);
-                    interval_end = prev(it)->first;
-                    auto tit = next(it);
-                    neg_deltas.erase(it);
-                    it = tit;
+                    add_delta(prev(delta_it),delta_it->second);
+                    interval_end = prev(delta_it)->first;
                 } else {
-                	//下一个delta在end之外，或者没有delta了，需要将delta前推到end
-                    neg_deltas[end] = it->second;
+					//如果下一个delta区间已经在滚动范围end之外了，或者从end往后都是平的，直接在end上插进去一个新delta
+					insert_delta(end,delta_it->second);
                     interval_end = end;
-                    auto tit = next(it);
-                    neg_deltas.erase(it);
-                    it = tit;
                 }
-                if (interval_start - 1 >= x_L && interval_end <= x_L)
-                    dp_L_actual += it->second;
-                if(it==neg_deltas.begin())break;
+                //更新L真实值
+				if (interval_start - 1 >= x_L && interval_end <= x_L)
+					dp_L_actual += delta_it->second;
+                //负值delta置0，移出
+				auto tit = next(it);
+				negative_delta_x.erase(it);
+				deltas.erase(delta_it);
+				it = tit;
+                if(it == negative_delta_x.begin())break;
 				--it;
-				interval_start=it->first;
+				interval_start=deltas[*it];
             }
 			if(debug_dp)
 				for(int k=start; k >= end + 1; --k)
@@ -109,20 +131,15 @@ public:
 						dp[k-1]=dp[k];
         }
     }
+    //将区间[start,end]内的值+1
     void add(int start, int end){
+    	//如果x位置已有delta，对其进行添加；如果没有（相当于delta为0），插入新delta
         auto update=[&](int x,int delta){//delta could only be +1 or -1
-            auto it= pos_deltas.find(x);
-            if(it==pos_deltas.end()){
-                it=neg_deltas.find(x);
-                if(it==neg_deltas.end()){
-                    if(delta>0)
-                        pos_deltas[x]=delta;
-                    else
-                        neg_deltas[x]=delta;
-                    return ;
-                }
-            }
-            add_delta(it,delta);
+            auto it=deltas.find(x);
+			if(it!=deltas.end())
+            	add_delta(it,delta);
+			else
+				insert_delta(x,delta);
         };
         if(start<end){
             update(start,1);
@@ -142,12 +159,11 @@ public:
 					dp[k]+=1;
         }
     }
+    //找出L，R区间内最小值，就是答案
     int find_min(){
-        //先把neg_delta对应区间的copy到pos delta里
-        for(auto it=neg_deltas.lower_bound(x_L); it!=neg_deltas.upper_bound(x_R); ++it)
-            pos_deltas[it->first]=it->second;
-        auto itb= pos_deltas.lower_bound(x_L+1);
-        auto ite= pos_deltas.lower_bound(x_R);
+        //找出[L,R]内最小值
+        auto itb= deltas.lower_bound(x_L + 1);
+        auto ite= deltas.lower_bound(x_R);
         int actual,ret;
         actual=ret=dp_L_actual;
         for(auto k=itb;k!=ite;k++){
