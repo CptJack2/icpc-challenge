@@ -29,10 +29,25 @@ int minx,maxx;
 class dp_solver{
 public:
 	//X cord->delta storage pointer
-    map<int, list<pair<int,int>>::iterator> delta_index;
-    list<pair<int,int>> delta_storage;
+    typedef list<pair<int,int>> delta_storage_type;
+    typedef map<int, delta_storage_type::iterator> index_cache_type;
+    index_cache_type pos_delta_index;
+    index_cache_type neg_delta_index;
+    delta_storage_type delta_storage;
     int dp_L_actual,x_L,x_R;
-    void update_delta(int x, int delta){
+    void add_delta(delta_storage_type::iterator where,int num){
+        int old_delta=where->second;
+        where->second+=num;
+        //判断delta修改后是否异号. int二进制,负数最高位是1,正数0。负数^正数最高位为1
+        if((old_delta ^ where->second) < 0){
+            auto& old_delta_index=old_delta>0?pos_delta_index:neg_delta_index;
+            auto& new_delta_index=old_delta<0?pos_delta_index:neg_delta_index;
+            new_delta_index[where->first]=old_delta_index[where->first];
+            old_delta_index.erase(where->first);
+        }
+    }
+    void insert_or_update_delta(int x, int delta){
+        auto& delta_index=delta>0?pos_delta_index:neg_delta_index;
         auto index_it=delta_index.lower_bound(x);
         if(index_it==delta_index.end()){
             delta_storage.emplace_back(make_pair(x,delta));
@@ -48,16 +63,18 @@ public:
             delta_index[x]=newIt;
         }
     }
-    list<pair<int,int>>::iterator delete_delta(list<pair<int,int>>::iterator where){//return next iter of deleted
+    delta_storage_type::iterator delete_delta(delta_storage_type::iterator where){//return next iter of deleted
         auto tit=next(where);
-        int x=where->first;
+        int x=where->first,
+            delta=where->second;
         delta_storage.erase(where);
+        auto& delta_index=delta>0?pos_delta_index:neg_delta_index;
         delta_index.erase(x);
         return tit;
     }
     dp_solver(int L,int R): x_L(L), x_R(R),dp_L_actual(0){
-        update_delta(L, -inf);
-        update_delta(R, inf);
+        insert_or_update_delta(L, -inf);
+        insert_or_update_delta(R, inf);
     }
     void roll(int start, int end){
         int interval_start=start;
@@ -66,18 +83,18 @@ public:
 				for(int k=interval_start; k <= end - 1; ++k)
 					if(dp[k-minx+1]>=dp[k-minx])
 						dp[k-minx+1]=dp[k-minx];
-            auto index_iter= delta_index.lower_bound(interval_start + 1);
-            if(index_iter==delta_index.end())return;
+            auto index_iter= pos_delta_index.lower_bound(interval_start + 1);
+            if(index_iter==pos_delta_index.end())return;
             auto storage_iter=index_iter->second;
             interval_start=storage_iter->first;
             while(interval_start <= end){
                 if(storage_iter->second>0) {
                 	int interval_end;
                     if (next(storage_iter) !=delta_storage.end() && next(storage_iter)->first <= end + 1) {
-						next(storage_iter)->second += storage_iter->second;
+                        add_delta(next(storage_iter),storage_iter->second);
 						interval_end= next(storage_iter)->second-1;
 					}else{
-                        update_delta(end + 1, storage_iter->second);
+                        insert_or_update_delta(end + 1, storage_iter->second);
 						interval_end= end;
 					}
                     if(interval_start<=x_L && interval_end>=x_L)
@@ -94,9 +111,9 @@ public:
 				for(int k=interval_start; k >= end + 1; --k)
 					if(dp[k-minx-1]>=dp[k-minx])
 						dp[k-minx-1]=dp[k-minx];
-            list<pair<int,int>>::iterator storage_iter;
-            auto index_iter=delta_index.lower_bound(interval_start + 1);
-            if(index_iter==delta_index.end())
+            delta_storage_type::iterator storage_iter;
+            auto index_iter=neg_delta_index.lower_bound(interval_start + 1);
+            if(index_iter==neg_delta_index.end())
                 storage_iter=prev(delta_storage.end());
             else
                 storage_iter=prev(index_iter->second);
@@ -106,11 +123,11 @@ public:
 				int interval_end;
                 if(storage_iter->second<0) {
                     if (storage_iter!=delta_storage.begin() && prev(storage_iter)->first >= end) {
-                        prev(storage_iter)->second += storage_iter->second;
+                        add_delta(prev(storage_iter),storage_iter->second);
                         interval_end=prev(storage_iter)->first;
                         storage_iter= delete_delta(storage_iter);
                     } else {
-                        update_delta(end, storage_iter->second);
+                        insert_or_update_delta(end, storage_iter->second);
 						interval_end=end;
                         storage_iter= delete_delta(storage_iter);
                     }
@@ -125,11 +142,14 @@ public:
     }
     void add(int start, int end){
         auto update=[&](int x,int delta){
-            auto it= delta_index.find(x);
-            if(it!=delta_index.end())
-                it->second->second+=delta;
-            else
-                update_delta(x,delta);
+            auto it=pos_delta_index.find(x);
+            if(it==pos_delta_index.end()){
+                it=neg_delta_index.find(x);
+                if(it==neg_delta_index.end())
+                    insert_or_update_delta(x, delta);
+                    return;
+            }
+            add_delta(it->second,delta);
         };
         if(start<end){
             update(start,1);
@@ -150,11 +170,19 @@ public:
         }
     }
     int find_min(){
-        auto itb= delta_index.lower_bound(x_L+1)->second;
-        auto ite= delta_index.lower_bound(x_R)->second;
+        auto itb= pos_delta_index.lower_bound(x_L+1);
+        auto itb1= neg_delta_index.lower_bound(x_L+1);
+        if(itb1!=neg_delta_index.end() &&
+            (itb==pos_delta_index.end() || itb1->first < itb->first))
+            itb=itb1;
+        auto ite= pos_delta_index.lower_bound(x_R);
+        auto ite1= neg_delta_index.lower_bound(x_R);
+        if(ite1!=neg_delta_index.end() &&
+            (ite==pos_delta_index.end() || ite1->first > ite->first))
+            ite=ite1;
         int actual,ret;
         actual=ret=dp_L_actual;
-        for(auto k=itb;k!=ite;k++){
+        for(auto k=itb->second;k!=ite->second;k++){
             actual+=k->second;
             ret=min(actual,ret);
         }
