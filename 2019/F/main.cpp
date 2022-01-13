@@ -35,6 +35,7 @@ public:
     index_cache_type neg_delta_index;
     delta_storage_type delta_storage;
     int dp_L_actual,x_L,x_R;
+    //修改list内已有的delta,为这个delta加上num
     void add_delta(delta_storage_type::iterator where,int num){
         int old_delta=where->second;
         where->second+=num;
@@ -46,22 +47,20 @@ public:
             old_delta_index.erase(where->first);
         }
     }
-    void insert_or_update_delta(int x, int delta){
+    //插入一个不在list内的delta
+    void insert_delta(int x, int delta){
         auto& delta_index=delta>0?pos_delta_index:neg_delta_index;
         auto index_it=delta_index.lower_bound(x);
-        if(index_it==delta_index.end()){
-            delta_storage.emplace_back(make_pair(x,delta));
-            auto tailIt=prev(delta_storage.end());
-            delta_index[x]=tailIt;
-            return;
-        }
-        auto sotrage_it=index_it->second;
-        if(sotrage_it->first == x)
-            sotrage_it->second=delta;
-        else{
-            auto newIt=delta_storage.insert(sotrage_it, make_pair(x, delta));
-            delta_index[x]=newIt;
-        }
+        delta_storage_type::iterator storage_it;
+        if(index_it!=delta_index.end())
+            storage_it=index_it->second;
+        else
+            storage_it= delta_storage.end();
+        //storage_it指向的x坐标必定大于x或者为end
+        while(storage_it!=delta_storage.begin()&& prev(storage_it)->first > x)
+            --storage_it;
+        //storage_it指向的前一个小于x
+        auto newIt=delta_storage.insert(storage_it, make_pair(x, delta));
     }
     delta_storage_type::iterator delete_delta(delta_storage_type::iterator where){//return next iter of deleted
         auto tit=next(where);
@@ -73,8 +72,8 @@ public:
         return tit;
     }
     dp_solver(int L,int R): x_L(L), x_R(R),dp_L_actual(0){
-        insert_or_update_delta(L, -inf);
-        insert_or_update_delta(R, inf);
+        insert_delta(L, -inf);
+        insert_delta(R, inf);
     }
     void roll(int start, int end){
         int interval_start=start;
@@ -94,7 +93,7 @@ public:
                         add_delta(next(storage_iter),storage_iter->second);
 						interval_end= next(storage_iter)->second-1;
 					}else{
-                        insert_or_update_delta(end + 1, storage_iter->second);
+                        insert_delta(end + 1, storage_iter->second);
 						interval_end= end;
 					}
                     if(interval_start<=x_L && interval_end>=x_L)
@@ -127,7 +126,7 @@ public:
                         interval_end=prev(storage_iter)->first;
                         storage_iter= delete_delta(storage_iter);
                     } else {
-                        insert_or_update_delta(end, storage_iter->second);
+                        insert_delta(end, storage_iter->second);
 						interval_end=end;
                         storage_iter= delete_delta(storage_iter);
                     }
@@ -146,7 +145,7 @@ public:
             if(it==pos_delta_index.end()){
                 it=neg_delta_index.find(x);
                 if(it==neg_delta_index.end())
-                    insert_or_update_delta(x, delta);
+                    insert_delta(x, delta);
                     return;
             }
             add_delta(it->second,delta);
