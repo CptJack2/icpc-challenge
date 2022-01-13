@@ -23,7 +23,7 @@ struct allx_stru{
     allx_stru(int x,int index,enum direction_enum dir): x(x), direction(dir), index(index){}
 };
 vector<int> dp;
-bool debug_dp= true;
+bool debug_dp= false;
 int minx,maxx;
 class dp_solver{
 public:
@@ -68,7 +68,7 @@ public:
             //找出 > start的第一个正delta的x坐标
     		auto it= positive_delta_x.lower_bound(interval_start + 1);
             if(it == positive_delta_x.end())return;
-            interval_start=deltas[*it];
+            interval_start=*it;
             while(interval_start <= end){//每个循环内滚动区间[interval_start,interval_end]
                 int interval_end;
                 //从缓存转到实际的delta区间的位置关系
@@ -90,7 +90,7 @@ public:
                 positive_delta_x.erase(it);
                 deltas.erase(delta_it);
                 it = tit;
-                interval_start=deltas[*it];
+                interval_start=*it;
             }
 			if(debug_dp)
 				for(int k=start; k <= end - 1; ++k)
@@ -101,7 +101,7 @@ public:
     		auto it=negative_delta_x.upper_bound(interval_start);
             if(it == negative_delta_x.begin())return;
             --it;
-			interval_start=deltas[*it];
+			interval_start=*it;
             while(interval_start > end){
 				int interval_end;
 				auto delta_it=deltas.find(*it);
@@ -125,7 +125,7 @@ public:
 				it = tit;
                 if(it == negative_delta_x.begin())break;
 				--it;
-				interval_start=deltas[*it];
+				interval_start=*it;
             }
 			if(debug_dp)
 				for(int k=start; k >= end + 1; --k)
