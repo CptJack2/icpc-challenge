@@ -81,6 +81,7 @@ public:
 			interval_start=it->first;
             while(interval_start > end){
 				int interval_end;
+				//如果到达end之前还有delta，将这个区间抹平，delta需要移到前一个
                 if (it != neg_deltas.begin() && prev(it)->first >= end) {
                     //更新前一区间delta
                     add_delta(prev(it),it->second);
@@ -89,6 +90,7 @@ public:
                     neg_deltas.erase(it);
                     it = tit;
                 } else {
+                	//下一个delta在end之外，或者没有delta了，需要将delta前推到end
                     neg_deltas[end] = it->second;
                     interval_end = end;
                     auto tit = next(it);
@@ -128,7 +130,7 @@ public:
 			if(start<=x_L && x_L<=end)
 				dp_L_actual+=1;
 			if(debug_dp)
-				for(int k=start+1;k<=end;++k)
+				for(int k=start;k<=end;++k)
 					dp[k]+=1;
         } else{
             update(start+1,-1);
@@ -136,7 +138,7 @@ public:
 			if( end<=x_L && x_L<=start)
 				dp_L_actual+=1;
 			if(debug_dp)
-				for(int k=start-1;k>=end;--k)
+				for(int k=start;k>=end;--k)
 					dp[k]+=1;
         }
     }
