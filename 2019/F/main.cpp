@@ -75,7 +75,7 @@ public:
                 auto delta_it=deltas.find(*it);
                 //将[interval_start,interval_end]的值用interval_start的值推平，要将interval_start的delta加到下一个区间的delta上
                 if (next(delta_it) != deltas.end() && next(delta_it)->first <= end + 1) {
-                    interval_end = next(delta_it)->second - 1;//add_delta可能移出为0的delta,导致区间end取错,所以要先取
+                    interval_end = next(delta_it)->first - 1;//add_delta可能移出为0的delta,导致区间end取错,所以要先取
                     add_delta(next(delta_it),delta_it->second);
                 } else {
                 	//如果下一个delta区间已经在滚动范围end之外了，或者从end往后都是平的，直接在end+1上插进去一个新delta
