@@ -197,12 +197,12 @@ int main(){
     vector<vector<int>> dependency(N+1);
     vector<int> dep_degree(N+1,0);
 	auto cal_y=[&](int x,int x1,int y1,int x2,int y2){
-		return float(y1-y2)/(x1-x2)*(x-x1)+y1;
+		return double (y1-y2)/(x1-x2)*(x-x1)+y1;
 	};
 	int nowx;
 	auto cmp_Set = [&](const int& t1,const int& t2){
-		float h1= cal_y(nowx,data[t1].X1,data[t1].Y1,data[t1].X2,data[t1].Y2);
-		float h2= cal_y(nowx,data[t2].X1,data[t2].Y1,data[t2].X2,data[t2].Y2);
+        double h1= cal_y(nowx,data[t1].X1,data[t1].Y1,data[t1].X2,data[t1].Y2);
+        double h2= cal_y(nowx,data[t2].X1,data[t2].Y1,data[t2].X2,data[t2].Y2);
 		return h1<h2;
 	};
     set<int, decltype(cmp_Set)>scan_set(cmp_Set);
