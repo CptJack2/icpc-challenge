@@ -2,7 +2,7 @@
 
 function cmp() {
   AC=$(cat test.txt| ./answer);
-  AM=$(cat test.txt|python3 solution.py );
+  AM=$(cat test.txt| ./main );
   [ $AC == $AM ]
   res=$?
   return $res
