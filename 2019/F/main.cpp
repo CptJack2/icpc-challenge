@@ -89,6 +89,7 @@ public:
                 auto tit = next(it);
                 positive_delta_x.erase(it);
                 deltas.erase(delta_it);
+                if(tit==positive_delta_x.end())break;
                 it = tit;
                 interval_start=*it;
             }
