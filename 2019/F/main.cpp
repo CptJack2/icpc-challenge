@@ -1,9 +1,4 @@
-#include <vector>
-#include "iostream"
-#include "queue"
-#include "algorithm"
-#include "set"
-#include "map"
+#include "bits/stdc++.h"
 using namespace std;
 
 int inf=1e8;
