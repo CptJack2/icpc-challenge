@@ -180,7 +180,9 @@ int main(){
     cin >> L >> R >> N;
     vector<Tarp> data(N+1);
     vector<allx_stru>allX;
+    //将地板作为0号tarp放入data
     data[0]=Tarp(L,0,R,0);
+    //加入所有tarp断点的x坐标,不包括L和R
     for(int i=1;i<=N;i++){
         int x1, x2, y1, y2;
         cin>>x1>>y1>>x2>>y2;
@@ -190,6 +192,7 @@ int main(){
     }
     std::sort(allX.begin(), allX.end(), [] (const allx_stru& a, const allx_stru& b) { return a.x < b.x; });
 
+    //dependency内存储序号n的tarp(不包括0号地板)被哪些序号的tarp依赖,用于拓扑排序
     vector<vector<int>> dependency(N+1);
     vector<int> dep_degree(N+1,0);
 	auto cal_y=[&](int x,int x1,int y1,int x2,int y2){
@@ -224,6 +227,7 @@ int main(){
         }
     }
 
+    //输出一个对tarp拓扑排序后的序列
     vector<int> topo_sorted;
     queue<int> deg0que;
     for(int i=1;i<=N;++i)
@@ -239,6 +243,8 @@ int main(){
 				deg0que.push(dependency[top][i]);
 		}
 	}
+
+    //动态规划求解
 	if(debug_dp){
 		if(!allX.empty()) {
 			minx=allX[0].x,maxx=allX.back().x;
