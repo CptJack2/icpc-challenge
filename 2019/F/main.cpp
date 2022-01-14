@@ -188,6 +188,37 @@ int main(){
     }
     std::sort(allX.begin(), allX.end(), [] (const allx_stru& a, const allx_stru& b) { return a.x < b.x; });
 
+    auto gen_debug_data=[&](){
+        allx_stru ins1(L,0,in);
+        allx_stru ins2(L,0,out);
+        allX.insert(
+            upper_bound(allX.begin(),allX.end(),ins1,[] (const allx_stru& a, const allx_stru& b) { return a.x < b.x; }),
+            ins1);
+        allX.insert(
+            upper_bound(allX.begin(),allX.end(),ins2,[] (const allx_stru& a, const allx_stru& b) { return a.x < b.x; }),
+            ins2);
+        for(int i=0;i<allX.size();i++){
+            int index=allX[i].index;
+            int&minx=data[index].X1<data[index].X2?data[index].X1:data[index].X2;
+            int&maxx=data[index].X1>data[index].X2?data[index].X1:data[index].X2;
+            if(allX[i].direction==in)
+                minx=i*2;
+            else
+                maxx=i*2;
+        }
+        stringstream output;
+        for(int i=0;i<=N;i++) {
+            if(i==0){
+                output<<data[i].X1<<" "<<data[i].X2<<" "<<N<<endl;
+            } else
+                output<<data[i].X1<<" "<<data[i].Y1<<" "<<" "<<data[i].X2<<" "<<data[i].Y2<<endl;
+        }
+        string out=output.str();
+        return;
+    };
+    //gen_debug_data();
+
+
     //dependency内存储序号n的tarp(不包括0号地板)被哪些序号的tarp依赖,用于拓扑排序
     vector<vector<int>> dependency(N+1);
     vector<int> dep_degree(N+1,0);
