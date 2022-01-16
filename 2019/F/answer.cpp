@@ -65,12 +65,14 @@ int main(){
     int a=1;
     for(int x=1; x<=N+N; x++){
         int i = X[x].second;
+        //每个seg用最后一位区分是左端点还是右端点
         if(i>0)
             Seg[i].first.first=x<<1;
         else
             Seg[-i].second.first=x<<1;
     }
     vector<pair<pii, bool>> Ban(N+1);
+    //拓扑排序, 不知道怎么做到的
     for(int i=to[0], j=N; j; i=to[i], j--){
         Ban[j]={{Seg[i].first.first, Seg[i].second.first}, Seg[i].first.second>Seg[i].second.second};
     }
@@ -80,6 +82,7 @@ int main(){
     l = (rightL - X.begin())*2 - (rightL->first != ll);
     auto leftR = lower_bound(X.begin()+1, X.end(), make_pair(rr+1, -inf)) -1;
     r = (leftR - X.begin())*2 + (leftR->first != rr);
+    //下标是在X数组中的下标+左/右端点
     vector<int> dp(N*4+3, 0);
     set<int> Neg, Pos;
     dp[0]=inf;
@@ -89,6 +92,7 @@ int main(){
     Neg.insert(l);
     for(int i=1; i<=N; i++){
         int L = Ban[i].first.first, R=Ban[i].first.second;
+        //if/else对称, 代表是左往右还是右往左roll
         if(Ban[i].second){
             auto i=Pos.lower_bound(L+1);
             while(i!=Pos.end() && *i<=R){
@@ -105,6 +109,7 @@ int main(){
                 else Neg.erase(pos), Pos.erase(pos);
                 i=Pos.lower_bound(L+1);
             }
+            //add操作
             dp[L]++;
             if(dp[L]==0)Neg.erase(L);
             else if(dp[L]==1)Pos.insert(L);
@@ -136,6 +141,7 @@ int main(){
             else if(dp[R+1]==-1)Neg.insert(R+1);
         }
     }
+    //差分数组还原
     for(int i=1; i<=N*4; i++){
         dp[i]+=dp[i-1];
     }
