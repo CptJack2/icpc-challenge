@@ -1,33 +1,29 @@
 import matplotlib.pyplot as plt
 
-from solution import *
+def get_data_from_input():
+    L,R,N=[int(i) for i in input().split()]
+    #tarp位置数据
+    data=[(L,0,R,0)]
+    #allX是一个二维数组，每一个子数组是allX_stru的数组，存放在这个x坐标下端点的信息
+    allX=[]
 
-L,R,N,data,allX=get_data_from_input()
+    for i in range(1,N+1):
+        x1,y1,x2,y2=[int(i) for i in input().split()]
+        data.append((x1,y1,x2,y2))
+        if x1>x2:
+            x1,x2=x2,x1
 
-dependency=get_dep(N,allX,data)
-sorted=topo_sort(dependency)
+    allX.sort(key=lambda st:st.x)
 
-plt.subplot(1,2,1)
+    return L,R,N,data
+
+L,R,N,data=get_data_from_input()
 
 data.pop(0)
-ceiling=data.pop()
 plt.plot([L, R], [0, 0], linestyle="solid", color="green")
-plt.plot([L, R], [ceiling[1], ceiling[1]], linestyle="solid", color="green")
 for i,p in enumerate(data):
     plt.plot([p[0],p[2]],[p[1],p[3]],linestyle="solid",color="black")
     plt.text(p[0],p[1],str(i+1))
-
-plt.subplot(1,2,2)
-sorted.remove(0)
-sorted.remove(N+1)
-plt.plot([L, R], [0, 0], linestyle="solid", color="green")
-plt.plot([L, R], [N+1, N+1], linestyle="solid", color="green")
-#[4, 5, 1, 2, 3]
-for i, ind in enumerate(sorted):
-    x1=data[ind-1][0]
-    x2=data[ind-1][2]
-    plt.arrow(x2,i+1,x1-x2,0,head_width=0.1,head_length=1.5,length_includes_head=True)
-    plt.text(x2,i+1,str(ind))
 
 plt.show()
 
