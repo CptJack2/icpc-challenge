@@ -52,4 +52,4 @@ set<int> negative_delta_x;
 最后最差的时间复杂度是O(NlogN),空间复杂度是O(N)
 
 ##代码实现
-可以在https://github.com/CptJack2/icpc-challenge/blob/master/2019/F/main.cpp找到
+可以在https://github.com/CptJack2/icpc-challenge/blob/master/2019/F/main.cpp找到,代码已经作了充足的注释，欢迎查看交流。
