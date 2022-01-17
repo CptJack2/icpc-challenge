@@ -42,7 +42,7 @@
 map<int,int>deltas; 
 ```
 同时，由于secret-34-matthias.in是一个特殊的测试用例，如图所示
-![](../../../../Desktop/微信图片_20220117114620.png)
+![](secret34.png)
 对每一个tarp进行roll时都会遍历到所有无须处理的delta，最后导致超时，所以还需要缓存map中出现正值和负值的位置，这部分用两个set存储。
 ```
 //存储delta为正和负的位置的加速缓存
