@@ -231,7 +231,6 @@ int main(){
         x2=data[*it].X2;
         solver.roll(x2,x1);
 		solver.add(x2+(x2<x1?1:-1),x1+(x2<x1?-1:1));
-        int a=1;
 	}
     int ans=solver.find_min();
     cout<<ans<<endl;
