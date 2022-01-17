@@ -17,9 +17,6 @@ struct allx_stru{
     direction_enum direction;
     allx_stru(int x,int index,enum direction_enum dir): x(x), direction(dir), index(index){}
 };
-vector<int> dp;
-bool debug_dp= false;
-int minx,maxx;
 class dp_solver{
 public:
 	//X cord->delta
@@ -88,10 +85,6 @@ public:
                 it = tit;
                 interval_start=*it;
             }
-			if(debug_dp)
-				for(int k=start; k <= end - 1; ++k)
-					if(dp[k+1]>=dp[k])
-						dp[k+1]=dp[k];
         } else{//从横坐标大往小滚动，跟上面对称
             ////找出 <= start的第一个负delta的x坐标
     		auto it=negative_delta_x.upper_bound(interval_start);
@@ -123,10 +116,6 @@ public:
 				--it;
 				interval_start=*it;
             }
-			if(debug_dp)
-				for(int k=start; k >= end + 1; --k)
-					if(dp[k-1]>=dp[k])
-						dp[k-1]=dp[k];
         }
     }
     //将区间[start,end]内的值+1
@@ -144,17 +133,11 @@ public:
             update(end+1,-1);
 			if(start<=x_L && x_L<=end)
 				dp_L_actual+=1;
-			if(debug_dp)
-				for(int k=start;k<=end;++k)
-					dp[k]+=1;
         } else{
             update(start+1,-1);
             update(end,1);
 			if( end<=x_L && x_L<=start)
 				dp_L_actual+=1;
-			if(debug_dp)
-				for(int k=start;k>=end;--k)
-					dp[k]+=1;
         }
     }
     //找出L，R区间内最小值，就是答案
@@ -187,37 +170,6 @@ int main(){
         allX.emplace_back(max(x1,x2),i,out);
     }
     std::sort(allX.begin(), allX.end(), [] (const allx_stru& a, const allx_stru& b) { return a.x < b.x; });
-
-    auto gen_debug_data=[&](){
-        allx_stru ins1(L,0,in);
-        allx_stru ins2(L,0,out);
-        allX.insert(
-            upper_bound(allX.begin(),allX.end(),ins1,[] (const allx_stru& a, const allx_stru& b) { return a.x < b.x; }),
-            ins1);
-        allX.insert(
-            upper_bound(allX.begin(),allX.end(),ins2,[] (const allx_stru& a, const allx_stru& b) { return a.x < b.x; }),
-            ins2);
-        for(int i=0;i<allX.size();i++){
-            int index=allX[i].index;
-            int&minx=data[index].X1<data[index].X2?data[index].X1:data[index].X2;
-            int&maxx=data[index].X1>data[index].X2?data[index].X1:data[index].X2;
-            if(allX[i].direction==in)
-                minx=i*2;
-            else
-                maxx=i*2;
-        }
-        stringstream output;
-        for(int i=0;i<=N;i++) {
-            if(i==0){
-                output<<data[i].X1<<" "<<data[i].X2<<" "<<N<<endl;
-            } else
-                output<<data[i].X1<<" "<<data[i].Y1<<" "<<" "<<data[i].X2<<" "<<data[i].Y2<<endl;
-        }
-        string out=output.str();
-        return;
-    };
-    //gen_debug_data();
-
 
     //dependency内存储序号n的tarp(不包括0号地板)被哪些序号的tarp依赖,用于拓扑排序
     vector<vector<int>> dependency(N+1);
@@ -272,17 +224,6 @@ int main(){
 	}
 
     //动态规划求解
-	if(debug_dp){
-		if(!allX.empty()) {
-			minx=allX[0].x,maxx=allX.back().x;
-			dp.resize(maxx+1,inf);
-			for(int i=L;i<=R;++i)
-				dp[i]=0;
-		}
-		else {
-			debug_dp= false;
-		}
-	}
     dp_solver solver(L,R);
 	for(auto it=topo_sorted.rbegin();it!=topo_sorted.rend();it++){
         int x1,x2;
