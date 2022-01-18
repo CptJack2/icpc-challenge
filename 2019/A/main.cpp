@@ -31,17 +31,17 @@ int main() {
 	vector<int> front_ret(n),back_ret(n);
 	while (1) {
 		//插入当前价格的tile到set
-		if (front_tile_set.empty()) {
+		if (front_tile_map.empty()) {
 			int price = front_row[front_index].price;
 			while (front_index < front_row.size() && front_row[front_index].price == price) {
-				front_tile_set.insert(front_row[front_index].index);
+				front_tile_map.insert(make_pair(front_row[front_index].height, front_row.begin() + front_index));
 				++front_index;
 			}
 		}
-		if (back_tile_set.empty()) {
+		if (back_tile_map.empty()) {
 			int price = back_row[back_index].price;
 			while (back_index < back_row.size() && back_row[back_index].price == price) {
-				back_tile_set.insert(back_row[back_index].index);
+				back_tile_map.insert(make_pair(back_row[back_index].height, back_row.begin() + back_index));
 				++back_index;
 			}
 		}
