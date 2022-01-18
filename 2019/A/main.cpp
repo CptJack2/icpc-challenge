@@ -83,7 +83,7 @@ int main() {
             }
             back_tile_map.clear();
         }
-        if(front_tile_map.empty() && back_tile_map.empty())
+        if(front_ret_index>=n && back_ret_index>=n)
             break;
 	}
     //output answer
