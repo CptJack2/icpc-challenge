@@ -26,26 +26,52 @@ int main() {
 	read_tile(front_row);
 	read_tile(back_row);
 	//存储当前价格相同的tile
-	set<int> front_tile_set, back_tile_set;
+    //auto setCmp=[&](vector<tile>::iterator t1,vector<tile>::iterator t2){return t1->price<t2->price;};
+    //height -> iter in front/back row
+	map<int,vector<tile>::iterator> front_tile_map, back_tile_map;
 	int front_index = 0, back_index = 0;
 	vector<int> front_ret(n),back_ret(n);
+    int front_ret_index = 0, back_ret_index = 0;
 	while (1) {
-		//插入当前价格的tile到set
-		if (front_tile_map.empty()) {
-			int price = front_row[front_index].price;
-			while (front_index < front_row.size() && front_row[front_index].price == price) {
-				front_tile_map.insert(make_pair(front_row[front_index].height, front_row.begin() + front_index));
-				++front_index;
-			}
-		}
-		if (back_tile_map.empty()) {
-			int price = back_row[back_index].price;
-			while (back_index < back_row.size() && back_row[back_index].price == price) {
-				back_tile_map.insert(make_pair(back_row[back_index].height, back_row.begin() + back_index));
-				++back_index;
-			}
-		}
+        //插入当前价格的tile到set
+        struct insert_map_arg{
+            map<int,vector<tile>::iterator>& tile_map;
+            vector<tile>& tile_vec;
+            int& vec_index;
+        }
+        front_map_arg{front_tile_map, front_row, front_index},
+        back_map_arg{back_tile_map, back_row, back_index};
+        auto insert_map=[&](insert_map_arg& arg){
+            if (arg.tile_map.empty()) {
+                int price = arg.tile_vec[arg.vec_index].price;
+                while (arg.vec_index < arg.tile_vec.size() && arg.tile_vec[arg.vec_index].price == price) {
+                    front_tile_map.insert(make_pair(arg.tile_vec[arg.vec_index].height, arg.tile_vec.begin() + arg.vec_index));
+                    ++arg.vec_index;
+                }
+            }
+        };
+        insert_map(front_map_arg);
+        insert_map(back_map_arg);
 		//用贪心法，从当前价格区间找出最合适的砖
+        if(front_tile_map.size() < back_tile_map.size()){
+            for(auto t:front_tile_map){
+                int frontH=t.second->height;
+                auto iter=back_tile_map.lower_bound(frontH + 1);
 
+            }
+        }
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
