@@ -161,7 +161,7 @@ int main(){
     vector<allx_stru>allX;
     //将地板作为0号tarp放入data
     data[0]=Tarp(L,0,R,0);
-    //加入所有tarp断点的x坐标,不包括L和R
+    //加入所有tarp端点的x坐标,不包括L和R
     for(int i=1;i<=N;i++){
         int x1, x2, y1, y2;
         cin>>x1>>y1>>x2>>y2;
@@ -178,6 +178,7 @@ int main(){
 		return double (y1-y2)/(x1-x2)*(x-x1)+y1;
 	};
 	int nowx;
+    //通过同一x坐标下y坐标的大小判断tarp的上下位置关系, 并以此作为scan_set的排序依据
 	auto cmp_Set = [&](const int& t1,const int& t2){
         double h1= cal_y(nowx,data[t1].X1,data[t1].Y1,data[t1].X2,data[t1].Y2);
         double h2= cal_y(nowx,data[t2].X1,data[t2].Y1,data[t2].X2,data[t2].Y2);
