@@ -28,13 +28,13 @@ int main() {
     //存储当前价格相同的tile
     //auto setCmp=[&](vector<tile>::iterator t1,vector<tile>::iterator t2){return t1->price<t2->price;};
     //height -> iter in front/back row
-	map<int,vector<tile>::iterator> front_tile_map, back_tile_map;
+    multimap<int,vector<tile>::iterator> front_tile_map, back_tile_map;
 	int front_index = 0, back_index = 0;
 	vector<int> front_ret(n),back_ret(n);
     int front_ret_index = 0, back_ret_index = 0;
     //插入当前价格的tile到set
     struct insert_map_arg{
-        map<int,vector<tile>::iterator>& tile_map;
+        multimap<int,vector<tile>::iterator>& tile_map;
         vector<tile>& tile_vec;
         int& vec_index;
     }
@@ -54,7 +54,7 @@ int main() {
         };
         insert_map(front_map_arg);
         insert_map(back_map_arg);
-		//用贪心法，从当前价格区间找出最合适的砖
+		//用贪心法，从当前价格区间找出最合适的砖, 具体就是刚好和当前tile差一的
         if(front_tile_map.size() < back_tile_map.size()){
             for(auto t:front_tile_map){
                 int frontH=t.second->height;
@@ -67,6 +67,7 @@ int main() {
                 back_ret[back_ret_index++]=iter->second->index;
                 back_tile_map.erase(iter);
             }
+            front_tile_map.clear();
         } else{
             for(auto t:back_tile_map){
                 int backH=t.second->height;
@@ -79,6 +80,7 @@ int main() {
                 back_ret[back_ret_index++]=t.second->index;
                 front_tile_map.erase(iter);
             }
+            back_tile_map.clear();
         }
         if(front_tile_map.empty() && back_tile_map.empty())
             break;
