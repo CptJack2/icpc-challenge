@@ -71,11 +71,12 @@ int main() {
         } else{
             for(auto t:back_tile_map){
                 int backH=t.second->height;
-                auto iter=front_tile_map.lower_bound(backH - 1);
-                if(iter==front_tile_map.end()){
+                auto iter=front_tile_map.upper_bound(backH-1);
+                if(iter==front_tile_map.begin()){
                     cout<<"impossible"<<endl;
                     return 0;
                 }
+                iter=prev(iter);
                 front_ret[front_ret_index++]=iter->second->index ;
                 back_ret[back_ret_index++]=t.second->index;
                 front_tile_map.erase(iter);
