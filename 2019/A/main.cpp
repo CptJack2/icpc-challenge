@@ -21,7 +21,7 @@ int main() {
 		}
 		for (int i = 0; i < n; i++)
 			cin >> tile_row[i].height;
-		sort(tile_row.begin(), tile_row.end(), [&](const tile &a, const tile &b) { return a.price < b.price });
+		sort(tile_row.begin(), tile_row.end(), [&](const tile &a, const tile &b) { return a.price < b.price; });
 	};
 	read_tile(front_row);
 	read_tile(back_row);
@@ -92,6 +92,7 @@ int main() {
     for(auto i:front_ret)
         cout<<i<<" ";
     cout<<endl;
+    return 0;
 }
 
 
