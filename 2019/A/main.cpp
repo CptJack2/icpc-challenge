@@ -41,26 +41,57 @@ int main() {
         }
         front_map_arg{front_tile_map, front_row, front_index},
         back_map_arg{back_tile_map, back_row, back_index};
-        auto insert_map=[&](insert_map_arg& arg){
+        //返回值代表vec是否走到了尽头
+        auto insert_map=[&](insert_map_arg& arg)->bool{
             if (arg.tile_map.empty()) {
                 int price = arg.tile_vec[arg.vec_index].price;
-                while (arg.vec_index < arg.tile_vec.size() && arg.tile_vec[arg.vec_index].price == price) {
+                if(arg.vec_index < arg.tile_vec.size())
+                    return false ;
+                while (arg.tile_vec[arg.vec_index].price == price) {
                     front_tile_map.insert(make_pair(arg.tile_vec[arg.vec_index].height, arg.tile_vec.begin() + arg.vec_index));
                     ++arg.vec_index;
                 }
             }
+            return true;
         };
-        insert_map(front_map_arg);
-        insert_map(back_map_arg);
+        bool bF=insert_map(front_map_arg);
+        bool bB=insert_map(back_map_arg);
+        if(!bF && !bB)
+            break;
 		//用贪心法，从当前价格区间找出最合适的砖
         if(front_tile_map.size() < back_tile_map.size()){
             for(auto t:front_tile_map){
                 int frontH=t.second->height;
                 auto iter=back_tile_map.lower_bound(frontH + 1);
-
+                if(iter==back_tile_map.end()){
+                    cout<<"impossible"<<endl;
+                    return 0;
+                }
+                front_ret[front_ret_index++]=t.second->index;
+                back_ret[back_ret_index++]=iter->second->index;
+                back_tile_map.erase(iter);
+            }
+        } else{
+            for(auto t:back_tile_map){
+                int backH=t.second->height;
+                auto iter=front_tile_map.lower_bound(backH - 1);
+                if(iter==front_tile_map.end()){
+                    cout<<"impossible"<<endl;
+                    return 0;
+                }
+                front_ret[front_ret_index++]=iter->second->index ;
+                back_ret[back_ret_index++]=t.second->index;
+                front_tile_map.erase(iter);
             }
         }
 	}
+    //output answer
+    for(auto i:back_ret)
+        cout<<i<<" ";
+    cout<<endl;
+    for(auto i:front_ret)
+        cout<<i<<" ";
+    cout<<endl;
 }
 
 
