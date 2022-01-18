@@ -23,41 +23,37 @@ int main() {
 			cin >> tile_row[i].height;
 		sort(tile_row.begin(), tile_row.end(), [&](const tile &a, const tile &b) { return a.price < b.price; });
 	};
-	read_tile(front_row);
 	read_tile(back_row);
-	//存储当前价格相同的tile
+    read_tile(front_row);
+    //存储当前价格相同的tile
     //auto setCmp=[&](vector<tile>::iterator t1,vector<tile>::iterator t2){return t1->price<t2->price;};
     //height -> iter in front/back row
 	map<int,vector<tile>::iterator> front_tile_map, back_tile_map;
 	int front_index = 0, back_index = 0;
 	vector<int> front_ret(n),back_ret(n);
     int front_ret_index = 0, back_ret_index = 0;
-	while (1) {
-        //插入当前价格的tile到set
-        struct insert_map_arg{
-            map<int,vector<tile>::iterator>& tile_map;
-            vector<tile>& tile_vec;
-            int& vec_index;
-        }
+    //插入当前价格的tile到set
+    struct insert_map_arg{
+        map<int,vector<tile>::iterator>& tile_map;
+        vector<tile>& tile_vec;
+        int& vec_index;
+    }
         front_map_arg{front_tile_map, front_row, front_index},
         back_map_arg{back_tile_map, back_row, back_index};
+	while (1) {
         //返回值代表vec是否走到了尽头
-        auto insert_map=[&](insert_map_arg& arg)->bool{
+        auto insert_map=[&](insert_map_arg& arg){
             if (arg.tile_map.empty()) {
                 int price = arg.tile_vec[arg.vec_index].price;
-                if(arg.vec_index < arg.tile_vec.size())
-                    return false ;
-                while (arg.tile_vec[arg.vec_index].price == price) {
-                    front_tile_map.insert(make_pair(arg.tile_vec[arg.vec_index].height, arg.tile_vec.begin() + arg.vec_index));
+                while (arg.vec_index < arg.tile_vec.size() && arg.tile_vec[arg.vec_index].price == price) {
+                    arg.tile_map.insert(make_pair(arg.tile_vec[arg.vec_index].height, arg.tile_vec.begin() + arg.vec_index));
                     ++arg.vec_index;
                 }
             }
             return true;
         };
-        bool bF=insert_map(front_map_arg);
-        bool bB=insert_map(back_map_arg);
-        if(!bF && !bB)
-            break;
+        insert_map(front_map_arg);
+        insert_map(back_map_arg);
 		//用贪心法，从当前价格区间找出最合适的砖
         if(front_tile_map.size() < back_tile_map.size()){
             for(auto t:front_tile_map){
@@ -84,6 +80,8 @@ int main() {
                 front_tile_map.erase(iter);
             }
         }
+        if(front_tile_map.empty() && back_tile_map.empty())
+            break;
 	}
     //output answer
     for(auto i:back_ret)
