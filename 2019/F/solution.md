@@ -60,7 +60,10 @@ set<int> negative_delta_x;
 
 ##一些易错点
 通过一次方程从x坐标求y坐标的时候,需要用double类型浮点数, 用float类型的会因为精度不足导致出错
+
 利用map维护的压缩过的delta数组的增删改查
+
+差分数组delta的下标, 容易搞错
 
 ##代码实现
 可以在https://github.com/CptJack2/icpc-challenge/blob/master/2019/F/main.cpp找到,代码已经作了充足的注释，欢迎查看交流。
