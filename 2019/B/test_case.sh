@@ -12,7 +12,7 @@ for inf in $input;do
   correct=$(cat ../icpc2019data/B-beautifulbridges/$ans_filename)
   if [ "$ans" != "$correct" ];then
     echo "failed"
-    echo "correct " correct
+    echo "correct " $correct
     echo "ans " $ans
   else
     echo "succ"
