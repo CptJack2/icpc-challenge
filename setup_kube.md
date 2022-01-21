@@ -46,3 +46,6 @@ vim /etc/docker/daemon.json
 "registry-mirrors": ["https://ustc-edu-cn.mirror.aliyuncs.com"]
 }
 service docker restart
+
+#bookmark
+https://kubernetes.io/docs/tutorials/stateless-application/guestbook/
