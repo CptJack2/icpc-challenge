@@ -9,6 +9,12 @@ service kubelet stop
 kubeadm init --pod-network-cidr 172.16.0.0/16
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
+#generate init config
+kubeadm config print init-defaults --kubeconfig ClusterConfiguration > kubeadm.yml
+modify localAPIEndpoint->advertiseAddress
+change imageRepository if needed
+add podSubnet: "192.168.0.0/16" after serviceSubnet, don't conflict with virtual machine host network cidr 
+
 ##获取join命令
 kubeadm token create --print-join-command
 
