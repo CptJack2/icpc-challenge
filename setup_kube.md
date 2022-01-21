@@ -32,7 +32,10 @@ kubeadm reset
 service kubelet stop 
 service docker stop 
 rm -rf /var/lib/cni/  /var/lib/kubelet/* /etc/cni/
+rm -rf .kube /etc/kubernetes
 ifconfig cni0 down
+ip link delete cni0
 ifconfig flannel.1 down
+ip link delete flannel.1
 ifconfig docker0 down
 service docker start
