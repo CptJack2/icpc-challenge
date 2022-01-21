@@ -39,3 +39,10 @@ ifconfig flannel.1 down
 ip link delete flannel.1
 ifconfig docker0 down
 service docker start
+
+#modify docker image registry
+vim /etc/docker/daemon.json
+{
+"registry-mirrors": ["https://ustc-edu-cn.mirror.aliyuncs.com"]
+}
+service docker restart
