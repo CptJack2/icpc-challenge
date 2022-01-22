@@ -11,9 +11,15 @@ kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documen
 
 #generate init config
 kubeadm config print init-defaults --kubeconfig ClusterConfiguration > kubeadm.yml
+
 modify localAPIEndpoint->advertiseAddress
+change nodeRegistration->name
 change imageRepository if needed
-add podSubnet: "192.168.0.0/16" after serviceSubnet, don't conflict with virtual machine host network cidr 
+change kubernetesVersion if needed
+
+add podSubnet: "192.168.0.0/16" after serviceSubnet, don't conflict with virtual machine host network cidr
+
+kubeadm init --config=kubeadm.yml
 
 ##获取join命令
 kubeadm token create --print-join-command
@@ -49,3 +55,12 @@ service docker restart
 
 #bookmark
 https://kubernetes.io/docs/tutorials/stateless-application/guestbook/
+
+#network block
+ufw status
+ufw disable
+iptables -P INPUT ACCEPT
+iptables -P OUTPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -F
+route add default gw IP Address Adapter
