@@ -75,9 +75,6 @@ Environment="HTTPS_PROXY=http://proxy.example.com:8080/"
 Environment="NO_PROXY=localhost,127.0.0.1,.example.com"
 ```
 
-kubeadm join 192.168.119.130:6443 --token abcdef.0123456789abcdef \
---discovery-token-ca-cert-hash sha256:0e2635838e873ee324494c8f42ccaf446f79d3534b4352ef5a6b198c74e536d6
-
 #pulling google docker image inside wall
 gcr.io/google-samples/node-hello:1.0
 docker pull anjia0532/google-samples.node-hello:1.0
