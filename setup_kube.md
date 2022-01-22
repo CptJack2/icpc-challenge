@@ -64,3 +64,13 @@ iptables -P OUTPUT ACCEPT
 iptables -P FORWARD ACCEPT
 iptables -F
 route add default gw IP Address Adapter
+
+#docker pull proxy
+mkdir -p /etc/systemd/system/docker.service.d
+touch /etc/systemd/system/docker.service.d/proxy.conf
+```
+[Service]
+Environment="HTTP_PROXY=192.168.119.1:1080/"
+Environment="HTTPS_PROXY=http://proxy.example.com:8080/"
+Environment="NO_PROXY=localhost,127.0.0.1,.example.com"
+```
