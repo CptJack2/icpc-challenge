@@ -63,7 +63,7 @@ iptables -P INPUT ACCEPT
 iptables -P OUTPUT ACCEPT
 iptables -P FORWARD ACCEPT
 iptables -F
-route add default gw IP Address Adapter
+route add default gw 192.168.119.1
 
 #docker pull proxy
 mkdir -p /etc/systemd/system/docker.service.d
@@ -74,3 +74,8 @@ Environment="HTTP_PROXY=192.168.119.1:1080/"
 Environment="HTTPS_PROXY=http://proxy.example.com:8080/"
 Environment="NO_PROXY=localhost,127.0.0.1,.example.com"
 ```
+
+#pulling google docker image inside wall
+gcr.io/google-samples/node-hello:1.0
+docker pull anjia0532/google-samples.node-hello:1.0
+docker tag anjia0532/google-samples.node-hello:1.0 gcr.io/google-samples/node-hello:1.0
