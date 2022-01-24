@@ -53,9 +53,6 @@ vim /etc/docker/daemon.json
 }
 service docker restart
 
-#bookmark
-https://kubernetes.io/docs/tutorials/stateless-application/guestbook/
-
 #network block
 ufw status
 ufw disable
@@ -83,3 +80,22 @@ docker tag anjia0532/google-samples.node-hello:1.0 gcr.io/google-samples/node-he
 #saving docker image
 docker save -onode-hello.tar gcr.io/google-samples/node-hello
 docker load < node-hello.tar
+
+#guestbook
+https://kubernetes.io/docs/tutorials/stateless-application/guestbook/
+if can't pull img from docker.io, change redis leader image to "bitnami/redis:6.0.5", add env var
+```
+containers:
+    - name: leader
+      image: "bitnami/redis:6.0.5"
+      resources:
+        requests:
+          cpu: 100m
+          memory: 100Mi
+      ports:
+        - containerPort: 6379
+      env:
+      - name: ALLOW_EMPTY_PASSWORD
+        value: "yes"
+```
+kubectl expose deployment frontend --type=LoadBalancer --name=frontend
