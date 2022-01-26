@@ -84,7 +84,7 @@ docker load < node-hello.tar
 #guestbook
 https://kubernetes.io/docs/tutorials/stateless-application/guestbook/
 if can't pull img from docker.io, change redis leader image to "bitnami/redis:6.0.5", add env var
-```
+```yaml
 containers:
     - name: leader
       image: "bitnami/redis:6.0.5"
@@ -99,3 +99,37 @@ containers:
         value: "yes"
 ```
 kubectl expose deployment frontend --type=LoadBalancer --name=frontend
+
+#deploy stateful set
+https://kubernetes.io/docs/tutorials/stateful-application/basic-stateful-set/
+create 2 pv
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: task-pv-volume1
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 3Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: task-pv-volume2
+  labels:
+    type: local
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+```
+create sts with the provided web.yaml
