@@ -16,10 +16,10 @@ int main(){
 	}
 	set<int> visited;
 	//每个点遍历
-	for(int i=1;i<=n;++i){
-		if(visited.find(i)!=visited.end())
+	for(int node_index=1; node_index <= n; ++node_index){
+		if(visited.find(node_index) != visited.end())
 			continue;
-		int circle_start=i;
+		int circle_start=node_index;
 		//找圈
 		while(visited.find(to[circle_start])!=visited.end()){
 			visited.insert(circle_start);
@@ -55,6 +55,28 @@ int main(){
 					}
 				}
 			}
+			//树中节点，每一层的可达数加上往后k层的节点数
+			for(int i=0;i<=tree_lv.size()-2;++i){
+				for(int j=1;j<=k;j++){
+					if(i+j>=tree_lv.size())
+						break;
+					for(auto ind:tree_lv[i])
+						ans[ind]+=tree_lv[i+j].size();
+				}
+			}
+			//树到圈中节点(除数根外)
+			int cir_n=min(k-1,int(circle.size()-1));
+			auto cir_it=circle_prev;
+			for(int i=0;i<cir_n;i++){
+				int lv=min(int(tree_lv.size())-1,k-1-i);
+				for(int j=1;j<=lv;++j)
+					ans[*cir_it]+=tree_lv[lv].size();
+				if(cir_it==circle.begin())
+					circ_it=prev(circle.end());
+				else
+					cir_it= prev(cir_it);
+			}
+			//圈中节点互相访问
 
 		}
 	}
