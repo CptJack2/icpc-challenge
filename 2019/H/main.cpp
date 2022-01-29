@@ -9,6 +9,7 @@ int main(){
 	vector<int> to(n+1);
 	//i点的入站
 	vector<vector<int>>from(n+1);
+	vector<int> ans(n+1,1);
 	for(int i=1;i<=n;++i){
 		cin>>to[i];
 		from[to[i]].push_back(i);
@@ -33,21 +34,29 @@ int main(){
 			p_circle=to[p_circle];
 		}while(p_circle!=circle_start);
 		//从圈上找分叉
-		for(auto it=circle.begin();it!=circle.end();++it){
+		for(auto circ_it=circle.begin(); circ_it != circle.end(); ++circ_it){
 			//找圈上的上一个
-			auto circle_prev= prev(it);
-			if(it==circle.begin())
+			auto circle_prev= prev(circ_it);
+			if(circ_it == circle.begin())
 				circle_prev=prev(circle.end());
-			for(auto r:from[*it]){
-				//如果来者是圈上上一个跳过
-				if(r==*circle_prev)
-					continue;
-				//否则就是一个树枝分叉
-
+			//否则就是一个树枝分叉
+			vector<vector<int>> tree_lv;
+			tree_lv.push_back(vector<int>{*circ_it});
+			//以圈上点为root，层高为0，广度优先遍历记录每一层的孩子数
+			while(!tree_lv.back().empty()){
+				auto& dfs_que=tree_lv.back();
+				tree_lv.emplace_back();
+				for(auto parent=dfs_que.begin();parent!=dfs_que.end();++parent){
+					for(auto ch:from[*parent]){
+						//对于根节点要跳过它圈上的上一个
+						if(*parent==*circ_it && ch == *circle_prev)
+							continue;
+						tree_lv.back().push_back(ch);
+					}
+				}
 			}
+
 		}
 	}
-
-
 }
 
