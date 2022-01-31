@@ -72,22 +72,29 @@ int main(){
                     level_num.pop_back();
                 }
                 //dfs到此处,栈中是往后k层的总点数,用开头记录的总点数减去当前总点数,即是k层距离内的总点数
-                ans[index]+= level_num_sum - level_num_sum_at_begin;
+                add_ans(index,level_num_sum - level_num_sum_at_begin);
 			};
 			if(from[*circ_it].size()>1)
 			    dfs(*circ_it,0);
 			//树到圈中节点(除树根外)
-//			int cir_n=min(k-1,int(circle.size()-1));
-//			auto cir_it=circle_prev;
-//			for(int i=0;i<cir_n;i++){
-//				int lv=min(int(tree_lv.size())-1,k-1-i);
-//				for(int j=1;j<=lv;++j)
-//					add_ans(*cir_it,tree_lv[lv].size());
-//				if(cir_it==circle.begin())
-//					circ_it=prev(circle.end());
-//				else
-//					cir_it= prev(cir_it);
-//			}
+			auto circ_next=[&](vector<int>::iterator it){
+			    if(it!=prev(circle.end()))
+			        return next(it);
+			    else
+			        return circle.begin();
+			};
+			//圈上的树根跳过，把栈上最后一层弹出
+            level_num_sum-=level_num.back();
+            level_num.pop_back();
+            //树根也是圈上的,不计入此处,在后面更新
+             level_num_sum-=1;
+            auto circ_it2=circ_next(circ_it);
+            while(level_num.size()>1 && circ_it2!=circ_it){
+                add_ans(*circ_it2,level_num_sum);
+                circ_it2=circ_next(circ_it2);
+                level_num_sum-=level_num.back();
+                level_num.pop_back();
+			}
 		}
         //圈中节点互相访问
         int plus=min(k-1,int(circle.size())-1);
