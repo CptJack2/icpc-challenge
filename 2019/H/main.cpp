@@ -56,7 +56,8 @@ int main(){
 			int level_num_sum=0;
 			//dfs，对于树的统计，index为node序号，level为树层高
 			function<void(int,int)> dfs=[&](int index, int level){
-                ++level_num_sum;
+                visited.insert(index);
+			    ++level_num_sum;
                 int level_num_sum_at_begin=level_num_sum;
                 if(level >= level_num.size())
                     level_num.push_back(0);
@@ -102,7 +103,7 @@ int main(){
             add_ans(v,plus);
         }
 	}
-	for(auto a:ans)
-	    cout<<a<<endl;
+	for(int i=1;i<ans.size();++i)
+	    cout<<ans[i]<<endl;
 }
 
