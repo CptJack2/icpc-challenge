@@ -23,7 +23,7 @@ int main(){
 		if(visited.find(node_index) != visited.end())
 			continue;
 		int circle_start=node_index;
-		//找圈
+		//找圈,有且只会有一个圈，最小的圈是两个点互相指向
 		while(visited.find(to[circle_start])==visited.end()){
 			visited.insert(circle_start);
 			circle_start=to[circle_start];
@@ -84,17 +84,17 @@ int main(){
 			    else
 			        return circle.begin();
 			};
-			//圈上的树根跳过，把栈上最后一层弹出
-            level_num_sum-=level_num.back();
-            level_num.pop_back();
-            //树根也是圈上的,不计入此处,在后面更新
-             level_num_sum-=1;
+            //树根属于圈上,不计入此处,在后面更新
+            level_num_sum-=1;
             auto circ_it2=circ_next(circ_it);
+            int circ_l=1;
             while(level_num.size()>1 && circ_it2!=circ_it){
+                if(circ_l+level_num.size()>k){
+                    level_num_sum-=level_num.back();
+                    level_num.pop_back();
+                }
                 add_ans(*circ_it2,level_num_sum);
                 circ_it2=circ_next(circ_it2);
-                level_num_sum-=level_num.back();
-                level_num.pop_back();
 			}
 		}
         //圈中节点互相访问
