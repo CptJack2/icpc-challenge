@@ -42,13 +42,14 @@ int main(){
 		vector<int> circle_diff(circle.size(),0);
 		//从圈上找分叉
 		for(auto circ_it=circle.begin(); circ_it != circle.end(); ++circ_it){
-			//找圈上的上一个
+            //此点不存在分叉
+		    if(from[*circ_it].size()<2)
+                continue;
+		    //找圈上的上一个
 			auto circle_prev= prev(circ_it);
 			if(circ_it == circle.begin())
 				circle_prev=prev(circle.end());
-			//否则就是一个树枝分叉
-			//广度优先搜索因为无法得知自己是叶子节点，所以是不行的
-			//深度优先搜索
+			//广度优先搜索因为无法得知自己是叶子节点，所以只能用深度优先搜索
             //随dfs更新的每层node数量
 			vector<int> level_num;
             //当前在k层范围内的node数量总和缓存
@@ -74,8 +75,7 @@ int main(){
                 //dfs到此处,栈中是往后k层的总点数,用开头记录的总点数减去当前总点数,即是k层距离内的总点数
                 add_ans(index,level_num_sum - level_num_sum_at_begin);
 			};
-			if(from[*circ_it].size()>1)
-			    dfs(*circ_it,0);
+            dfs(*circ_it,0);
 			//树到圈中节点(除树根外)
 			auto circ_next=[&](vector<int>::iterator it){
 			    if(it!=prev(circle.end()))
