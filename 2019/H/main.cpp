@@ -78,23 +78,25 @@ int main(){
 			};
             dfs(*circ_it,0);
 			//树到圈中节点(除树根外)
-			auto circ_next=[&](vector<int>::iterator it){
-			    if(it!=prev(circle.end()))
-			        return next(it);
+			int circle_size=circle.size();
+			auto circ_next=[&](int ind){
+			    if(ind!=circle_size-1)
+			        return ind+1;
 			    else
-			        return circle.begin();
+			        return 0;
 			};
             //树根属于圈上,不计入此处,在后面更新
             level_num_sum-=1;
-            auto circ_it2=circ_next(circ_it);
+            int circ_it_ind=circ_it-circle.begin();
+            int circ_ind2=circ_next(circ_it_ind);
             int circ_l=1;
-            while(level_num.size()>1 && circ_it2!=circ_it){
+            while(level_num.size()>1 && circ_ind2 != circ_it_ind){
                 if(circ_l+level_num.size()>k){
                     level_num_sum-=level_num.back();
                     level_num.pop_back();
                 }
-                add_ans(*circ_it2,level_num_sum);
-                circ_it2=circ_next(circ_it2);
+                add_ans(circle[circ_ind2], level_num_sum);
+                circ_ind2=circ_next(circ_ind2);
 			}
 		}
         //圈中节点互相访问
