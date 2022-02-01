@@ -42,6 +42,7 @@ int main(){
 		vector<int> circle_diff(circle.size(),0);
 		//环上区间增加值，更新差分数组
 		auto add_interval=[&](vector<int>::iterator ita,vector<int>::iterator itb,int v){
+            //整个圈增加
 		    if(ita==circle.begin() && (itb==prev(circle.end()) || itb==circle.end())
 		        || ita==next(itb) ){
 		        circle_0_abs+=v;
@@ -50,7 +51,8 @@ int main(){
 		    int a=ita-circle.begin(),
 		        b=itb-circle.begin();
             circle_diff[a]+=v;
-            circle_diff[b+1]-=v;
+            circle_diff[b!=circle.size()-1?b+1:0]-=v;
+            //0点在区间内
             if(a>b || a==0)
                 circle_0_abs+=v;
 		};
@@ -101,29 +103,26 @@ int main(){
             //树根属于圈上,不计入此处,在后面更新
             level_num_sum-=1;
             auto circ_it2=circ_next(circ_it);
-            int k_remain=k-level_num.size();
-            //圈上处理的长度
-            int circ_l=1;
-            if (k_remain >= 0) {
+            int k_remain=k-level_num.size()+1;
+            if (k_remain > 0) {
                 if (k_remain >= circle.size() - 1) {
                     //k的长度超过了树高和整个圈长,除根节点外其余部分增加树中点数，然后可以前进到圈下一点了
                     add_interval(circ_it2, prev(circ_it), level_num_sum);
                     continue;
                 } else {
                     //从根起到k_remain部分的点加上树的点数
-                    add_interval(circ_it2, prev(circ_it), level_num_sum);
-                    circ_l=k_remain;
+                    add_interval(circ_it2, circ_it2+k_remain-1, level_num_sum);
                 }
             }
             //剩余树逐层退栈
             while(level_num.size()>1 && circ_it2!=circ_it){
-                if(circ_l+level_num.size()-1>k){
-                    level_num_sum-=level_num.back();
-                    level_num.pop_back();
-                }
+                level_num_sum -= level_num.back();
+                level_num.pop_back();
+                //只剩下根节点
+                if(level_num.size()<=1)
+                    break;
                 add_interval(circ_it2,circ_it2,level_num_sum);
                 circ_it2=circ_next(circ_it2);
-                ++circ_l;
 			}
 		}
         //圈中节点互相访问
@@ -137,6 +136,7 @@ int main(){
             if(i!=circle.size()-1)
                 abs+=circle_diff[i+1];
         }
+        int aaa=min(1,2);
 	}
 	for(int i=1;i<ans.size();++i)
 	    cout<<ans[i]<<endl;
