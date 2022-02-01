@@ -107,11 +107,13 @@ int main(){
             if (k_remain > 0) {
                 if (k_remain >= circle.size() - 1) {
                     //k的长度超过了树高和整个圈长,除根节点外其余部分增加树中点数，然后可以前进到圈下一点了
-                    add_interval(circ_it2, prev(circ_it), level_num_sum);
+                    add_interval(circ_it2, circ_it==circle.begin()?prev(circle.end()):prev(circ_it), level_num_sum);
                     continue;
                 } else {
                     //从根起到k_remain部分的点加上树的点数
-                    add_interval(circ_it2, circ_it2+k_remain-1, level_num_sum);
+                    int end_ind=(circ_it2-circle.begin()+k_remain-1)%circle.size();
+                    add_interval(circ_it2, circle.begin()+end_ind, level_num_sum);
+                    circ_it2=circ_next(circle.begin()+end_ind);
                 }
             }
             //剩余树逐层退栈
@@ -136,7 +138,6 @@ int main(){
             if(i!=circle.size()-1)
                 abs+=circle_diff[i+1];
         }
-        int aaa=min(1,2);
 	}
 	for(int i=1;i<ans.size();++i)
 	    cout<<ans[i]<<endl;
