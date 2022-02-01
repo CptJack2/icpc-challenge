@@ -18,12 +18,12 @@ int main(){
 		from[to[i]].push_back(i);
 	}
 	set<int> visited;
-	//每个点遍历
+	//每个点遍历,可能存在多个互不连通的独立圈
 	for(int node_index=1; node_index <= n; ++node_index){
 		if(visited.find(node_index) != visited.end())
 			continue;
 		int circle_start=node_index;
-		//找圈,有且只会有一个圈，最小的圈是两个点互相指向
+		//找圈，最小的圈是两个点互相指向
 		while(visited.find(to[circle_start])==visited.end()){
 			visited.insert(circle_start);
 			circle_start=to[circle_start];
