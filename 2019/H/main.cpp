@@ -89,16 +89,17 @@ int main(){
             auto circ_it2=circ_next(circ_it);
             int circ_l=1;
             while(level_num.size()>1 && circ_it2!=circ_it){
-                if(circ_l+level_num.size()>k){
+                if(circ_l+level_num.size()-1>k){
                     level_num_sum-=level_num.back();
                     level_num.pop_back();
                 }
                 add_ans(*circ_it2,level_num_sum);
                 circ_it2=circ_next(circ_it2);
+                ++circ_l;
 			}
 		}
         //圈中节点互相访问
-        int plus=min(k-1,int(circle.size())-1);
+        int plus=min(k,int(circle.size())-1);
         for(auto v:circle){
             add_ans(v,plus);
         }
