@@ -38,9 +38,10 @@ int main(){
 			p_circle=to[p_circle];
 		}while(p_circle!=circle_start);
 		//用差分表示圆上的值（方便对一段区间做增减）
-		int circle_0_abs=0;
+		int circle_0_abs=0;//0点的真实值
+		//差分数组,arr[i]为圆上i点减去i-1点的值，arr[0]是0点减去最后一个点的值
 		vector<int> circle_diff(circle.size(),0);
-		//环上区间增加值，更新差分数组
+		//对圈上的一段区间全部增加一个值，更新差分数组
 		auto add_interval=[&](vector<int>::iterator ita,vector<int>::iterator itb,int v){
             //整个圈增加
 		    if(ita==circle.begin() && (itb==prev(circle.end()) || itb==circle.end())
@@ -52,7 +53,7 @@ int main(){
 		        b=itb-circle.begin();
             circle_diff[a]+=v;
             circle_diff[b!=circle.size()-1?b+1:0]-=v;
-            //0点在区间内
+            //0点在区间内(设圆周长l, a>b <==> a-l<0<b<a<l, 即a-b顺时针一定经过0点; 另外如果a<=b, 因为0<=a<=b<=l-1,只有a=0的情况会包含0点)
             if(a>b || a==0)
                 circle_0_abs+=v;
 		};
@@ -65,7 +66,7 @@ int main(){
 			auto circle_prev= prev(circ_it);
 			if(circ_it == circle.begin())
 				circle_prev=prev(circle.end());
-			//广度优先搜索因为无法得知自己是叶子节点，所以只能用深度优先搜索
+			//广度优先搜索因为遍历到叶子节点的时候，没有维护祖先的信息（单纯取上一层的节点增加值是不行的），所以只能用深度优先搜索
             //随dfs更新的每层node数量
 			vector<int> level_num;
             //当前在k层范围内的node数量总和缓存
@@ -74,6 +75,7 @@ int main(){
 			function<void(int,int)> dfs=[&](int index, int level){
                 visited.insert(index);
 			    ++level_num_sum;
+			    //存下进入函数时的level_num的总节点数
                 int level_num_sum_at_begin=level_num_sum;
                 if(level >= level_num.size())
                     level_num.push_back(0);
@@ -89,20 +91,20 @@ int main(){
                     level_num_sum-=level_num.back();
                     level_num.pop_back();
                 }
-                //dfs到此处,栈中是往后k层的总点数,用开头记录的总点数减去当前总点数,即是k层距离内的总点数
+                //由于上面把超过k层的从level_num中清退了,子节点全部dfs过了，所以leve_num里是当前节点的1-k层的子节点,用当前总点数减去开头记录的总点数,即是k层距离内的总点数
                 add_ans(index,level_num_sum - level_num_sum_at_begin);
 			};
             dfs(*circ_it,0);
-			//树到圈中节点(除树根外)
 			auto circ_next=[&](vector<int>::iterator it){
 			    if(it!=prev(circle.end()))
 			        return next(it);
 			    else
 			        return circle.begin();
 			};
-            //树根属于圈上,不计入此处,在后面更新
+            //树到圈中节点(除树根外)的统计，树根属于圈上,不计入此处,在后面更新
             level_num_sum-=1;
             auto circ_it2=circ_next(circ_it);
+            //树的长度没超过k的部分,可以延伸到圈内的节点数
             int k_remain=k-level_num.size()+1;
             if (k_remain > 0) {
                 if (k_remain >= circle.size() - 1) {
