@@ -1,0 +1,740 @@
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg version="1.1" width="1200" height="374" onload="init(evt)" viewBox="0 0 1200 374" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<!-- Flame graph stack visualization. See https://github.com/brendangregg/FlameGraph for latest version, and http://www.brendangregg.com/flamegraphs.html for examples. -->
+<!-- NOTES:  -->
+<defs>
+	<linearGradient id="background" y1="0" y2="1" x1="0" x2="0" >
+		<stop stop-color="#eeeeee" offset="5%" />
+		<stop stop-color="#eeeeb0" offset="95%" />
+	</linearGradient>
+</defs>
+<style type="text/css">
+	text { font-family:Verdana; font-size:12px; fill:rgb(0,0,0); }
+	#search, #ignorecase { opacity:0.1; cursor:pointer; }
+	#search:hover, #search.show, #ignorecase:hover, #ignorecase.show { opacity:1; }
+	#subtitle { text-anchor:middle; font-color:rgb(160,160,160); }
+	#title { text-anchor:middle; font-size:17px}
+	#unzoom { cursor:pointer; }
+	#frames > *:hover { stroke:black; stroke-width:0.5; cursor:pointer; }
+	.hide { display:none; }
+	.parent { opacity:0.5; }
+</style>
+<script type="text/ecmascript">
+<![CDATA[
+	"use strict";
+	var details, searchbtn, unzoombtn, matchedtxt, svg, searching, currentSearchTerm, ignorecase, ignorecaseBtn;
+	function init(evt) {
+		details = document.getElementById("details").firstChild;
+		searchbtn = document.getElementById("search");
+		ignorecaseBtn = document.getElementById("ignorecase");
+		unzoombtn = document.getElementById("unzoom");
+		matchedtxt = document.getElementById("matched");
+		svg = document.getElementsByTagName("svg")[0];
+		searching = 0;
+		currentSearchTerm = null;
+
+		// use GET parameters to restore a flamegraphs state.
+		var params = get_params();
+		if (params.x && params.y)
+			zoom(find_group(document.querySelector('[x="' + params.x + '"][y="' + params.y + '"]')));
+                if (params.s) search(params.s);
+	}
+
+	// event listeners
+	window.addEventListener("click", function(e) {
+		var target = find_group(e.target);
+		if (target) {
+			if (target.nodeName == "a") {
+				if (e.ctrlKey === false) return;
+				e.preventDefault();
+			}
+			if (target.classList.contains("parent")) unzoom();
+			zoom(target);
+			if (!document.querySelector('.parent')) {
+				clearzoom();
+				return;
+			}
+
+			// set parameters for zoom state
+			var el = target.querySelector("rect");
+			if (el && el.attributes && el.attributes.y && el.attributes._orig_x) {
+				var params = get_params()
+				params.x = el.attributes._orig_x.value;
+				params.y = el.attributes.y.value;
+				history.replaceState(null, null, parse_params(params));
+			}
+		}
+		else if (e.target.id == "unzoom") clearzoom();
+		else if (e.target.id == "search") search_prompt();
+		else if (e.target.id == "ignorecase") toggle_ignorecase();
+	}, false)
+
+	// mouse-over for info
+	// show
+	window.addEventListener("mouseover", function(e) {
+		var target = find_group(e.target);
+		if (target) details.nodeValue = "Function: " + g_to_text(target);
+	}, false)
+
+	// clear
+	window.addEventListener("mouseout", function(e) {
+		var target = find_group(e.target);
+		if (target) details.nodeValue = ' ';
+	}, false)
+
+	// ctrl-F for search
+	// ctrl-I to toggle case-sensitive search
+	window.addEventListener("keydown",function (e) {
+		if (e.keyCode === 114 || (e.ctrlKey && e.keyCode === 70)) {
+			e.preventDefault();
+			search_prompt();
+		}
+		else if (e.ctrlKey && e.keyCode === 73) {
+			e.preventDefault();
+			toggle_ignorecase();
+		}
+	}, false)
+
+	// functions
+	function get_params() {
+		var params = {};
+		var paramsarr = window.location.search.substr(1).split('&');
+		for (var i = 0; i < paramsarr.length; ++i) {
+			var tmp = paramsarr[i].split("=");
+			if (!tmp[0] || !tmp[1]) continue;
+			params[tmp[0]]  = decodeURIComponent(tmp[1]);
+		}
+		return params;
+	}
+	function parse_params(params) {
+		var uri = "?";
+		for (var key in params) {
+			uri += key + '=' + encodeURIComponent(params[key]) + '&';
+		}
+		if (uri.slice(-1) == "&")
+			uri = uri.substring(0, uri.length - 1);
+		if (uri == '?')
+			uri = window.location.href.split('?')[0];
+		return uri;
+	}
+	function find_child(node, selector) {
+		var children = node.querySelectorAll(selector);
+		if (children.length) return children[0];
+	}
+	function find_group(node) {
+		var parent = node.parentElement;
+		if (!parent) return;
+		if (parent.id == "frames") return node;
+		return find_group(parent);
+	}
+	function orig_save(e, attr, val) {
+		if (e.attributes["_orig_" + attr] != undefined) return;
+		if (e.attributes[attr] == undefined) return;
+		if (val == undefined) val = e.attributes[attr].value;
+		e.setAttribute("_orig_" + attr, val);
+	}
+	function orig_load(e, attr) {
+		if (e.attributes["_orig_"+attr] == undefined) return;
+		e.attributes[attr].value = e.attributes["_orig_" + attr].value;
+		e.removeAttribute("_orig_"+attr);
+	}
+	function g_to_text(e) {
+		var text = find_child(e, "title").firstChild.nodeValue;
+		return (text)
+	}
+	function g_to_func(e) {
+		var func = g_to_text(e);
+		// if there's any manipulation we want to do to the function
+		// name before it's searched, do it here before returning.
+		return (func);
+	}
+	function update_text(e) {
+		var r = find_child(e, "rect");
+		var t = find_child(e, "text");
+		var w = parseFloat(r.attributes.width.value) -3;
+		var txt = find_child(e, "title").textContent.replace(/\([^(]*\)$/,"");
+		t.attributes.x.value = parseFloat(r.attributes.x.value) + 3;
+
+		// Smaller than this size won't fit anything
+		if (w < 2 * 12 * 0.59) {
+			t.textContent = "";
+			return;
+		}
+
+		t.textContent = txt;
+		// Fit in full text width
+		if (/^ *$/.test(txt) || t.getSubStringLength(0, txt.length) < w)
+			return;
+
+		for (var x = txt.length - 2; x > 0; x--) {
+			if (t.getSubStringLength(0, x + 2) <= w) {
+				t.textContent = txt.substring(0, x) + "..";
+				return;
+			}
+		}
+		t.textContent = "";
+	}
+
+	// zoom
+	function zoom_reset(e) {
+		if (e.attributes != undefined) {
+			orig_load(e, "x");
+			orig_load(e, "width");
+		}
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_reset(c[i]);
+		}
+	}
+	function zoom_child(e, x, ratio) {
+		if (e.attributes != undefined) {
+			if (e.attributes.x != undefined) {
+				orig_save(e, "x");
+				e.attributes.x.value = (parseFloat(e.attributes.x.value) - x - 10) * ratio + 10;
+				if (e.tagName == "text")
+					e.attributes.x.value = find_child(e.parentNode, "rect[x]").attributes.x.value + 3;
+			}
+			if (e.attributes.width != undefined) {
+				orig_save(e, "width");
+				e.attributes.width.value = parseFloat(e.attributes.width.value) * ratio;
+			}
+		}
+
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_child(c[i], x - 10, ratio);
+		}
+	}
+	function zoom_parent(e) {
+		if (e.attributes) {
+			if (e.attributes.x != undefined) {
+				orig_save(e, "x");
+				e.attributes.x.value = 10;
+			}
+			if (e.attributes.width != undefined) {
+				orig_save(e, "width");
+				e.attributes.width.value = parseInt(svg.width.baseVal.value) - (10 * 2);
+			}
+		}
+		if (e.childNodes == undefined) return;
+		for (var i = 0, c = e.childNodes; i < c.length; i++) {
+			zoom_parent(c[i]);
+		}
+	}
+	function zoom(node) {
+		var attr = find_child(node, "rect").attributes;
+		var width = parseFloat(attr.width.value);
+		var xmin = parseFloat(attr.x.value);
+		var xmax = parseFloat(xmin + width);
+		var ymin = parseFloat(attr.y.value);
+		var ratio = (svg.width.baseVal.value - 2 * 10) / width;
+
+		// XXX: Workaround for JavaScript float issues (fix me)
+		var fudge = 0.0001;
+
+		unzoombtn.classList.remove("hide");
+
+		var el = document.getElementById("frames").children;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			var a = find_child(e, "rect").attributes;
+			var ex = parseFloat(a.x.value);
+			var ew = parseFloat(a.width.value);
+			var upstack;
+			// Is it an ancestor
+			if (0 == 0) {
+				upstack = parseFloat(a.y.value) > ymin;
+			} else {
+				upstack = parseFloat(a.y.value) < ymin;
+			}
+			if (upstack) {
+				// Direct ancestor
+				if (ex <= xmin && (ex+ew+fudge) >= xmax) {
+					e.classList.add("parent");
+					zoom_parent(e);
+					update_text(e);
+				}
+				// not in current path
+				else
+					e.classList.add("hide");
+			}
+			// Children maybe
+			else {
+				// no common path
+				if (ex < xmin || ex + fudge >= xmax) {
+					e.classList.add("hide");
+				}
+				else {
+					zoom_child(e, xmin, ratio);
+					update_text(e);
+				}
+			}
+		}
+		search();
+	}
+	function unzoom() {
+		unzoombtn.classList.add("hide");
+		var el = document.getElementById("frames").children;
+		for(var i = 0; i < el.length; i++) {
+			el[i].classList.remove("parent");
+			el[i].classList.remove("hide");
+			zoom_reset(el[i]);
+			update_text(el[i]);
+		}
+		search();
+	}
+	function clearzoom() {
+		unzoom();
+
+		// remove zoom state
+		var params = get_params();
+		if (params.x) delete params.x;
+		if (params.y) delete params.y;
+		history.replaceState(null, null, parse_params(params));
+	}
+
+	// search
+	function toggle_ignorecase() {
+		ignorecase = !ignorecase;
+		if (ignorecase) {
+			ignorecaseBtn.classList.add("show");
+		} else {
+			ignorecaseBtn.classList.remove("show");
+		}
+		reset_search();
+		search();
+	}
+	function reset_search() {
+		var el = document.querySelectorAll("#frames rect");
+		for (var i = 0; i < el.length; i++) {
+			orig_load(el[i], "fill")
+		}
+		var params = get_params();
+		delete params.s;
+		history.replaceState(null, null, parse_params(params));
+	}
+	function search_prompt() {
+		if (!searching) {
+			var term = prompt("Enter a search term (regexp " +
+			    "allowed, eg: ^ext4_)"
+			    + (ignorecase ? ", ignoring case" : "")
+			    + "\nPress Ctrl-i to toggle case sensitivity", "");
+			if (term != null) search(term);
+		} else {
+			reset_search();
+			searching = 0;
+			currentSearchTerm = null;
+			searchbtn.classList.remove("show");
+			searchbtn.firstChild.nodeValue = "Search"
+			matchedtxt.classList.add("hide");
+			matchedtxt.firstChild.nodeValue = ""
+		}
+	}
+	function search(term) {
+		if (term) currentSearchTerm = term;
+
+		var re = new RegExp(currentSearchTerm, ignorecase ? 'i' : '');
+		var el = document.getElementById("frames").children;
+		var matches = new Object();
+		var maxwidth = 0;
+		for (var i = 0; i < el.length; i++) {
+			var e = el[i];
+			var func = g_to_func(e);
+			var rect = find_child(e, "rect");
+			if (func == null || rect == null)
+				continue;
+
+			// Save max width. Only works as we have a root frame
+			var w = parseFloat(rect.attributes.width.value);
+			if (w > maxwidth)
+				maxwidth = w;
+
+			if (func.match(re)) {
+				// highlight
+				var x = parseFloat(rect.attributes.x.value);
+				orig_save(rect, "fill");
+				rect.attributes.fill.value = "rgb(230,0,230)";
+
+				// remember matches
+				if (matches[x] == undefined) {
+					matches[x] = w;
+				} else {
+					if (w > matches[x]) {
+						// overwrite with parent
+						matches[x] = w;
+					}
+				}
+				searching = 1;
+			}
+		}
+		if (!searching)
+			return;
+		var params = get_params();
+		params.s = currentSearchTerm;
+		history.replaceState(null, null, parse_params(params));
+
+		searchbtn.classList.add("show");
+		searchbtn.firstChild.nodeValue = "Reset Search";
+
+		// calculate percent matched, excluding vertical overlap
+		var count = 0;
+		var lastx = -1;
+		var lastw = 0;
+		var keys = Array();
+		for (k in matches) {
+			if (matches.hasOwnProperty(k))
+				keys.push(k);
+		}
+		// sort the matched frames by their x location
+		// ascending, then width descending
+		keys.sort(function(a, b){
+			return a - b;
+		});
+		// Step through frames saving only the biggest bottom-up frames
+		// thanks to the sort order. This relies on the tree property
+		// where children are always smaller than their parents.
+		var fudge = 0.0001;	// JavaScript floating point
+		for (var k in keys) {
+			var x = parseFloat(keys[k]);
+			var w = matches[keys[k]];
+			if (x >= lastx + lastw - fudge) {
+				count += w;
+				lastx = x;
+				lastw = w;
+			}
+		}
+		// display matched percent
+		matchedtxt.classList.remove("hide");
+		var pct = 100 * count / maxwidth;
+		if (pct != 100) pct = pct.toFixed(1)
+		matchedtxt.firstChild.nodeValue = "Matched: " + pct + "%";
+	}
+]]>
+</script>
+<rect x="0.0" y="0" width="1200.0" height="374.0" fill="url(#background)"  />
+<text id="title" x="600.00" y="24" >Flame Graph</text>
+<text id="details" x="10.00" y="357" > </text>
+<text id="unzoom" x="10.00" y="24" class="hide">Reset Zoom</text>
+<text id="search" x="1090.00" y="24" >Search</text>
+<text id="ignorecase" x="1174.00" y="24" >ic</text>
+<text id="matched" x="1090.00" y="357" > </text>
+<g id="frames">
+<g >
+<title>__gnu_cxx::operator!=&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt; (137 samples, 6.92%)</title><rect x="170.9" y="245" width="81.7" height="15.0" fill="rgb(205,18,2)" rx="2" ry="2" />
+<text  x="173.91" y="255.5" >__gnu_cxx..</text>
+</g>
+<g >
+<title>__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;::base (27 samples, 1.36%)</title><rect x="235.9" y="229" width="16.1" height="15.0" fill="rgb(238,13,45)" rx="2" ry="2" />
+<text  x="238.87" y="239.5" ></text>
+</g>
+<g >
+<title>std::__iterator_category&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt; &gt; (7 samples, 0.35%)</title><rect x="777.6" y="197" width="4.2" height="15.0" fill="rgb(216,6,46)" rx="2" ry="2" />
+<text  x="780.60" y="207.5" ></text>
+</g>
+<g >
+<title>swake_up (1 samples, 0.05%)</title><rect x="777.0" y="69" width="0.6" height="15.0" fill="rgb(242,200,17)" rx="2" ry="2" />
+<text  x="780.00" y="79.5" ></text>
+</g>
+<g >
+<title>rh_timer_func (1 samples, 0.05%)</title><rect x="995.1" y="85" width="0.6" height="15.0" fill="rgb(229,224,20)" rx="2" ry="2" />
+<text  x="998.12" y="95.5" ></text>
+</g>
+<g >
+<title>std::vector&lt;int, std::allocator&lt;int&gt; &gt;::size (80 samples, 4.04%)</title><rect x="1126.2" y="245" width="47.7" height="15.0" fill="rgb(222,75,12)" rx="2" ry="2" />
+<text  x="1129.23" y="255.5" >std:..</text>
+</g>
+<g >
+<title>rcu_gp_kthread_wake (1 samples, 0.05%)</title><rect x="252.0" y="133" width="0.6" height="15.0" fill="rgb(220,226,49)" rx="2" ry="2" />
+<text  x="254.96" y="143.5" ></text>
+</g>
+<g >
+<title>std::vector&lt;int, std::allocator&lt;int&gt; &gt;::size (27 samples, 1.36%)</title><rect x="1173.9" y="261" width="16.1" height="15.0" fill="rgb(230,177,51)" rx="2" ry="2" />
+<text  x="1176.91" y="271.5" ></text>
+</g>
+<g >
+<title>apic_timer_interrupt (1 samples, 0.05%)</title><rect x="252.0" y="229" width="0.6" height="15.0" fill="rgb(243,83,36)" rx="2" ry="2" />
+<text  x="254.96" y="239.5" ></text>
+</g>
+<g >
+<title>swake_up (1 samples, 0.05%)</title><rect x="252.0" y="117" width="0.6" height="15.0" fill="rgb(205,7,46)" rx="2" ry="2" />
+<text  x="254.96" y="127.5" ></text>
+</g>
+<g >
+<title>rcu_report_qs_rnp (1 samples, 0.05%)</title><rect x="252.0" y="149" width="0.6" height="15.0" fill="rgb(209,218,21)" rx="2" ry="2" />
+<text  x="254.96" y="159.5" ></text>
+</g>
+<g >
+<title>smp_apic_timer_interrupt (1 samples, 0.05%)</title><rect x="252.0" y="213" width="0.6" height="15.0" fill="rgb(240,123,42)" rx="2" ry="2" />
+<text  x="254.96" y="223.5" ></text>
+</g>
+<g >
+<title>run_timer_softirq (1 samples, 0.05%)</title><rect x="995.1" y="117" width="0.6" height="15.0" fill="rgb(218,213,19)" rx="2" ry="2" />
+<text  x="998.12" y="127.5" ></text>
+</g>
+<g >
+<title>std::next&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt; &gt; (352 samples, 17.78%)</title><rect x="572.0" y="229" width="209.8" height="15.0" fill="rgb(212,73,44)" rx="2" ry="2" />
+<text  x="574.99" y="239.5" >std::next&lt;__gnu_cxx::__norm..</text>
+</g>
+<g >
+<title>__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;::base (36 samples, 1.82%)</title><rect x="524.9" y="213" width="21.5" height="15.0" fill="rgb(223,3,5)" rx="2" ry="2" />
+<text  x="527.91" y="223.5" >_..</text>
+</g>
+<g >
+<title>__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;::__normal_iterator (29 samples, 1.46%)</title><rect x="1036.8" y="213" width="17.3" height="15.0" fill="rgb(241,123,51)" rx="2" ry="2" />
+<text  x="1039.84" y="223.5" ></text>
+</g>
+<g >
+<title>smp_apic_timer_interrupt (1 samples, 0.05%)</title><rect x="995.1" y="165" width="0.6" height="15.0" fill="rgb(208,219,26)" rx="2" ry="2" />
+<text  x="998.12" y="175.5" ></text>
+</g>
+<g >
+<title>std::next&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt; &gt; (14 samples, 0.71%)</title><rect x="1089.9" y="245" width="8.3" height="15.0" fill="rgb(206,14,52)" rx="2" ry="2" />
+<text  x="1092.88" y="255.5" ></text>
+</g>
+<g >
+<title>__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;::operator+= (62 samples, 3.13%)</title><rect x="740.1" y="181" width="36.9" height="15.0" fill="rgb(232,143,43)" rx="2" ry="2" />
+<text  x="743.05" y="191.5" >__g..</text>
+</g>
+<g >
+<title>std::_Rb_tree&lt;int, int, std::_Identity&lt;int&gt;, std::less&lt;int&gt;, std::allocator&lt;int&gt; &gt;::_M_insert_unique&lt;int const&amp;&gt; (2 samples, 0.10%)</title><rect x="1088.7" y="181" width="1.2" height="15.0" fill="rgb(228,208,15)" rx="2" ry="2" />
+<text  x="1091.69" y="191.5" ></text>
+</g>
+<g >
+<title>__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;::operator* (15 samples, 0.76%)</title><rect x="10.0" y="261" width="8.9" height="15.0" fill="rgb(205,123,11)" rx="2" ry="2" />
+<text  x="13.00" y="271.5" ></text>
+</g>
+<g >
+<title>std::prev&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt; &gt; (24 samples, 1.21%)</title><rect x="1098.2" y="245" width="14.3" height="15.0" fill="rgb(248,10,15)" rx="2" ry="2" />
+<text  x="1101.22" y="255.5" ></text>
+</g>
+<g >
+<title>_raw_spin_unlock_irqrestore (1 samples, 0.05%)</title><rect x="252.0" y="101" width="0.6" height="15.0" fill="rgb(213,67,31)" rx="2" ry="2" />
+<text  x="254.96" y="111.5" ></text>
+</g>
+<g >
+<title>__softirqentry_text_start (1 samples, 0.05%)</title><rect x="777.0" y="133" width="0.6" height="15.0" fill="rgb(209,31,4)" rx="2" ry="2" />
+<text  x="780.00" y="143.5" ></text>
+</g>
+<g >
+<title>std::advance&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;, long&gt; (242 samples, 12.22%)</title><rect x="637.5" y="213" width="144.3" height="15.0" fill="rgb(227,172,14)" rx="2" ry="2" />
+<text  x="640.55" y="223.5" >std::advance&lt;__gnu..</text>
+</g>
+<g >
+<title>__softirqentry_text_start (1 samples, 0.05%)</title><rect x="995.1" y="133" width="0.6" height="15.0" fill="rgb(220,99,28)" rx="2" ry="2" />
+<text  x="998.12" y="143.5" ></text>
+</g>
+<g >
+<title>apic_timer_interrupt (1 samples, 0.05%)</title><rect x="995.1" y="181" width="0.6" height="15.0" fill="rgb(253,21,46)" rx="2" ry="2" />
+<text  x="998.12" y="191.5" ></text>
+</g>
+<g >
+<title>std::vector&lt;int, std::allocator&lt;int&gt; &gt;::operator[] (8 samples, 0.40%)</title><rect x="1121.5" y="245" width="4.7" height="15.0" fill="rgb(238,134,41)" rx="2" ry="2" />
+<text  x="1124.46" y="255.5" ></text>
+</g>
+<g >
+<title>__gnu_cxx::operator!=&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt; (162 samples, 8.18%)</title><rect x="449.8" y="229" width="96.6" height="15.0" fill="rgb(222,210,48)" rx="2" ry="2" />
+<text  x="452.82" y="239.5" >__gnu_cxx::..</text>
+</g>
+<g >
+<title>std::advance&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;, long&gt; (43 samples, 2.17%)</title><rect x="546.4" y="229" width="25.6" height="15.0" fill="rgb(226,77,5)" rx="2" ry="2" />
+<text  x="549.36" y="239.5" >s..</text>
+</g>
+<g >
+<title>std::__advance&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;, long&gt; (38 samples, 1.92%)</title><rect x="810.4" y="213" width="22.6" height="15.0" fill="rgb(246,207,1)" rx="2" ry="2" />
+<text  x="813.37" y="223.5" >s..</text>
+</g>
+<g >
+<title>std::vector&lt;int, std::allocator&lt;int&gt; &gt;::end (93 samples, 4.70%)</title><rect x="998.7" y="229" width="55.4" height="15.0" fill="rgb(226,224,47)" rx="2" ry="2" />
+<text  x="1001.70" y="239.5" >std::..</text>
+</g>
+<g >
+<title>__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;::__normal_iterator (7 samples, 0.35%)</title><rect x="435.5" y="229" width="4.2" height="15.0" fill="rgb(242,96,48)" rx="2" ry="2" />
+<text  x="438.52" y="239.5" ></text>
+</g>
+<g >
+<title>main (1,980 samples, 100.00%)</title><rect x="10.0" y="309" width="1180.0" height="15.0" fill="rgb(247,53,1)" rx="2" ry="2" />
+<text  x="13.00" y="319.5" >main</text>
+</g>
+<g >
+<title>uhci_hub_status_data (1 samples, 0.05%)</title><rect x="995.1" y="53" width="0.6" height="15.0" fill="rgb(247,37,18)" rx="2" ry="2" />
+<text  x="998.12" y="63.5" ></text>
+</g>
+<g >
+<title>std::advance&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;, long&gt; (270 samples, 13.64%)</title><rect x="837.8" y="213" width="160.9" height="15.0" fill="rgb(224,27,0)" rx="2" ry="2" />
+<text  x="840.79" y="223.5" >std::advance&lt;__gnu_c..</text>
+</g>
+<g >
+<title>usb_hcd_poll_rh_status (1 samples, 0.05%)</title><rect x="995.1" y="69" width="0.6" height="15.0" fill="rgb(206,66,47)" rx="2" ry="2" />
+<text  x="998.12" y="79.5" ></text>
+</g>
+<g >
+<title>__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;::operator+= (8 samples, 0.40%)</title><rect x="913.5" y="197" width="4.7" height="15.0" fill="rgb(240,71,50)" rx="2" ry="2" />
+<text  x="916.47" y="207.5" ></text>
+</g>
+<g >
+<title>main::{lambda (16 samples, 0.81%)</title><rect x="145.3" y="261" width="9.5" height="15.0" fill="rgb(212,13,6)" rx="2" ry="2" />
+<text  x="148.28" y="271.5" ></text>
+</g>
+<g >
+<title>std::_Function_handler&lt;void  (2 samples, 0.10%)</title><rect x="1088.7" y="229" width="1.2" height="15.0" fill="rgb(228,40,7)" rx="2" ry="2" />
+<text  x="1091.69" y="239.5" ></text>
+</g>
+<g >
+<title>std::__advance&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;, long&gt; (130 samples, 6.57%)</title><rect x="918.2" y="197" width="77.5" height="15.0" fill="rgb(227,154,45)" rx="2" ry="2" />
+<text  x="921.24" y="207.5" >std::__a..</text>
+</g>
+<g >
+<title>__softirqentry_text_start (1 samples, 0.05%)</title><rect x="252.0" y="181" width="0.6" height="15.0" fill="rgb(242,164,35)" rx="2" ry="2" />
+<text  x="254.96" y="191.5" ></text>
+</g>
+<g >
+<title>irq_exit (1 samples, 0.05%)</title><rect x="252.0" y="197" width="0.6" height="15.0" fill="rgb(227,9,10)" rx="2" ry="2" />
+<text  x="254.96" y="207.5" ></text>
+</g>
+<g >
+<title>[unknown] (1,980 samples, 100.00%)</title><rect x="10.0" y="293" width="1180.0" height="15.0" fill="rgb(214,108,19)" rx="2" ry="2" />
+<text  x="13.00" y="303.5" >[unknown]</text>
+</g>
+<g >
+<title>std::__iterator_category&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt; &gt; (8 samples, 0.40%)</title><rect x="833.0" y="213" width="4.8" height="15.0" fill="rgb(236,20,44)" rx="2" ry="2" />
+<text  x="836.02" y="223.5" ></text>
+</g>
+<g >
+<title>__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;::operator+= (11 samples, 0.56%)</title><rect x="711.4" y="197" width="6.6" height="15.0" fill="rgb(228,25,9)" rx="2" ry="2" />
+<text  x="714.44" y="207.5" ></text>
+</g>
+<g >
+<title>__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;::operator+= (101 samples, 5.10%)</title><rect x="934.9" y="181" width="60.2" height="15.0" fill="rgb(239,146,38)" rx="2" ry="2" />
+<text  x="937.93" y="191.5" >__gnu_..</text>
+</g>
+<g >
+<title>std::__advance&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;, long&gt; (40 samples, 2.02%)</title><rect x="606.6" y="213" width="23.8" height="15.0" fill="rgb(242,21,35)" rx="2" ry="2" />
+<text  x="609.56" y="223.5" >s..</text>
+</g>
+<g >
+<title>__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;::operator* (14 samples, 0.71%)</title><rect x="162.6" y="245" width="8.3" height="15.0" fill="rgb(247,162,48)" rx="2" ry="2" />
+<text  x="165.57" y="255.5" ></text>
+</g>
+<g >
+<title>rcu_report_qs_rnp (1 samples, 0.05%)</title><rect x="777.0" y="101" width="0.6" height="15.0" fill="rgb(234,161,21)" rx="2" ry="2" />
+<text  x="780.00" y="111.5" ></text>
+</g>
+<g >
+<title>std::prev&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt; &gt; (364 samples, 18.38%)</title><rect x="781.8" y="229" width="216.9" height="15.0" fill="rgb(229,63,37)" rx="2" ry="2" />
+<text  x="784.77" y="239.5" >std::prev&lt;__gnu_cxx::__norma..</text>
+</g>
+<g >
+<title>std::function&lt;void  (2 samples, 0.10%)</title><rect x="1088.7" y="245" width="1.2" height="15.0" fill="rgb(216,5,47)" rx="2" ry="2" />
+<text  x="1091.69" y="255.5" ></text>
+</g>
+<g >
+<title>main::{lambda (2 samples, 0.10%)</title><rect x="1088.7" y="213" width="1.2" height="15.0" fill="rgb(224,197,40)" rx="2" ry="2" />
+<text  x="1091.69" y="223.5" ></text>
+</g>
+<g >
+<title>_raw_spin_unlock_irqrestore (1 samples, 0.05%)</title><rect x="995.1" y="37" width="0.6" height="15.0" fill="rgb(247,181,23)" rx="2" ry="2" />
+<text  x="998.12" y="47.5" ></text>
+</g>
+<g >
+<title>std::__iterator_category&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt; &gt; (12 samples, 0.61%)</title><rect x="630.4" y="213" width="7.1" height="15.0" fill="rgb(210,203,2)" rx="2" ry="2" />
+<text  x="633.39" y="223.5" ></text>
+</g>
+<g >
+<title>std::_Rb_tree&lt;int, int, std::_Identity&lt;int&gt;, std::less&lt;int&gt;, std::allocator&lt;int&gt; &gt;::_M_get_insert_unique_pos (2 samples, 0.10%)</title><rect x="1088.7" y="165" width="1.2" height="15.0" fill="rgb(212,39,28)" rx="2" ry="2" />
+<text  x="1091.69" y="175.5" ></text>
+</g>
+<g >
+<title>main (1,710 samples, 86.36%)</title><rect x="154.8" y="261" width="1019.1" height="15.0" fill="rgb(206,111,10)" rx="2" ry="2" />
+<text  x="157.82" y="271.5" >main</text>
+</g>
+<g >
+<title>[libstdc++.so.6.0.25] (1 samples, 0.05%)</title><rect x="1089.3" y="149" width="0.6" height="15.0" fill="rgb(235,163,39)" rx="2" ry="2" />
+<text  x="1092.28" y="159.5" ></text>
+</g>
+<g >
+<title>all (1,980 samples, 100%)</title><rect x="10.0" y="325" width="1180.0" height="15.0" fill="rgb(249,25,13)" rx="2" ry="2" />
+<text  x="13.00" y="335.5" ></text>
+</g>
+<g >
+<title>__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;::base (17 samples, 0.86%)</title><rect x="439.7" y="229" width="10.1" height="15.0" fill="rgb(216,148,27)" rx="2" ry="2" />
+<text  x="442.69" y="239.5" ></text>
+</g>
+<g >
+<title>smp_apic_timer_interrupt (1 samples, 0.05%)</title><rect x="777.0" y="165" width="0.6" height="15.0" fill="rgb(247,116,49)" rx="2" ry="2" />
+<text  x="780.00" y="175.5" ></text>
+</g>
+<g >
+<title>call_timer_fn (1 samples, 0.05%)</title><rect x="995.1" y="101" width="0.6" height="15.0" fill="rgb(231,184,15)" rx="2" ry="2" />
+<text  x="998.12" y="111.5" ></text>
+</g>
+<g >
+<title>__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;::base (13 samples, 0.66%)</title><rect x="154.8" y="245" width="7.8" height="15.0" fill="rgb(213,208,9)" rx="2" ry="2" />
+<text  x="157.82" y="255.5" ></text>
+</g>
+<g >
+<title>_raw_spin_unlock_irqrestore (1 samples, 0.05%)</title><rect x="777.0" y="53" width="0.6" height="15.0" fill="rgb(228,44,45)" rx="2" ry="2" />
+<text  x="780.00" y="63.5" ></text>
+</g>
+<g >
+<title>__libc_start_main (1,980 samples, 100.00%)</title><rect x="10.0" y="277" width="1180.0" height="15.0" fill="rgb(210,58,28)" rx="2" ry="2" />
+<text  x="13.00" y="287.5" >__libc_start_main</text>
+</g>
+<g >
+<title>std::vector&lt;int, std::allocator&lt;int&gt; &gt;::end (15 samples, 0.76%)</title><rect x="1112.5" y="245" width="9.0" height="15.0" fill="rgb(216,158,11)" rx="2" ry="2" />
+<text  x="1115.53" y="255.5" ></text>
+</g>
+<g >
+<title>std::set&lt;int, std::less&lt;int&gt;, std::allocator&lt;int&gt; &gt;::insert (2 samples, 0.10%)</title><rect x="1088.7" y="197" width="1.2" height="15.0" fill="rgb(217,228,23)" rx="2" ry="2" />
+<text  x="1091.69" y="207.5" ></text>
+</g>
+<g >
+<title>std::__iterator_category&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt; &gt; (5 samples, 0.25%)</title><rect x="995.7" y="197" width="3.0" height="15.0" fill="rgb(221,91,23)" rx="2" ry="2" />
+<text  x="998.72" y="207.5" ></text>
+</g>
+<g >
+<title>main (207 samples, 10.45%)</title><rect x="21.9" y="261" width="123.4" height="15.0" fill="rgb(236,174,34)" rx="2" ry="2" />
+<text  x="24.92" y="271.5" >main</text>
+</g>
+<g >
+<title>rcu_process_callbacks (1 samples, 0.05%)</title><rect x="252.0" y="165" width="0.6" height="15.0" fill="rgb(241,161,17)" rx="2" ry="2" />
+<text  x="254.96" y="175.5" ></text>
+</g>
+<g >
+<title>__gnu_cxx::operator!=&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt; (5 samples, 0.25%)</title><rect x="18.9" y="261" width="3.0" height="15.0" fill="rgb(210,157,4)" rx="2" ry="2" />
+<text  x="21.94" y="271.5" ></text>
+</g>
+<g >
+<title>irq_exit (1 samples, 0.05%)</title><rect x="777.0" y="149" width="0.6" height="15.0" fill="rgb(216,81,6)" rx="2" ry="2" />
+<text  x="780.00" y="159.5" ></text>
+</g>
+<g >
+<title>irq_exit (1 samples, 0.05%)</title><rect x="995.1" y="149" width="0.6" height="15.0" fill="rgb(231,184,38)" rx="2" ry="2" />
+<text  x="998.12" y="159.5" ></text>
+</g>
+<g >
+<title>rcu_gp_kthread_wake (1 samples, 0.05%)</title><rect x="777.0" y="85" width="0.6" height="15.0" fill="rgb(216,196,45)" rx="2" ry="2" />
+<text  x="780.00" y="95.5" ></text>
+</g>
+<g >
+<title>std::vector&lt;int, std::allocator&lt;int&gt; &gt;::operator[] (58 samples, 2.93%)</title><rect x="1054.1" y="229" width="34.6" height="15.0" fill="rgb(235,140,17)" rx="2" ry="2" />
+<text  x="1057.12" y="239.5" >st..</text>
+</g>
+<g >
+<title>apic_timer_interrupt (1 samples, 0.05%)</title><rect x="777.0" y="181" width="0.6" height="15.0" fill="rgb(227,150,24)" rx="2" ry="2" />
+<text  x="780.00" y="191.5" ></text>
+</g>
+<g >
+<title>std::__advance&lt;__gnu_cxx::__normal_iterator&lt;int*, std::vector&lt;int, std::allocator&lt;int&gt; &gt; &gt;, long&gt; (100 samples, 5.05%)</title><rect x="718.0" y="197" width="59.6" height="15.0" fill="rgb(234,161,1)" rx="2" ry="2" />
+<text  x="721.00" y="207.5" >std::_..</text>
+</g>
+<g >
+<title>main::{lambda (1,403 samples, 70.86%)</title><rect x="252.6" y="245" width="836.1" height="15.0" fill="rgb(215,46,20)" rx="2" ry="2" />
+<text  x="255.56" y="255.5" >main::{lambda</text>
+</g>
+<g >
+<title>rcu_process_callbacks (1 samples, 0.05%)</title><rect x="777.0" y="117" width="0.6" height="15.0" fill="rgb(219,54,48)" rx="2" ry="2" />
+<text  x="780.00" y="127.5" ></text>
+</g>
+</g>
+</svg>
