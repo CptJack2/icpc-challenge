@@ -43,6 +43,18 @@ vim /etc/docker/daemon.json
 ```
 systemctl restart docker
 
+#turn off swap
+swapoff -a
+
+#network block
+ufw status
+ufw disable
+iptables -P INPUT ACCEPT
+iptables -P OUTPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -F
+route add default gw 192.168.119.1
+
 ##清理
 kubeadm reset
 rm -rf .kube /etc/kubernetes
@@ -57,7 +69,7 @@ kubeadm config print init-defaults --kubeconfig ClusterConfiguration > kubeadm.y
 
 modify localAPIEndpoint->advertiseAddress
 change nodeRegistration->name
-change imageRepository if needed
+change imageRepository if needed (registry.aliyuncs.com/google_containers)
 change kubernetesVersion if needed
 
 add podSubnet: "192.168.0.0/16" after serviceSubnet, don't conflict with virtual machine host network cidr
@@ -95,15 +107,6 @@ vim /etc/docker/daemon.json
 "registry-mirrors": ["https://ustc-edu-cn.mirror.aliyuncs.com"]
 }
 service docker restart
-
-#network block
-ufw status
-ufw disable
-iptables -P INPUT ACCEPT
-iptables -P OUTPUT ACCEPT
-iptables -P FORWARD ACCEPT
-iptables -F
-route add default gw 192.168.119.1
 
 #docker pull proxy
 mkdir -p /etc/systemd/system/docker.service.d
