@@ -1,5 +1,48 @@
 #搭建Kubernetes集群
 
+#configure static ip address
+on host
+gen new mac addr for vm in vmware-> virtual machine settings -> network adapter -> advanced
+edit C:\ProgramData\VMware\vmnetdchp.conf
+add 
+```
+host kube-master {
+    hardware ethernet 00:50:56:35:81:8E;
+    fixed-address 192.168.174.131;
+}
+```
+restart vmware service
+
+#install kubernetes utils
+use proxy
+export http_proxy=192.168.174.1:7890
+export https_proxy=192.168.174.1:7890
+
+apt-get install -y apt-transport-https ca-certificates curl
+
+Download the Google Cloud public signing key
+curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+
+Add the Kubernetes apt repository:  
+echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+
+apt use proxy:
+echo 'Acquire::http::Proxy "http://192.168.174.1:7890";' > /etc/apt/apt.conf.d/apt_proxy.conf
+
+install utils (apt can't use http_proxy env var)
+apt update
+apt-get install -y kubelet kubeadm kubectl
+apt-mark hold kubelet kubeadm kubectl
+
+#change docker cgroup driver
+vim /etc/docker/daemon.json
+```json
+{
+  "exec-opts": ["native.cgroupdriver=systemd"]
+}
+```
+systemctl restart docker
+
 ##清理
 kubeadm reset
 rm -rf .kube /etc/kubernetes
