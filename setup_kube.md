@@ -57,7 +57,7 @@ route add default gw 192.168.119.1
 
 ##清理
 kubeadm reset
-rm -rf .kube /etc/kubernetes
+rm -rf ~/.kube /etc/kubernetes
 service kubelet stop
 
 ##kubeadm命令行
