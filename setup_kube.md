@@ -55,12 +55,12 @@ iptables -P FORWARD ACCEPT
 iptables -F
 route add default gw 192.168.119.1
 
-##清理
+#清理
 kubeadm reset
 rm -rf ~/.kube /etc/kubernetes
 service kubelet stop
 
-##kubeadm命令行
+#kubeadm命令行
 kubeadm init --pod-network-cidr 172.16.0.0/16
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
@@ -76,10 +76,13 @@ add podSubnet: "192.168.0.0/16" after serviceSubnet, don't conflict with virtual
 
 kubeadm init --config=kubeadm.yml
 
-##获取join命令
+#use kubelet 
+export KUBECONFIG=/etc/kubernetes/admin.conf
+
+#获取join命令
 kubeadm token create --print-join-command
 
-##slave加入
+#slave加入
 kubeadm join xxx
 
 #taint
