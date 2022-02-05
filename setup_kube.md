@@ -46,6 +46,9 @@ systemctl restart docker
 #turn off swap
 swapoff -a
 
+#check kubelet log
+journalctl -xeu kubelet
+
 #network block
 ufw status
 ufw disable
