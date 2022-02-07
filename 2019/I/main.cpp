@@ -58,7 +58,7 @@ public:
         auto pairRC=TryMove(st);
         char newR= pairRC.first;
         char newC= pairRC.second;
-        if(newR < r && newR > 0 && newC < c){
+        if(newR < r && newR > 0 && newC < c && newC>0){
             st.row=newR;
             st.col=newC;
         }
@@ -116,8 +116,8 @@ public:
     char condition;
     vector<Command*> Exec;
     bool Execute(RobotState& st) final{
-        vector<set<RobotState>> loopRoute;
-        while(JudgeCond(st,condition))
+        vector<set<RobotState>> loopRoute(Exec.size());
+        while(!JudgeCond(st,condition))
             for (int i = 0; i < Exec.size(); ++i) {
                 auto cmd=Exec[i];
                 if(loopRoute[i].insert(st).second==false)
