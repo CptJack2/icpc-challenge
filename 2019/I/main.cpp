@@ -132,7 +132,7 @@ public:
 int FindMatchingParentheses(string prog,int leftParIndex){ //return Right Parentheses Index
     stack<int> stackPar;
     stackPar.push(leftParIndex);
-    for(int i=leftParIndex;i<prog.size();++i){
+    for(int i=leftParIndex+1;i<prog.size();++i){
         if(prog[i]=='(')
             stackPar.push(i);
         else if(prog[i]==')'){
@@ -149,33 +149,32 @@ vector<Command*> ParseProgram(string prog){
     vector<Command*> ret;
     for(int i=0;i<prog.size();++i){
         if(prog[i]=='i'){
-            IfCommand iCmd;
-            iCmd.condition=prog[i+1];
+            IfCommand* iCmd=new IfCommand();
+            iCmd->condition=prog[i+1];
             int firstParEnd= FindMatchingParentheses(prog,i+2);
             int secParEnd=FindMatchingParentheses(prog,firstParEnd+1);
-            iCmd.TrueExec= ParseProgram(prog.substr(i+3,firstParEnd-1-(i+3)+1));
-            iCmd.FalseExec= ParseProgram(prog.substr(firstParEnd+2,secParEnd-1-(firstParEnd+2)+1));
-            ret.push_back(&iCmd);
+            iCmd->TrueExec= ParseProgram(prog.substr(i+3,firstParEnd-1-(i+3)+1));
+            iCmd->FalseExec= ParseProgram(prog.substr(firstParEnd+2,secParEnd-1-(firstParEnd+2)+1));
+            ret.push_back(iCmd);
             i=secParEnd;
         }else if(prog[i]=='u'){
-            UntilCommand uCmd;
-            uCmd.condition=prog[i+1];
+            UntilCommand* uCmd=new UntilCommand();
+            uCmd->condition=prog[i+1];
             int parEnd= FindMatchingParentheses(prog,i+2);
-            uCmd.Exec= ParseProgram(prog.substr(i+3,parEnd-1-(i+3)+1));
-            ret.push_back(&uCmd);
+            uCmd->Exec= ParseProgram(prog.substr(i+3,parEnd-1-(i+3)+1));
+            ret.push_back(uCmd);
             i=parEnd;
         }else if(prog[i]>='A' && prog[i]<='Z'){
-            CallCommand cCmd;
-            cCmd.procedure=prog[i];
-            ret.push_back(&cCmd);
+            CallCommand* cCmd=new CallCommand();
+            cCmd->procedure=prog[i];
+            ret.push_back(cCmd);
         }else if(prog[i]=='l'){
-            TurnCommand tCmd;
-            ret.push_back(&tCmd);
+            ret.push_back(new TurnCommand());
         }else if(prog[i]=='m'){
-            MoveCommand mCmd;
-            ret.push_back(&mCmd);
+            ret.push_back(new MoveCommand());
         }
     }
+    return ret;
 }
 
 int main(){
