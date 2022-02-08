@@ -15,6 +15,7 @@ RobotState Inf{-1,-1,-1};
 class Command{
 public:
     virtual bool Execute(RobotState& st)=0;//is infinite loop
+    string origianl_program;
 };
 
 int r,c,d,e;
@@ -42,7 +43,7 @@ pair<int,int> TryMove(const RobotState& st){
     int newC= st.col + dc;
     return make_pair(newR,newC);
 }
-int LookAhead(const RobotState& st){
+char LookAhead(const RobotState& st){
     auto pairRC=TryMove(st);
     int newR= pairRC.first;
     int newC= pairRC.second;
@@ -55,6 +56,8 @@ int LookAhead(const RobotState& st){
 class MoveCommand:public Command{
 public:
     bool Execute(RobotState& st) final{
+        if(LookAhead(st)=='#')
+            return false;
         auto pairRC=TryMove(st);
         int newR= pairRC.first;
         int newC= pairRC.second;
@@ -76,12 +79,15 @@ public:
 };
 class CallCommand:public Command {
 public:
+    static int stack_lv;
     char procedure;//A-Z for defined procedures, m for main function
     bool Execute(RobotState& st) final {
+        ++stack_lv;//todo
         auto cacheKey=make_pair(procedure,st);
         if(procedure!='m'){//should never cache the main function, because it's program changes
             if(executionCache.find(cacheKey)!=executionCache.end()){
                 st= executionCache[cacheKey];
+                --stack_lv;
                 return st==Inf;
             }
             executionCache[cacheKey]=Inf;
@@ -89,14 +95,19 @@ public:
         int ind=(procedure>='A' && procedure<='Z')?procedure-'A':26;
         for (int i = 0; i < programs[ind].size(); ++i) {
             auto cmd=programs[ind][i];
-            if(cmd->Execute(st))
+            if(cmd->Execute(st)){
+                --stack_lv;
                 return true;
+            }
         }
         if(procedure!='m')
             executionCache[cacheKey]=st;
+        --stack_lv;
         return false;
     }
 };
+int CallCommand::stack_lv=0;
+
 bool JudgeCond(const RobotState& st,const char cond){
     if(cond=='b')
         return LookAhead(st)=='#';
@@ -110,7 +121,8 @@ public:
     vector<Command*> FalseExec;
     bool Execute(RobotState& st) final{
         for(auto cmd :(JudgeCond(st,condition)?TrueExec:FalseExec))
-            cmd->Execute(st);
+            if(cmd->Execute(st))
+                return true;
         return false;
     }
 };
@@ -162,6 +174,7 @@ vector<Command*> ParseProgram(string prog){
             int secParEnd=FindMatchingParentheses(prog,firstParEnd+1);
             iCmd->TrueExec= ParseProgram(prog.substr(i+3,firstParEnd-1-(i+3)+1));
             iCmd->FalseExec= ParseProgram(prog.substr(firstParEnd+2,secParEnd-1-(firstParEnd+2)+1));
+            iCmd->origianl_program=prog.substr(i,secParEnd-i+1);
             ret.push_back(iCmd);
             i=secParEnd;
         }else if(prog[i]=='u'){
@@ -169,16 +182,22 @@ vector<Command*> ParseProgram(string prog){
             uCmd->condition=prog[i+1];
             int parEnd= FindMatchingParentheses(prog,i+2);
             uCmd->Exec= ParseProgram(prog.substr(i+3,parEnd-1-(i+3)+1));
+            uCmd->origianl_program=prog.substr(i,parEnd-i+1);
             ret.push_back(uCmd);
             i=parEnd;
         }else if(prog[i]>='A' && prog[i]<='Z'){
             CallCommand* cCmd=new CallCommand();
             cCmd->procedure=prog[i];
+            cCmd->origianl_program=prog[i];
             ret.push_back(cCmd);
         }else if(prog[i]=='l'){
-            ret.push_back(new TurnCommand());
+            auto cmd=new TurnCommand();
+            cmd->origianl_program='l';
+            ret.push_back(cmd);
         }else if(prog[i]=='m'){
-            ret.push_back(new MoveCommand());
+            auto cmd=new MoveCommand();
+            cmd->origianl_program='m';
+            ret.push_back(cmd);
         }
     }
     return ret;
@@ -205,9 +224,10 @@ int main(){
         programs[26]=ParseProgram(prog);
         CallCommand cCmd;
         cCmd.procedure='m';
+        cCmd.origianl_program='m';
         if(cCmd.Execute(st))
             cout<<"inf"<<endl;
         else
-            cout<<st.row<<" "<<st.col<<" "<<st.direction<<" "<<endl;
+            cout<<st.row<<" "<<st.col<<" "<<st.direction<<endl;
     }
 }
