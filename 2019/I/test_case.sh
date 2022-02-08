@@ -20,11 +20,14 @@ for inf in $input;do
   extension="${filename##*.}"
   ans_filename="${filename%.*}"".ans"
   ans=$(cat $inf |./main)
+  echo "$ans" > ../icpc2019data/I-karel/my_ans
   correct=$(cat ../icpc2019data/I-karel/$ans_filename)
   if [ "$ans" != "$correct" ];then
     echo "failed"
 #    echo "correct " $correct
 #    echo "ans " $ans
+    diff ../icpc2019data/I-karel/$ans_filename ../icpc2019data/I-karel/my_ans
+    exit
   else
     echo "succ"
   fi
