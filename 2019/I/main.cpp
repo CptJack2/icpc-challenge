@@ -79,18 +79,21 @@ public:
     char procedure;//A-Z for defined procedures, m for main function
     bool Execute(RobotState& st) final {
         auto cacheKey=make_pair(procedure,st);
-        if(executionCache.find(cacheKey)!=executionCache.end()){
-            st= executionCache[cacheKey];
-            return st==Inf;
+        if(procedure!='m'){//should never cache the main function, because it's program changes
+            if(executionCache.find(cacheKey)!=executionCache.end()){
+                st= executionCache[cacheKey];
+                return st==Inf;
+            }
+            executionCache[cacheKey]=Inf;
         }
-        executionCache[cacheKey]=Inf;
         int ind=(procedure>='A' && procedure<='Z')?procedure-'A':26;
         for (int i = 0; i < programs[ind].size(); ++i) {
             auto cmd=programs[ind][i];
             if(cmd->Execute(st))
                 return true;
         }
-        executionCache[cacheKey]=st;
+        if(procedure!='m')
+            executionCache[cacheKey]=st;
         return false;
     }
 };
@@ -113,22 +116,26 @@ public:
 };
 class UntilCommand:public Command{
 public:
+    static int stack_lv;
     char condition;
     vector<Command*> Exec;
     bool Execute(RobotState& st) final{
+        ++stack_lv;
         vector<set<RobotState>> loopRoute(Exec.size());
         while(!JudgeCond(st,condition))
             for (int i = 0; i < Exec.size(); ++i) {
                 auto cmd=Exec[i];
-                if(loopRoute[i].insert(st).second==false)
+                if(loopRoute[i].insert(st).second==false ||
+                    cmd->Execute(st)){
+                    --stack_lv;//todo remvoe debug code
                     return true;
-                if(cmd->Execute(st))
-                    return true;
+                }
             }
+        --stack_lv;
         return false;
     }
 };
-
+int UntilCommand::stack_lv=0;
 int FindMatchingParentheses(string prog,int leftParIndex){ //return Right Parentheses Index
     stack<int> stackPar;
     stackPar.push(leftParIndex);
