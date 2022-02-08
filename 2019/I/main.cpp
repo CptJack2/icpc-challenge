@@ -14,15 +14,16 @@ RobotState Inf{-1,-1,-1};
 
 class Command{
 public:
-    virtual bool Execute(RobotState& st)=0;//is infinite loop
-    string origianl_program;
+    virtual bool Execute(RobotState& st)=0;//返回值指示这个命令是否陷入了无限循环
+    string origianl_program;//原始的程序文本，debug用
 };
 
 int r,c,d,e;
 vector<vector<char>> grid;
 vector<vector<Command*>> programs(27); //procedure A-Z, and last is main
-map<pair<char,RobotState>,RobotState> executionCache;
+map<pair<char,RobotState>,RobotState> executionCache;//用于存储某个状态输入到函数得到的输出状态，下次就不用再算了，用于加速。同时这个cache也能帮助识别出无穷递归调用
 
+//返回Robot向前迈出一步后的坐标
 pair<int,int> TryMove(const RobotState& st){
     int dr,dc;
     switch(st.direction){
@@ -43,6 +44,7 @@ pair<int,int> TryMove(const RobotState& st){
     int newC= st.col + dc;
     return make_pair(newR,newC);
 }
+//Robot看看自己前方是障碍还是可以走
 char LookAhead(const RobotState& st){
     auto pairRC=TryMove(st);
     int newR= pairRC.first;
@@ -205,7 +207,6 @@ int main(){
         char prog_n=prog.front();
         programs[prog_n-'A']=ParseProgram(prog.substr(2));
     }
-    map<pair<char,RobotState>,RobotState> exectuionCache;
     for (int i = 0; i < e; ++i) {
         RobotState st;
         cin>>st.row>>st.col>>st.direction;
@@ -213,11 +214,13 @@ int main(){
         cin>>prog;
         programs[26]=ParseProgram(prog);
         CallCommand cCmd;
-        cCmd.procedure='m';
+        cCmd.procedure='m';//m代表main function，程序入口点
         cCmd.origianl_program='m';
         if(cCmd.Execute(st))
             cout<<"inf"<<endl;
         else
             cout<<st.row<<" "<<st.col<<" "<<st.direction<<endl;
+        for(auto cmd : programs[26])//释放内存好习惯
+            delete cmd;
     }
 }
