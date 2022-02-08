@@ -133,16 +133,19 @@ public:
     vector<Command*> Exec;
     bool Execute(RobotState& st) final{
         ++stack_lv;
-        vector<set<RobotState>> loopRoute(Exec.size());
-        while(!JudgeCond(st,condition))
+        vector<set<RobotState>> loopRoute(Exec.size()+1);//the last route for the while expression
+        while(!JudgeCond(st,condition)) {
+            if(loopRoute[Exec.size()].insert(st).second==false)
+                return true;
             for (int i = 0; i < Exec.size(); ++i) {
-                auto cmd=Exec[i];
-                if(loopRoute[i].insert(st).second==false ||
-                    cmd->Execute(st)){
+                auto cmd = Exec[i];
+                if (loopRoute[i].insert(st).second == false ||
+                    cmd->Execute(st)) {
                     --stack_lv;//todo remvoe debug code
                     return true;
                 }
             }
+        }
         --stack_lv;
         return false;
     }
