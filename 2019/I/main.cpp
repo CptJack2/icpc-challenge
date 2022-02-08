@@ -79,15 +79,12 @@ public:
 };
 class CallCommand:public Command {
 public:
-    static int stack_lv;
     char procedure;//A-Z for defined procedures, m for main function
     bool Execute(RobotState& st) final {
-        ++stack_lv;//todo
         auto cacheKey=make_pair(procedure,st);
         if(procedure!='m'){//should never cache the main function, because it's program changes
             if(executionCache.find(cacheKey)!=executionCache.end()){
                 st= executionCache[cacheKey];
-                --stack_lv;
                 return st==Inf;
             }
             executionCache[cacheKey]=Inf;
@@ -95,18 +92,14 @@ public:
         int ind=(procedure>='A' && procedure<='Z')?procedure-'A':26;
         for (int i = 0; i < programs[ind].size(); ++i) {
             auto cmd=programs[ind][i];
-            if(cmd->Execute(st)){
-                --stack_lv;
+            if(cmd->Execute(st))
                 return true;
-            }
         }
         if(procedure!='m')
             executionCache[cacheKey]=st;
-        --stack_lv;
         return false;
     }
 };
-int CallCommand::stack_lv=0;
 
 bool JudgeCond(const RobotState& st,const char cond){
     if(cond=='b')
@@ -128,11 +121,9 @@ public:
 };
 class UntilCommand:public Command{
 public:
-    static int stack_lv;
     char condition;
     vector<Command*> Exec;
     bool Execute(RobotState& st) final{
-        ++stack_lv;
         vector<set<RobotState>> loopRoute(Exec.size()+1);//the last route for the while expression
         while(!JudgeCond(st,condition)) {
             if(loopRoute[Exec.size()].insert(st).second==false)
@@ -140,17 +131,13 @@ public:
             for (int i = 0; i < Exec.size(); ++i) {
                 auto cmd = Exec[i];
                 if (loopRoute[i].insert(st).second == false ||
-                    cmd->Execute(st)) {
-                    --stack_lv;//todo remvoe debug code
+                    cmd->Execute(st))
                     return true;
-                }
             }
         }
-        --stack_lv;
         return false;
     }
 };
-int UntilCommand::stack_lv=0;
 int FindMatchingParentheses(string prog,int leftParIndex){ //return Right Parentheses Index
     stack<int> stackPar;
     stackPar.push(leftParIndex);
