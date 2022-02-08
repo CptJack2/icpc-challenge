@@ -1,4 +1,4 @@
-  #!/bin/bash
+#!/bin/bash
 
 pid=$(ps aux|grep main|grep -v grep|awk '{print $2}')
 perf record -F 99 -p $pid -g -- sleep 20
