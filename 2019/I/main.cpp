@@ -3,8 +3,8 @@ using namespace std;
 
 struct RobotState{
     //row and col in [0,40]
-    char row;
-    char col;
+    int row;
+    int col;
     char direction;
     bool operator<(const RobotState& st2)const{return row<st2.row || row==st2.row && col<st2.col || row==st2.row && col==st2.col &&direction<st2.direction;}
     bool operator==(const RobotState& st2)const{return row==st2.row && col==st2.col &&direction==st2.direction;}
@@ -22,8 +22,8 @@ vector<vector<char>> grid;
 vector<vector<Command*>> programs(27); //procedure A-Z, and last is main
 map<pair<char,RobotState>,RobotState> executionCache;
 
-pair<char,char> TryMove(const RobotState& st){
-    char dr,dc;
+pair<int,int> TryMove(const RobotState& st){
+    int dr,dc;
     switch(st.direction){
         case 'w':
             dr=0;dc=-1;
@@ -38,15 +38,15 @@ pair<char,char> TryMove(const RobotState& st){
             dr=-1;dc=0;
             break;
     }
-    char newR= st.row + dr;
-    char newC= st.col + dc;
+    int newR= st.row + dr;
+    int newC= st.col + dc;
     return make_pair(newR,newC);
 }
-char LookAhead(const RobotState& st){
+int LookAhead(const RobotState& st){
     auto pairRC=TryMove(st);
-    char newR= pairRC.first;
-    char newC= pairRC.second;
-    if(newR < r && newR > 0 && newC < c)
+    int newR= pairRC.first;
+    int newC= pairRC.second;
+    if(newR <= r && newR >= 1 && newC <= c && newC >= 1)
         return grid[newR][newC];
     else
         return '#';
@@ -56,9 +56,9 @@ class MoveCommand:public Command{
 public:
     bool Execute(RobotState& st) final{
         auto pairRC=TryMove(st);
-        char newR= pairRC.first;
-        char newC= pairRC.second;
-        if(newR < r && newR > 0 && newC < c && newC>0){
+        int newR= pairRC.first;
+        int newC= pairRC.second;
+        if(newR <= r && newR >= 1 && newC <= c && newC >= 1){
             st.row=newR;
             st.col=newC;
         }
@@ -179,9 +179,9 @@ vector<Command*> ParseProgram(string prog){
 
 int main(){
     cin>>r>>c>>d>>e;
-    grid.resize(r, vector<char>(c));
-    for(int i=0;i<r;++i)
-        for(int j=0; j < c; ++j)
+    grid.resize(r+1, vector<char>(c+1));
+    for(int i=1;i<=r;++i)
+        for(int j=1; j <= c; ++j)
             cin >> grid[i][j];
     for(int i=0;i<d;++i){
         string prog;
