@@ -1,6 +1,9 @@
 #ICPC 2019 World Final H题 Hobson's Train题解
 这个题有点意思，简单写一下题解
 
+#问题简述
+Hobson先生退休后迷上了铁路，每个火车站都有且只有一个出站方向，连接到另外一个火车站，一个火车站可以有0至多个入站。现在问在最多k次前进中，每一个站可以到达其他哪些站点。
+
 #算法解析
 算法总体上其实挺简单的，主要实现上比较繁琐，注意的细节要多一点，基本思路跟这个大神是一样的
 https://github.com/SnapDragon64/ACMFinalsSolutions/blob/master/finals2019/hobsonstrainsDK.cc
