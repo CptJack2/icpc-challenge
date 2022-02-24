@@ -21,23 +21,35 @@ int main() {
 			int itot = tot[i], jtot = tot[j], interval_end = 1000000000;
 			if (jtot <= itot) cur++;
 			if(i==j)continue;
-			set<int,greater<>> limits;
+			set<int,greater<int>> limits;
 			for(auto l:scores[i])
 				limits.insert(l);
 			for(auto l:scores[j])
 				limits.insert(l);
-			limits.insert(interval_end);
-			for (int iholes = 0, jholes = 0; iholes < H || jholes < H; scores[i][iholes]>scores[j][jholes]?++iholes:++jholes) {
-				int interval_start =scores[i][iholes] > scores[j][jholes] ? scores[i][iholes] : scores[j][jholes];
+			limits.insert(1000000000);
+			int iholes=0,jholes=0;
+			for (auto it=limits.begin();it!=prev(limits.end());++it) {
+				int interval_end=*it, interval_start=*next(it);
+				while(scores[i][iholes]>interval_start)++iholes;
+				while(scores[j][jholes]>interval_start)++jholes;
 				bool end_i_bigger = (jtot < itot);
 				itot -= (interval_end - interval_start) * iholes;
 				jtot -= (interval_end - interval_start) * jholes;
 				bool start_i_bigger = (jtot < itot);
-				if (iholes != jholes && start_i_bigger ^ end_i_bigger)
-					events.emplace_back(interval_start + double(itot - jtot) / (jholes - iholes), end_i_bigger ? -1 : 1);
+				auto add_events=[&](double pos,int v){
+					if(!events.empty() && events.back().first== pos)
+						events.back().second+=v;
+					else
+						events.emplace_back(pos,v);
+				};
+				if (iholes != jholes && start_i_bigger ^ end_i_bigger){
+//					double intersection_point= interval_start + double(itot - jtot) / (jholes - iholes);
+//					if(intersection_point - interval_start > 1)
+//						events.emplace_back(intersection_point, end_i_bigger ? -1 : 1);
+					add_events(interval_start + double(itot - jtot) / (jholes - iholes), end_i_bigger ? -1 : 1);
+				}
 				else if(iholes==jholes && itot==jtot) //区间内曲线重叠
-					events.emplace_back(interval_end,1);
-				interval_end = interval_start;
+					add_events(interval_end,1);
 			}
 		}
 		sort(events.begin(), events.end(), greater<pair<double, int>>());
