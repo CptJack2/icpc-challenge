@@ -23,10 +23,10 @@ int main() {
 			for (int j = 0; j < P; j++) {
 				int64_t itot = tot[i], jtot = tot[j], lim = 1000000000;
 				if (jtot <= itot) cur++;
-				for (int ih = 0, jh = 0; ih < H || jh < H; S[i][ih] > S[j][jh] ? ih++ : jh++) {//如果S[i]和S[j]中有重复的，29行lim会等于v，相当于tot无变化，后面的if无影响
+				for (int ih = 0, jh = 0; ih < H || jh < H; S[i][ih] > S[j][jh] ? ih++ : jh++) {
 					bool old = (jtot <= itot);//这里的条件比较巧妙，具体看下面
-					int v = max(S[i][ih], S[j][jh]);
-					itot -= (lim-v) * ih; jtot -= (lim-v) * jh;
+					int v = max(S[i][ih], S[j][jh]);//不断取ij的scores中较大者为lim,如果有重复,当两个都到达小值时才会进入下一lim
+					itot -= (lim-v) * ih; jtot -= (lim-v) * jh;//对两者总score进行裁减
 					lim = v;
 					if (!old && jtot <= itot) {
 						/*排名要+1，在前一lim需要jtot>itot（=不行，因为排名算的是小于等于自己分数的个数），当前lim jtot <= itot
