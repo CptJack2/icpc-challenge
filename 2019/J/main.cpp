@@ -5,7 +5,7 @@ int main() {
 	int P, H;
 	cin>>P>>H;
 	vector<vector<int>> scores(P, vector<int>(H));
-	vector<int> sum(P,0);
+	vector<long> sum(P,0);//洞数的总和最大为500*10^9,需要用long
 	for (int i = 0; i < P; i++) {
 		for (int j = 0; j < H; j++) {
 			cin >> scores[i][j];
@@ -21,7 +21,7 @@ int main() {
 		for (int j = 0; j < P; j++) {
 			if (j == i)
 				continue;
-			int isum = sum[i], jsum = sum[j];
+			long isum = sum[i], jsum = sum[j];
 			if (jsum <= isum)
 				++rank;
 			//以i号玩家和j号玩家的分数作为limit
