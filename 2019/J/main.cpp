@@ -18,7 +18,7 @@ int main() {
 		}
 
 		for (int i = 0; i < P; i++) {
-			vector<pair<int, int>> events;
+			vector<pair<int, int>> events;//pair中第一个int为取的lim,第二个表示取此lim时,排名需要如何变化
 			int cur = 0;
 			for (int j = 0; j < P; j++) {
 				int64_t itot = tot[i], jtot = tot[j], lim = 1000000000;
