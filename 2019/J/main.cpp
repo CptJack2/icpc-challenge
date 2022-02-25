@@ -3,6 +3,7 @@ using namespace std;
 
 int main() {
 	int P, H;
+	cin>>P>>H;
 	vector<vector<int>> scores(P, vector<int>(H));
 	vector<int> sum(P,0);
 	for (int i = 0; i < P; i++) {
@@ -32,10 +33,10 @@ int main() {
 			for (auto it = limits.begin(); it != prev(limits.end()); ++it) {
 				bool jLessEqual = (jsum <= isum);
 				int lim = *next(it), prevLim = *it;
-				isum -= (prevLim - lim) * iLimitedHoles;
-				jsum -= (prevLim - lim) * jLimitedHoles;
 				while (lim < scores[i][iLimitedHoles])++iLimitedHoles;
 				while (lim < scores[j][jLimitedHoles])++jLimitedHoles;
+				isum -= (prevLim - lim) * iLimitedHoles;
+				jsum -= (prevLim - lim) * jLimitedHoles;
 				//排名要+1，在前一lim需要jsum>isum（=不行，因为排名算的是小于等于自己分数的个数），当前lim jsum <= isum
 				//排名要-1，在前一lim需要jsum<=isum，在当前lim jsum>isum
 				if (!jLessEqual && jsum <= isum || jLessEqual && jsum > isum) {

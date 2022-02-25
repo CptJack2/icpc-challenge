@@ -5,6 +5,9 @@ if [ $1 == "case" ];then
   ans=$(cat ../icpc2019data/J-minigolf/$2.in |./main)
   if [ "$ans" != "$correct" ];then
     echo "failed"
+    echo "$ans" > ../icpc2019data/J-minigolf/my_ans
+    ans_filename="$2.ans"
+    diff ../icpc2019data/J-minigolf/$ans_filename ../icpc2019data/J-minigolf/my_ans
   else
     echo "succ"
   fi
