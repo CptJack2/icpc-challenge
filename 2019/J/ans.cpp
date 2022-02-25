@@ -18,7 +18,7 @@ int main() {
 		vector<pair<double, int>> events;//intersection point
 		int cur = 0;
 		for (int j = 0; j < P; j++) {
-			int itot = tot[i], jtot = tot[j], interval_end = 1000000000;
+			int itot = tot[i], jtot = tot[j];
 			if (jtot <= itot) cur++;
 			if(i==j)continue;
 			set<int,greater<int>> limits;
@@ -37,6 +37,7 @@ int main() {
 				jtot -= (interval_end - interval_start) * jholes;
 				bool start_i_bigger = (jtot < itot);
 				auto add_events=[&](double pos,int v){
+					if(pos==1)return;
 					if(!events.empty() && events.back().first== pos)
 						events.back().second+=v;
 					else
