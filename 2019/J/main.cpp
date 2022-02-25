@@ -33,8 +33,8 @@ int main() {
 			for (auto it = limits.begin(); it != prev(limits.end()); ++it) {
 				bool jLessEqual = (jsum <= isum);
 				int lim = *next(it), prevLim = *it;
-				while (lim < scores[i][iLimitedHoles])++iLimitedHoles;
-				while (lim < scores[j][jLimitedHoles])++jLimitedHoles;
+				while (lim < scores[i][iLimitedHoles] && iLimitedHoles<H)++iLimitedHoles;
+				while (lim < scores[j][jLimitedHoles] && jLimitedHoles<H)++jLimitedHoles;
 				isum -= (prevLim - lim) * iLimitedHoles;
 				jsum -= (prevLim - lim) * jLimitedHoles;
 				//排名要+1，在前一lim需要jsum>isum（=不行，因为排名算的是小于等于自己分数的个数），当前lim jsum <= isum
