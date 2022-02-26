@@ -16,8 +16,8 @@ int main() {
 
 	for (int i = 0; i < P; i++) {
 		int rank = 1;//自己的一个
-		//pair中第一个int为取的lim,第二个表示取此lim时,排名需要如何变化
-		vector<pair<int, int>> rankChange;
+		//map key为取的lim, value表示取此lim时,排名需要如何变化
+		map<int,int,greater<int>> rankChange;
 		for (int j = 0; j < P; j++) {
 			if (j == i)
 				continue;
@@ -47,12 +47,10 @@ int main() {
 					//对于-1的效果,如果交点是整数,需要计入前一个点
 					if (jLessEqual && jsum > isum && int(intersectionPoint) == intersectionPoint)
 						--updatePoint;
-					rankChange.emplace_back(updatePoint, !jLessEqual ? 1 : -1);
+					rankChange[updatePoint]+=!jLessEqual?1:-1;
 				}
 			}
 		}
-		//根据更新点大小从大到小排序rankChange
-		sort(rankChange.begin(), rankChange.end(), greater<pair<int,int>>());
 		int minRank = rank;
 		for (auto const &r : rankChange) {
 			rank += r.second;
