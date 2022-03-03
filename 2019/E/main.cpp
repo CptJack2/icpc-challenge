@@ -3,27 +3,27 @@ using namespace std;
 
 int n,m;
 vector<set<int>> graph;
-void find_connected_componet(int index,int parent, vector<int>& ret, vector<bool>& visited, bool& is_tree){
+vector<bool> visited;
+
+void find_connected_componet(int index, vector<int>& ret){
 	if(visited[index])return;
 	visited[index]=true;
-//	if(is_tree)
-//		for(auto v:ret){
-//			//新加入的节点有除了来的路之外,能到达已加入的节点的其他路径,
-//			if(graph[index].count(v) && parent!=v)
-//				is_tree=false;
-//		}
 	ret.push_back(index);
 	for(auto i: graph[index]){
 		if(!visited[i])
-			find_connected_componet(i,index,ret,visited,is_tree);
-		else if(is_tree)
-			//新加入的点能到达已访问的点,此图不是树
-			is_tree= false;
+			find_connected_componet(i,ret);
 	}
+}
+int total_degrees(const vector<int>& nodes){
+	int ret=0;
+	for(auto v: nodes)
+		ret+=graph[v].size();
+	return ret;
 }
 int main(){
 	cin>>n>>m;
 	graph.resize(n+1);
+	visited.resize(n+1, false);
 	for (int i = 0; i < m; ++i) {
 		int v,w;
 		cin>>v>>w;
@@ -32,6 +32,40 @@ int main(){
 	}
 	vector<pair<int,int>>ret;
 	for (int i = 1; i <= n; ++i) {
-
+		if(visited[i])continue;
+		vector<int> connectedComponet;
+		find_connected_componet(i,connectedComponet);
+		int totalDegree= total_degrees(connectedComponet);
+		//连通分量是树
+		if(totalDegree==2*(connectedComponet.size()-1)){
+			//所有叶子节点的出路放置标志
+			for(auto v:connectedComponet)
+				if(graph[v].size()==1)
+					ret.emplace_back(v,*graph[v].begin());
+		} else{
+			map<int,int> nonLeaf;//node index -> degree
+			for(int v : connectedComponet)
+				nonLeaf[v]=graph[v].size();
+			bool needContinue= false;
+			do{
+				needContinue= false;
+				for(auto v:nonLeaf)
+					//leaf node, remove and update degree
+					if(v.second==1){
+						for(auto v2:graph[v.first])
+							--nonLeaf[v2];
+						nonLeaf.erase(v.first);
+						needContinue=true;
+					}
+			}while(needContinue);
+			for(auto v:nonLeaf)
+				for (auto v2:graph[v.first])
+					if(!nonLeaf.count(v2))
+						ret.emplace_back(v.first,v2);
+		}
 	}
+	sort(ret.begin(),ret.end());
+	cout<<ret.size()<<endl;
+	for(auto r:ret)
+		cout<<r.first<<" "<<r.second<<endl;
 }
