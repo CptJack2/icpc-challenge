@@ -49,7 +49,7 @@ int main(){
 			++counter.matched;
 		}
 		if(counter==Counter{0, 0})++availableTypes;
-		if(maxTypes <= availableTypes){
+		if(maxTypes < availableTypes || maxTypes==availableTypes && minCutPoint>i ){
 			maxTypes=availableTypes;
 			minCutPoint=i;
 		}
