@@ -28,19 +28,17 @@ int main(){
 				++typeCounter[dna[i].type].mismatched_e;
 		}
 	}
-	auto countAvailableTypes=[&]()->int{
-		int availableTypes=0;
-		for(auto d:typeCounter) {
-			if (d.second == Counter{0, 0})
-				++availableTypes;
-		}
-		return availableTypes;
-	};
-	int minCutPoint=0,maxTypes=countAvailableTypes();
+	int availableTypes=0;
+	for(auto d:typeCounter) {
+		if (d.second == Counter{0, 0})
+			++availableTypes;
+	}
+	int minCutPoint=0,maxTypes=availableTypes;
 	for (int i = n-1; i >0 ; --i) {
 		auto& counter=typeCounter[dna[i].type];
 		//如果s和e数量不相等,这个type不可能nested了,直接不管它了
 		if(counter.matched- counter.mismatched_e!=0)continue;
+		if(counter==Counter{0, 0})--availableTypes;
 		if(dna[i].marker=='s'){
 			if (counter.mismatched_e != 0) {
 				--counter.mismatched_e;
@@ -50,9 +48,9 @@ int main(){
 			++counter.mismatched_e;
 			++counter.matched;
 		}
-		int types=countAvailableTypes();
-		if(maxTypes <= types){
-			maxTypes=types;
+		if(counter==Counter{0, 0})++availableTypes;
+		if(maxTypes <= availableTypes){
+			maxTypes=availableTypes;
 			minCutPoint=i;
 		}
 	}
