@@ -5,14 +5,28 @@ int n,m;
 vector<set<int>> graph;
 vector<bool> visited;
 
-void find_connected_componet(int index, vector<int>& ret){
-	if(visited[index])return;
-	visited[index]=true;
-	ret.push_back(index);
-	for(auto i: graph[index]){
-		if(!visited[i])
-			find_connected_componet(i,ret);
+vector<int> find_connected_componet(int src){
+	vector<int> ret;
+	stack <int> s;
+
+	if(!visited[src]){
+		visited[src] = true;
+		s.push(src);
 	}
+	else
+		return ret;
+
+	while(!s.empty()){
+		int s_top =  s.top();
+		ret.push_back(s_top);
+		s.pop();
+		for(auto v:graph[s_top])
+			if(!visited[v]){
+				visited[v]=true;
+				s.push(v);
+			}
+	}
+	return ret;
 }
 int total_degrees(const vector<int>& nodes){
 	int ret=0;
@@ -33,8 +47,7 @@ int main(){
 	vector<pair<int,int>>ret;
 	for (int i = 1; i <= n; ++i) {
 		if(visited[i])continue;
-		vector<int> connectedComponet;
-		find_connected_componet(i,connectedComponet);
+		auto connectedComponet=find_connected_componet(i);
 		int totalDegree= total_degrees(connectedComponet);
 		//连通分量是树
 		if(totalDegree==2*(connectedComponet.size()-1)){
