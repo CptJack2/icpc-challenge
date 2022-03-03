@@ -57,23 +57,30 @@ int main(){
 					ret.emplace_back(v,*graph[v].begin());
 		} else{
 			map<int,int> nonLeaf;//node index -> degree
-			for(int v : connectedComponet)
+			map<int,set<int>> degreeIndex;//degree -> index set
+			auto maintainDegreeIndex=[&](int index,int oldDegree, int newDegree){
+				if(oldDegree!=0){
+					degreeIndex[oldDegree].erase(index);
+				}
+				degreeIndex[newDegree].insert(index);
+			};
+			for(int v : connectedComponet){
 				nonLeaf[v]=graph[v].size();
-			bool needContinue= false;
-			do{
-				needContinue= false;
-				for(auto it=nonLeaf.begin();it!=nonLeaf.end();++it)
+				maintainDegreeIndex(v,0,graph[v].size());
+			}
+			while(degreeIndex.count(1) && !degreeIndex[1].empty()){
+				auto t=degreeIndex[1];
+				for(auto v:t) {
 					//leaf node, remove and update degree
-					if(it->second==1){
-						for(auto v2:graph[it->first])
-							if(nonLeaf.count(v2))
-								--nonLeaf[v2];
-						auto t=prev(it);
-						nonLeaf.erase(it);
-						it=t;
-						needContinue=true;
-					}
-			}while(needContinue);
+					for (auto v2:graph[v])
+						if (nonLeaf.count(v2)) {
+							maintainDegreeIndex(v2, nonLeaf[v2], nonLeaf[v2] - 1);
+							--nonLeaf[v2];
+						}
+					nonLeaf.erase(v);
+					degreeIndex[1].erase(v);
+				}
+			}
 			for(auto v:nonLeaf)
 				for (auto v2:graph[v.first])
 					if(!nonLeaf.count(v2))
