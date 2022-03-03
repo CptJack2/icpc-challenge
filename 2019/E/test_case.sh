@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [[ -z "$1" && $1 == "case" ]];then
+if [[ $1 == "case" ]];then
   correct=$(cat ../icpc2019data/E-deadend/$2.ans)
   ans=$(cat ../icpc2019data/E-deadend/$2.in |./main)
   if [ "$ans" != "$correct" ];then

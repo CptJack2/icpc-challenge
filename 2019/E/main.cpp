@@ -49,12 +49,15 @@ int main(){
 			bool needContinue= false;
 			do{
 				needContinue= false;
-				for(auto v:nonLeaf)
+				for(auto it=nonLeaf.begin();it!=nonLeaf.end();++it)
 					//leaf node, remove and update degree
-					if(v.second==1){
-						for(auto v2:graph[v.first])
-							--nonLeaf[v2];
-						nonLeaf.erase(v.first);
+					if(it->second==1){
+						for(auto v2:graph[it->first])
+							if(nonLeaf.count(v2))
+								--nonLeaf[v2];
+						auto t=prev(it);
+						nonLeaf.erase(it);
+						it=t;
 						needContinue=true;
 					}
 			}while(needContinue);
