@@ -15,7 +15,6 @@ int main(){
 	cin>>n;
 	vector<Gene> dna(n);
 	map<int,Counter> typeCounter;//gene type -> counter
-	//auto updateCounter=[&]{};
 	for (int i = 0; i < n; ++i) {
 		cin>>dna[i].marker>>dna[i].type;
 		if(!typeCounter.count(dna[i].type))
@@ -23,7 +22,7 @@ int main(){
 		if(dna[i].marker=='s'){
 			++typeCounter[dna[i].type].matched;
 		}else{
-			if(typeCounter[dna[i].type].matched!=0)
+			if(typeCounter[dna[i].type].matched>0)
 				--typeCounter[dna[i].type].matched;
 			else
 				++typeCounter[dna[i].type].mismatched_e;
@@ -37,21 +36,25 @@ int main(){
 		}
 		return availableTypes;
 	};
-	int minCutPoint=n-1,minTypes=countAvailableTypes();
+	int minCutPoint=0,maxTypes=countAvailableTypes();
 	for (int i = n-1; i >0 ; --i) {
 		auto& counter=typeCounter[dna[i].type];
+		//如果s和e数量不相等,这个type不可能nested了,直接不管它了
+		if(counter.matched- counter.mismatched_e!=0)continue;
 		if(dna[i].marker=='s'){
-			if(counter.mismatched_e!=0)
+			if (counter.mismatched_e != 0) {
 				--counter.mismatched_e;
+				--counter.matched;
+			}
 		} else{
 			++counter.mismatched_e;
 			++counter.matched;
 		}
 		int types=countAvailableTypes();
-		if(minTypes>=types){
-			minTypes=types;
-			minCutPoint=i+1;
+		if(maxTypes <= types){
+			maxTypes=types;
+			minCutPoint=i;
 		}
 	}
-	cout<<minCutPoint+1<<" "<<minTypes;
+	cout <<minCutPoint+1 << " " << maxTypes;
 }
