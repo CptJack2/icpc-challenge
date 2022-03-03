@@ -1,3 +1,5 @@
+/*这题不难，但是就是没太看懂出题啥意思，看官方解答视频就可以了，代码也是一样的算法。
+ * 有一说一，这题真的挺无聊的。*/
 #include "bits/stdc++.h"
 using namespace std;
 
@@ -57,7 +59,7 @@ int main(){
 					ret.emplace_back(v,*graph[v].begin());
 		} else{
 			map<int,int> nonLeaf;//node index -> degree
-			map<int,set<int>> degreeIndex;//degree -> index set
+			map<int,set<int>> degreeIndex;//degree -> index set, to speed up finding the degree 1 node
 			auto maintainDegreeIndex=[&](int index,int oldDegree, int newDegree){
 				if(oldDegree!=0){
 					degreeIndex[oldDegree].erase(index);
