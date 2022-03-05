@@ -39,7 +39,7 @@ int main(){
 	};
 	dfs(&nodes[1]);
 	//统计第一个字母的排序
-	vector<int> rank(n+1);//queen name的前2^k个字母的排序
+	vector<int> rank(n+1);//queen name的前2^k个字母的排序, rank[node index]=字典序排名
 	for (int i = 0; i <= n; ++i)
 		rank[i]=nodes[i].c-'A'+1;
 	struct rankKey{
@@ -57,5 +57,33 @@ int main(){
 		for (int i = 1; i <= n; ++i)
 			rank[i]=distinctRankKeys[rankKey{rank[i], i+dist<n? rank[i+dist] : 0}];
 	}
-
+	//转换rank
+	vector<int> prefixArray(n+1);//prefixArray[字典序排名]=node index
+	for (int i = 1; i <=n ; ++i)
+		prefixArray[rank[i]]=i;
+	//读入查询串,二分查找
+	for (int i = 0; i < k; ++i) {
+		string queryStr;
+		cin >> queryStr;
+		auto cmp=[&](const int& index,const string& qstr){//->bool{
+			auto p=&nodes[index];
+			for(auto c:qstr){
+				if(p->c<c)
+					return true;
+				else if(p->c>c)
+					return false;
+				else
+					if(p->parent)
+						p=p->parent;
+					else
+						//qstr has a bigger or equal length
+						return false;
+			}
+			//qstr is shorter
+			return true;
+		};
+		auto lb= lower_bound(prefixArray.begin(),prefixArray.end(),queryStr,cmp);
+		auto ub= upper_bound(prefixArray.begin(),prefixArray.end(),queryStr,cmp);
+		cout<<ub-lb<<endl;
+	}
 }
