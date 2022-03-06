@@ -55,16 +55,25 @@ int main(){
 			return p1.rankFront<p2.rankFront || p1.rankFront==p2.rankFront && p1.rankBack<p2.rankBack;
 		};
 		map<rankKey,int,decltype(cmp)>distinctRankKeys(cmp);//用map对不同的rankKey排序
+		auto getRankKey=[&](int index)->rankKey{
+			return rankKey{rank[index],
+				  power < nodes[index].binayAncestors.size() ?
+				  rank[ nodes[index].binayAncestors[power]->index ] :
+				  0
+			};
+		};
 		for(int i=1;i<=n;++i){
-			auto key=rankKey{rank[i], i+dist<n? rank[i+dist] : 0};
+			auto key=getRankKey(i);
 			distinctRankKeys[key]=0;
 		}
 		int keyRank=1;
 		for(auto& p:distinctRankKeys)
 			p.second=keyRank++;
 		//更新rank
+		vector<int> newRank(n+1);
 		for (int i = 1; i <= n; ++i)
-			rank[i]=distinctRankKeys[rankKey{rank[i], i+dist<n? rank[i+dist] : 0}];
+			newRank[i]=distinctRankKeys[getRankKey(i)];
+		rank=newRank;
 	}
 	//转换rank
 	vector<int> prefixArray(n+1);//prefixArray[字典序排名]=node index
