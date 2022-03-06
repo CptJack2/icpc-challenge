@@ -12,7 +12,6 @@ struct TrieNode{
 int n,k;
 int main(){
 	cin>>n>>k;
-	set<char> usedAlpha;
 	vector<TrieNode> nodes(n+1);
 	for (int i = 1; i <= n; ++i) {
 		char c;
@@ -22,7 +21,6 @@ int main(){
 		nodes[i].index=i;
 		nodes[i].parent=&nodes[index];
 		nodes[i].parent->children.push_back(&nodes[i]);
-		usedAlpha.insert(c);
 	}
 	//寻找倍增祖先
 	vector<TrieNode*> dfsStack;
@@ -65,25 +63,36 @@ int main(){
 	for (int i = 0; i < k; ++i) {
 		string queryStr;
 		cin >> queryStr;
-		auto cmp=[&](const int& index,const string& qstr){//->bool{
+
+		auto cmp=[&](int index,const string& qstr,bool lb)->bool{
 			auto p=&nodes[index];
 			for(auto c:qstr){
-				if(p->c<c)
-					return true;
-				else if(p->c>c)
-					return false;
+				if(p->c < c)
+					return lb;
+				else if(p->c > c)
+					return !lb;
 				else
 					if(p->parent)
 						p=p->parent;
 					else
-						//qstr has a bigger or equal length
-						return false;
+						//exactly same string
+						if(c==qstr.back())
+							return false;
+						else
+							//qstr is longer, and prefixes are equal
+							return !lb;
 			}
-			//qstr is shorter
-			return true;
+			//qstr is shorter, and prefixes are equal
+			return lb;
 		};
-		auto lb= lower_bound(prefixArray.begin(),prefixArray.end(),queryStr,cmp);
-		auto ub= upper_bound(prefixArray.begin(),prefixArray.end(),queryStr,cmp);
+		auto lb= lower_bound(prefixArray.begin(),prefixArray.end(),queryStr,
+	   		[&](int index,const string& qstr){
+				return cmp(index,qstr,true);
+			});
+		auto ub= upper_bound(prefixArray.begin(),prefixArray.end(),queryStr,
+	   		[&](const string& qstr,int index){
+				return cmp(index,qstr, false);
+			});
 		cout<<ub-lb<<endl;
 	}
 }
