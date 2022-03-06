@@ -59,30 +59,33 @@ int main(){
 	struct rankKey{
 		int rankFront;//queen name的前缀前半段rank
 		int rankBack;//queen name的前缀后半段rank
+		int index;
 	};
 	for(int power=0;int dist=pow(2,power)<=trieHeight;power++){
 		auto cmp=[&](const rankKey& p1,const rankKey& p2){
 			return p1.rankFront<p2.rankFront || p1.rankFront==p2.rankFront && p1.rankBack<p2.rankBack;
 		};
-		map<rankKey,int,decltype(cmp)>distinctRankKeys(cmp);//用map对不同的rankKey排序
-		auto getRankKey=[&](int index)->rankKey{
-			return rankKey{rank[index],
-				  power < nodes[index].binayAncestors.size() ?
-				  rank[ nodes[index].binayAncestors[power]->index ] :
-				  0
+		vector<rankKey> sortRank(n+1);
+		for(int i=1;i<=n;++i)
+			sortRank[i]=rankKey{
+				rank[i],
+				power < nodes[i].binayAncestors.size() ?
+					rank[ nodes[i].binayAncestors[power]->index ] :
+					0,
+				i
 			};
-		};
-		for(int i=1;i<=n;++i){
-			auto key=getRankKey(i);
-			distinctRankKeys[key]=0;
-		}
+		sort(sortRank.begin()+1,sortRank.end(),cmp);
 		int keyRank=1;
-		for(auto& p:distinctRankKeys)
-			p.second=keyRank++;
 		//更新rank
 		vector<int> newRank(n+1);
-		for (int i = 1; i <= n; ++i)
-			newRank[i]=distinctRankKeys[getRankKey(i)];
+		for (int i = 1; i <= n; ) {
+			do {
+				newRank[sortRank[i].index] = keyRank;
+				++i;
+			}while(!(i > n ||
+				sortRank[i - 1].rankFront != sortRank[i].rankFront || sortRank[i - 1].rankBack != sortRank[i].rankBack));
+			++keyRank;
+		}
 		rank=newRank;
 	}
 	//转换rank
