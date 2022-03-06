@@ -13,6 +13,7 @@ int n,k;
 int main(){
 	cin>>n>>k;
 	vector<TrieNode> nodes(n+1);
+	map<char,int> usedAlpha;
 	for (int i = 1; i <= n; ++i) {
 		char c;
 		int index;
@@ -21,12 +22,16 @@ int main(){
 		nodes[i].index=i;
 		nodes[i].parent=&nodes[index];
 		nodes[i].parent->children.push_back(&nodes[i]);
+		usedAlpha[c]=0;
 	}
+	int alphaRank=1;
+	for(auto& p:usedAlpha)
+		p.second=alphaRank++;
 	//寻找倍增祖先
 	vector<TrieNode*> dfsStack;
 	int trieHeight=0;//字典树高度
 	function<void(TrieNode*)> dfs=[&](TrieNode* node){
-		for(int lv=1;lv<dfsStack.size();lv*=2)
+		for(int lv=1;lv<=dfsStack.size();lv*=2)
 			node->binayAncestors.push_back(dfsStack[dfsStack.size()-lv]);
 		dfsStack.push_back(node);
 		if(dfsStack.size() > trieHeight)
@@ -38,8 +43,9 @@ int main(){
 	dfs(&nodes[1]);
 	//统计第一个字母的排序
 	vector<int> rank(n+1);//queen name的前2^k个字母的排序, rank[node index]=字典序排名
-	for (int i = 0; i <= n; ++i)
-		rank[i]=nodes[i].c-'A'+1;
+	//根据字母序为rank赋初始值
+	for (int i = 1; i <= n; ++i)
+		rank[i]=usedAlpha[nodes[i].c];
 	struct rankKey{
 		int rankFront;//queen name的前缀前半段rank
 		int rankBack;//queen name的前缀后半段rank
@@ -49,8 +55,13 @@ int main(){
 			return p1.rankFront<p2.rankFront || p1.rankFront==p2.rankFront && p1.rankBack<p2.rankBack;
 		};
 		map<rankKey,int,decltype(cmp)>distinctRankKeys(cmp);//用map对不同的rankKey排序
-		for(int i=1;i<=n;++i)
-			distinctRankKeys[rankKey{rank[i], i+dist<n? rank[i+dist] : 0}]=distinctRankKeys.size()+1;
+		for(int i=1;i<=n;++i){
+			auto key=rankKey{rank[i], i+dist<n? rank[i+dist] : 0};
+			distinctRankKeys[key]=0;
+		}
+		int keyRank=1;
+		for(auto& p:distinctRankKeys)
+			p.second=keyRank++;
 		//更新rank
 		for (int i = 1; i <= n; ++i)
 			rank[i]=distinctRankKeys[rankKey{rank[i], i+dist<n? rank[i+dist] : 0}];
@@ -63,7 +74,7 @@ int main(){
 	for (int i = 0; i < k; ++i) {
 		string queryStr;
 		cin >> queryStr;
-
+		//判断node[index]的string是否小于query string, lb指示是lower_bound调用或是upper_bound调用
 		auto cmp=[&](int index,const string& qstr,bool lb)->bool{
 			auto p=&nodes[index];
 			for(auto c:qstr){
