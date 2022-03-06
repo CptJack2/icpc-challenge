@@ -77,9 +77,12 @@ int main(){
 		//判断node[index]的string是否小于query string, lb指示是lower_bound调用或是upper_bound调用
 		auto cmp=[&](int index,const string& qstr,bool lb)->bool{
 			auto p=&nodes[index];
-			for(auto c:qstr){
+			for(int i=0;i<qstr.size();++i){
+				char c=qstr[i];
+				// queen name < qstr
 				if(p->c < c)
 					return lb;
+				//queen name > qstr
 				else if(p->c > c)
 					return !lb;
 				else
@@ -87,22 +90,25 @@ int main(){
 						p=p->parent;
 					else
 						//exactly same string
-						if(c==qstr.back())
+						if(i==qstr.size()-1)
 							return false;
 						else
-							//qstr is longer, and prefixes are equal
-							return !lb;
+							//qstr is longer, should go behind queen name
+							return lb;
 			}
-			//qstr is shorter, and prefixes are equal
-			return lb;
+			/*qstr is shorter, if lb, should go before queen name;
+			if ub, should go behind queen name*/
+			return false;
 		};
-		auto lb= lower_bound(prefixArray.begin(),prefixArray.end(),queryStr,
+		auto lb= lower_bound(prefixArray.begin()+1,prefixArray.end(),queryStr,
 	   		[&](int index,const string& qstr){
-				return cmp(index,qstr,true);
+				bool t=cmp(index, qstr, true);
+				return t;
 			});
-		auto ub= upper_bound(prefixArray.begin(),prefixArray.end(),queryStr,
+		auto ub= upper_bound(prefixArray.begin()+1,prefixArray.end(),queryStr,
 	   		[&](const string& qstr,int index){
-				return cmp(index,qstr, false);
+				bool t=cmp(index, qstr, false);
+				return t;
 			});
 		cout<<ub-lb<<endl;
 	}
