@@ -16,11 +16,11 @@ int main(){
 	map<char,int> usedAlpha;
 	for (int i = 1; i <= n; ++i) {
 		char c;
-		int index;
-		cin>>c>>index;
+		int parentIndex;
+		cin >> c >> parentIndex;
 		nodes[i].c=c;
 		nodes[i].index=i;
-		nodes[i].parent=&nodes[index];
+		nodes[i].parent=&nodes[parentIndex];
 		nodes[i].parent->children.push_back(&nodes[i]);
 		usedAlpha[c]=0;
 	}
