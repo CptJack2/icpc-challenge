@@ -110,6 +110,7 @@ int main(){
 				bool t=cmp(index, qstr, false);
 				return t;
 			});
-		cout<<ub-lb<<endl;
+		int count=ub-lb;
+		cout<<count<<endl;
 	}
 }
