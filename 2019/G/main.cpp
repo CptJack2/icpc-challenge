@@ -28,19 +28,29 @@ int main(){
 	for(auto& p:usedAlpha)
 		p.second=alphaRank++;
 	//寻找倍增祖先
-	vector<TrieNode*> dfsStack;
+	vector<TrieNode*> inheritanceStack;
 	int trieHeight=0;//字典树高度
-	function<void(TrieNode*)> dfs=[&](TrieNode* node){
-		for(int lv=1;lv<=dfsStack.size();lv*=2)
-			node->binayAncestors.push_back(dfsStack[dfsStack.size()-lv]);
-		dfsStack.push_back(node);
-		if(dfsStack.size() > trieHeight)
-			trieHeight=dfsStack.size();
+	vector<TrieNode*> iterationStack;
+	iterationStack.push_back(&nodes[1]);
+	while(!iterationStack.empty()){
+		auto node =  iterationStack.back();
+		if(node== nullptr){
+			iterationStack.pop_back();//pop nullptr indicator
+			iterationStack.pop_back();//pop the parent that finished its procedure
+			inheritanceStack.pop_back();
+			continue;
+		}
+		//binary lifting to find ancestors
+		for(int lv=1; lv <= inheritanceStack.size(); lv*=2)
+			node->binayAncestors.push_back(inheritanceStack[inheritanceStack.size() - lv]);
+		inheritanceStack.push_back(node);
+		if(inheritanceStack.size() > trieHeight)
+			trieHeight=inheritanceStack.size();
+		//use a nullptr to indicate that all children are iterated
+		iterationStack.push_back(nullptr);
 		for(auto ch:node->children)
-			dfs(ch);
-		dfsStack.pop_back();
-	};
-	dfs(&nodes[1]);
+			iterationStack.push_back(ch);
+	}
 	//统计第一个字母的排序
 	vector<int> rank(n+1);//queen name的前2^k个字母的排序, rank[node index]=字典序排名
 	//根据字母序为rank赋初始值
