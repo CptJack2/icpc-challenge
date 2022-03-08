@@ -1,3 +1,6 @@
+/*这个版本跟main.cpp里面的,除了中间进行排序的部分是用基数排序外,其他的地方都是一样的.
+ * 但是使用基数排序后,会TLE,perf.svg里是执行的火焰图,看不出瓶颈在哪.
+ * 题解的理论上使用基数排序,复杂度是O(nlogn),而用std sort复杂度是O(nlog^2n),但实际上运行起来还是有差别的.*/
 #include "bits/stdc++.h"
 using namespace std;
 

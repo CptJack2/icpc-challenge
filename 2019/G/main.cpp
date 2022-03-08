@@ -61,7 +61,7 @@ int main(){
 		int rankBack;//queen name的前缀后半段rank
 		int index;
 	};
-	for(int power=0;int dist=pow(2,power)<=trieHeight;power++){
+	for(int power=0;pow(2,power)<=trieHeight;power++){
 		auto cmp=[&](const rankKey& p1,const rankKey& p2){
 			return p1.rankFront<p2.rankFront || p1.rankFront==p2.rankFront && p1.rankBack<p2.rankBack;
 		};
@@ -74,6 +74,7 @@ int main(){
 					0,
 					i
 			};
+		//用std sort对前后两部分的关键字排序,更新rank
 		sort(sortRank.begin()+1,sortRank.end(),cmp);
 		int keyRank=1;
 		//更新rank
@@ -82,7 +83,7 @@ int main(){
 			do {
 				newRank[sortRank[i].index] = keyRank;
 				++i;
-			}while(!(i > n ||
+			}while(!(i > n || //until到达rank数组的最后一个,或者rankKey发生了改变
 					 sortRank[i - 1].rankFront != sortRank[i].rankFront || sortRank[i - 1].rankBack != sortRank[i].rankBack));
 			++keyRank;
 		}
