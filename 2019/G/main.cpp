@@ -7,6 +7,8 @@ struct TrieNode{
 	TrieNode* parent;
 	vector<TrieNode*> children;
 	vector<TrieNode*> binayAncestors;//倍增的祖先
+	int rankFront;
+	int rankBack;
 };
 
 int n,k;
@@ -52,46 +54,65 @@ int main(){
 			iterationStack.push_back(ch);
 	}
 	//统计第一个字母的排序
-	vector<int> rank(n+1);//queen name的前2^k个字母的排序, rank[node index]=字典序排名
+	//vector<int> rank(n+1);//queen name的前2^k个字母的排序, rank[node index]=字典序排名
 	//根据字母序为rank赋初始值
-	for (int i = 1; i <= n; ++i)
-		rank[i]=usedAlpha[nodes[i].c];
-	struct rankKey{
-		int rankFront;//queen name的前缀前半段rank
-		int rankBack;//queen name的前缀后半段rank
-		int index;
-	};
-	for(int power=0;int dist=pow(2,power)<=trieHeight;power++){
-		auto cmp=[&](const rankKey& p1,const rankKey& p2){
-			return p1.rankFront<p2.rankFront || p1.rankFront==p2.rankFront && p1.rankBack<p2.rankBack;
-		};
-		vector<rankKey> sortRank(n+1);
-		for(int i=1;i<=n;++i)
-			sortRank[i]=rankKey{
-				rank[i],
-				power < nodes[i].binayAncestors.size() ?
-					rank[ nodes[i].binayAncestors[power]->index ] :
-					0,
-				i
-			};
-		sort(sortRank.begin()+1,sortRank.end(),cmp);
-		int keyRank=1;
-		//更新rank
-		vector<int> newRank(n+1);
-		for (int i = 1; i <= n; ) {
-			do {
-				newRank[sortRank[i].index] = keyRank;
-				++i;
-			}while(!(i > n ||
-				sortRank[i - 1].rankFront != sortRank[i].rankFront || sortRank[i - 1].rankBack != sortRank[i].rankBack));
-			++keyRank;
-		}
-		rank=newRank;
+	vector<list<TrieNode*>> sortRank1(n+1),sortRank2(n+1);
+	vector<list<TrieNode*>>* pSortingRank=&sortRank1,*pSortedRank=&sortRank2;
+	for (int i = 1; i <= n; ++i) {
+		int r=usedAlpha[nodes[i].c];
+		nodes[i].rankFront=r;
+		(*pSortedRank)[r].push_back(&nodes[i]);
+	}
+	for(int power=0;pow(2,power)<=trieHeight;power++){
+		for(auto& List:*pSortingRank)
+			List.clear();
+		for(auto& List:*pSortedRank)
+			for(auto it=List.begin();it!=List.end();++it){
+				auto p=*it;
+				int currentNodeIndex=p->index;
+				if(power < nodes[currentNodeIndex].binayAncestors.size()){
+					int binaryAncestorIndex=nodes[currentNodeIndex].binayAncestors[power]->index;
+					p->rankBack=nodes[binaryAncestorIndex].rankFront;
+					(*pSortingRank)[p->rankBack].push_back(p);
+				}else{
+					p->rankBack=0;
+					(*pSortingRank)[0].push_back(p);
+				}
+			}
+		for(auto& List:*pSortedRank)
+			List.clear();
+		for(auto& List:*pSortingRank)
+			for(auto p:List)
+				(*pSortedRank)[p->rankFront].push_back(p);
+		int newRank=1;
+		pair<int,int> oldKey;
+		bool firstKey=true;
+		for(auto& List:*pSortedRank)
+			for(auto p:List) {
+				if(firstKey){
+					oldKey = make_pair(p->rankFront, p->rankBack);
+					firstKey= false;
+				}else if (oldKey.first != p->rankFront || oldKey.second != p->rankBack) {
+					++newRank;
+					oldKey = make_pair(p->rankFront, p->rankBack);
+				}
+				p->rankFront = newRank;
+				p->rankBack = 0;
+
+			}
+		for(auto& List:*pSortingRank)
+			List.clear();
+		for(auto& List:*pSortedRank)
+			for(auto p:List)
+				(*pSortingRank)[p->rankFront].push_back(p);
+		swap(pSortedRank,pSortingRank);
 	}
 	//转换rank
 	vector<int> prefixArray(n+1);//prefixArray[字典序排名]=node index
-	for (int i = 1; i <=n ; ++i)
-		prefixArray[rank[i]]=i;
+	int finalRank=1;
+	for(auto List:*pSortedRank)
+		for(auto p:List)
+			prefixArray[p->index]=finalRank++;
 	//读入查询串,二分查找
 	for (int i = 0; i < k; ++i) {
 		string queryStr;
