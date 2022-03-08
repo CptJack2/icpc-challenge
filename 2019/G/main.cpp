@@ -63,34 +63,46 @@ int main(){
 		nodes[i].rankFront=r;
 		(*pSortedRank)[r].push_back(&nodes[i]);
 	}
-	swap(pSortingRank,pSortedRank);
-	struct rankKey{
-		int rankFront;//queen name的前缀前半段rank
-		int rankBack;//queen name的前缀后半段rank
-		int index;
-	};
-	vector<rankKey> sortRank(n+1);
-	int tmpIndex=0;
-	for(int power=0;int dist=pow(2,power)<=trieHeight;power++){
-		auto cmp=[&](const rankKey& p1,const rankKey& p2){
-			return p1.rankFront<p2.rankFront || p1.rankFront==p2.rankFront && p1.rankBack<p2.rankBack;
-		};
-		for(auto List:*pSortedRank)
+	for(int power=0;pow(2,power)<=trieHeight;power++){
+		for(auto& List:*pSortingRank)
+			List.clear();
+		for(auto& List:*pSortedRank)
 			for(auto it=List.begin();it!=List.end();++it){
 				auto p=*it;
 				int currentNodeIndex=p->index;
 				if(power < nodes[currentNodeIndex].binayAncestors.size()){
 					int binaryAncestorIndex=nodes[currentNodeIndex].binayAncestors[power]->index;
-					auto pAncestor=&nodes[binaryAncestorIndex];
-					pAncestor->rankBack=pAncestor->rankFront;
-					pAncestor->rankFront=p->rankFront;
+					p->rankBack=nodes[binaryAncestorIndex].rankFront;
+					(*pSortingRank)[p->rankBack].push_back(p);
 				}else{
 					p->rankBack=0;
-					List.erase(it);
-					(*pSortedRank)[0].push_back(p);
+					(*pSortingRank)[0].push_back(p);
 				}
 			}
-		for(auto List:*pSortedRank)
+		for(auto& List:*pSortedRank)
+			List.clear();
+		for(auto& List:*pSortingRank)
+			for(auto p:List)
+				(*pSortedRank)[p->rankFront].push_back(p);
+		int newRank=1;
+		pair<int,int> oldKey;
+		bool firstKey=true;
+		for(auto& List:*pSortedRank)
+			for(auto p:List) {
+				if(firstKey){
+					oldKey = make_pair(p->rankFront, p->rankBack);
+					firstKey= false;
+				}else if (oldKey.first != p->rankFront || oldKey.second != p->rankBack) {
+					++newRank;
+					oldKey = make_pair(p->rankFront, p->rankBack);
+				}
+				p->rankFront = newRank;
+				p->rankBack = 0;
+
+			}
+		for(auto& List:*pSortingRank)
+			List.clear();
+		for(auto& List:*pSortedRank)
 			for(auto p:List)
 				(*pSortingRank)[p->rankFront].push_back(p);
 		swap(pSortedRank,pSortingRank);
