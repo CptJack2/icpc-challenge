@@ -25,8 +25,9 @@ struct chess{
 	int pos;
 	char color;
 	chessType type;
+	bool eaten;
 };
-chess* emptySquare=new chess{-1, -1, 'o',chessType(0)};
+chess* emptySquare=new chess{-1, -1, 'o',chessType(0),true};
 vector<chess> chesses;
 vector<chess*> chessBoard(33,emptySquare);
 enum Direction{
@@ -69,6 +70,23 @@ bool canJumpInDirection(chess& ch,Direction dir){
 		return true;
 	return false;
 }
+vector<int> getEatenPos(const Move& theMove){
+	vector<int> ret;
+	for (int i = 0; i <= theMove.midway.size(); ++i) {
+		int startPos, endPos;
+		if (i == 0)
+			startPos = theMove.src;
+		else
+			startPos = theMove.midway[i - 1];
+		if (i == theMove.midway.size())
+			endPos = theMove.dest;
+		else
+			endPos = theMove.midway[i];
+		int eatenPos = (startPos + endPos + abs(startPos - endPos) == 7 ? 1 : -1) / 2;
+		ret.push_back(eatenPos);
+	}
+	return ret;
+}
 int main(){
 	//read input
 	cin>>firstMove>>moveNum;
@@ -104,7 +122,7 @@ int main(){
 	//开始放棋
 	auto addChess=[&](int pos, char color)->int{
 		int newId=static_cast<int>(chesses.size()+1);
-		chesses.push_back(chess{newId,pos,color,man});
+		chesses.push_back(chess{newId,pos,color,man, false});
 		return newId;
 	};
 	int blackMoveIndex=blackMoves.size()-1,
@@ -112,7 +130,7 @@ int main(){
 	while(blackMoveIndex || whiteMoveIndex){
 		auto &moveList=lastMoved=='W'?whiteMoves:blackMoves;
 		int& moveIndex=lastMoved=='W'?whiteMoveIndex:blackMoveIndex;
-		auto theMove=moveList[moveIndex];
+		auto& theMove=moveList[moveIndex];
 		//先看看dest有没有这个棋子,没有给他加上
 		if(chessBoard[theMove.dest]==emptySquare){
 			addChess(theMove.dest,lastMoved);
@@ -126,21 +144,12 @@ int main(){
 		//将棋子从这一步的dest移动到src
 		swap(chessBoard[theMove.dest],chessBoard[theMove.src]);
 		//如果这一步是jump,给他补上被吃掉的棋子
-		if(theMove.type==jump)
-			for (int i = 0; i <= theMove.midway.size(); ++i) {
-				int startPos,endPos;
-				if(i==0)
-					startPos=theMove.src;
-				else
-					startPos=theMove.midway[i-1];
-				if(i==theMove.midway.size())
-					endPos=theMove.dest;
-				else
-					endPos=theMove.midway[i];
-				int eatenPos=(startPos+endPos+abs(startPos-endPos)==7?1:-1)/2;
-				if(chessBoard[eatenPos]==emptySquare)
-					addChess(eatenPos, oppositeColor(lastMoved));
-			}
+		if(theMove.type==jump) {
+			auto eatenPos = getEatenPos(theMove);
+			for (auto ep:eatenPos)
+				if (chessBoard[ep] == emptySquare)
+					addChess(ep, oppositeColor(lastMoved));
+		}
 		//检查当前局面,是不是有棋子可以jump,但它却没有jump
 		for(auto ch:chesses){
 			if(ch.color!=lastMoved)
@@ -188,5 +197,53 @@ int main(){
 		lastMoved=oppositeColor(lastMoved);
 		--moveIndex;
 	}
-
+	auto outputChessboard=[&](vector<chess*> chessBoard){
+		int row=0;
+		for (int i = 0; i < chessBoard.size(); ++i) {
+			if(row%2==0)
+				cout<<'-';
+			map<pair<char,chessType>,char> outputMap={
+					{{'W',man},'w'},
+					{{'W',king},'W'},
+					{{'B',man},'b'},
+					{{'B',man},'B'},
+			};
+			if(chessBoard[i]!=emptySquare)
+				cout<<outputMap[make_pair(chessBoard[i]->color,chessBoard[i]->type)];
+			else
+				cout<<'.';
+			if(row%2==1)
+				cout<<'-';
+			if(i%4==3){
+				++row;
+				cout<<endl;
+			}
+		}
+	};
+	outputChessboard();
+	whiteMoveIndex=0;
+	blackMoveIndex=0;
+	//因为要同时输出开始和结束的棋盘,复制一份
+	vector<chess>beforeChesses=chesses;
+	vector<chess*>afterChessboard=chessBoard;
+	while(whiteMoveIndex<whiteMoves.size() || blackMoveIndex<blackMoves.size()){
+		auto &moveList=firstMove=='W'?whiteMoves:blackMoves;
+		int& moveIndex=firstMove=='W'?whiteMoveIndex:blackMoveIndex;
+		auto& theMove=moveList[moveIndex];
+		auto pch=afterChessboard[theMove.src];
+		//操作的棋子移动位置
+		pch->pos=theMove.dest;
+		//棋盘数据同步
+		afterChessboard[theMove.dest]=pch;
+		afterChessboard[theMove.src]=emptySquare;
+		//如果是jump,处理被吃掉的棋子
+		if(theMove.type==jump){
+			auto eatenPos = getEatenPos(theMove);
+			for (auto ep:eatenPos){
+				chessBoard[ep]->eaten=true;
+				chessBoard[ep]=emptySquare;
+			}
+		}
+		++moveIndex;
+	}
 }
