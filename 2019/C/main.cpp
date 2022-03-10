@@ -15,6 +15,18 @@ struct Move{
 	vector<int> midway;
 };
 vector<Move> blackMoves, whiteMoves;
+enum Direction{
+	leftUp,
+	leftDown,
+	rightUp,
+	rightDown,
+};
+map<pair<Direction,bool>,int> directionDelta{//bool true代表是偶数行, false奇数
+	{{leftUp, true},1},
+};
+int getPosInDirection(int pos,Direction dir){
+
+}
 int main(){
 	//read input
 	cin>>firstMove>>moveNum;
@@ -70,6 +82,10 @@ int main(){
 	};
 	int blackMoveIndex=blackMoves.size()-1,
 		whiteMoveIndex=whiteMoves.size()-1;
+	struct TryPlace{
+
+	};
+	vector<TryPlace> tries;
 	while(1){
 		auto &moveList=lastMoved=='W'?whiteMoves:blackMoves;
 		int& moveIndex=lastMoved=='W'?whiteMoveIndex:blackMoveIndex;
@@ -100,6 +116,36 @@ int main(){
 				if(chessBoard[eatenPos]==emptySquare)
 					addChess(eatenPos, oppositeColor(lastMoved));
 			}
+		//检查当前局面,是不是有棋子可以jump,但它却没有jump
+		for(auto ch:chesses){
+			if(ch.color!=lastMoved || ch.pos==theMove.src)
+				continue;
+			int lu,ld,ru,rd;
+			if((ch.pos-1)/4%2==0){
+				lu=ch.pos-4;
+				ld=ch.pos+4;
+				ru=ch.pos-3;
+				rd=ch.pos+5;
+			} else{
+				lu=ch.pos-5;
+				ld=ch.pos+3;
+				ru=ch.pos-4;
+				rd=ch.pos+4;
+			}
+			set<int> LBorder{5,13,21,29};
+			set<int> RBorder{4,12,20,28};
+			set<int> UBorder{1,2,3,4};
+			set<int> DBorder{29,30,31,32};
+			if(LBorder.count(ch.pos)){lu=-1;ld=-1;}
+			if(RBorder.count(ch.pos)){ru=-1;rd=-1;}
+			if(UBorder.count(ch.pos)){lu=-1;ru=-1;}
+			if(DBorder.count(ch.pos)){rd=-1;ld=-1;}
+			bool canJumpButDont= false;
+			if(ch.type==man){
 
+			}else{
+				if(lu!=-1 && )
+			}
+		}
 	}
 }
