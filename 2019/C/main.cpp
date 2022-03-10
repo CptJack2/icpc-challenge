@@ -15,6 +15,20 @@ struct Move{
 	vector<int> midway;
 };
 vector<Move> blackMoves, whiteMoves;
+enum chessType{
+	man=1,
+	king
+};
+//描述一个棋子的结构
+struct chess{
+	int id;
+	int pos;
+	char color;
+	chessType type;
+};
+chess* emptySquare=new chess{-1, -1, 'o',chessType(0)};
+vector<chess> chesses;
+vector<chess*> chessBoard(33,emptySquare);
 enum Direction{
 	leftUp,
 	leftDown,
@@ -22,10 +36,38 @@ enum Direction{
 	rightDown,
 };
 map<pair<Direction,bool>,int> directionDelta{//bool true代表是偶数行, false奇数
-	{{leftUp, true},1},
+	{{leftUp, true},-4},
+	{{leftDown, true},4},
+	{{rightUp, true},-3},
+	{{rightDown, true},5},
+	{{leftUp, false},-5},
+	{{leftDown, false},3},
+	{{rightUp, false},-4},
+	{{rightDown, false},4}
 };
 int getPosInDirection(int pos,Direction dir){
-
+	set<int> LBorder{5,13,21,29};
+	set<int> RBorder{4,12,20,28};
+	set<int> UBorder{1,2,3,4};
+	set<int> DBorder{29,30,31,32};
+	if(LBorder.count(pos) && (dir==leftUp || dir==leftDown))
+		return -1;
+	if(RBorder.count(pos) && (dir==rightUp || dir==rightDown))
+		return -1;
+	if(UBorder.count(pos) && (dir==leftUp || dir==rightUp))
+		return -1;
+	if(DBorder.count(pos) && (dir==rightDown || dir==leftDown))
+		return -1;
+	return pos+directionDelta[make_pair(dir,(pos-1)/4%2==0)];
+}
+bool canJumpInDirection(chess& ch,Direction dir){
+	int dirPos= getPosInDirection(ch.pos,dir);
+	int jumpPos=getPosInDirection(dirPos,dir);
+	if(dirPos==-1 || jumpPos==-1)
+		return false;
+	if(chessBoard[dirPos]!=emptySquare && chessBoard[dirPos]->color!=ch.color && chessBoard[jumpPos]==emptySquare)
+		return true;
+	return false;
 }
 int main(){
 	//read input
@@ -59,21 +101,6 @@ int main(){
 	//put chess
 	auto oppositeColor=[&](char m)->char{ if(m == 'W')return 'B'; else return 'W';	};
 	char lastMoved=moveNum%2==0? firstMove: oppositeColor(firstMove);
-	//求解用到的结构
-	enum chessType{
-		man=1,
-		king
-	};
-	//描述一个棋子的结构
-	struct chess{
-		int id;
-		int pos;
-		char color;
-		chessType type;
-	};
-	chess* emptySquare=new chess{-1, -1, 'o',chessType(0)};
-	vector<chess> chesses;
-	vector<chess*> chessBoard(33,emptySquare);
 	//开始放棋
 	auto addChess=[&](int pos, char color)->int{
 		int newId=static_cast<int>(chesses.size()+1);
@@ -82,21 +109,19 @@ int main(){
 	};
 	int blackMoveIndex=blackMoves.size()-1,
 		whiteMoveIndex=whiteMoves.size()-1;
-	struct TryPlace{
-
-	};
-	vector<TryPlace> tries;
-	while(1){
+	while(blackMoveIndex || whiteMoveIndex){
 		auto &moveList=lastMoved=='W'?whiteMoves:blackMoves;
 		int& moveIndex=lastMoved=='W'?whiteMoveIndex:blackMoveIndex;
 		auto theMove=moveList[moveIndex];
 		//先看看dest有没有这个棋子,没有给他加上
 		if(chessBoard[theMove.dest]==emptySquare){
 			addChess(theMove.dest,lastMoved);
-		}
-		//如果移动方向不是man能走出来的,那这个棋子是个king
-		if(lastMoved=='W' && theMove.dest>theMove.src ||
+		}else if(chessBoard[theMove.dest]->color!=lastMoved){
+		//不是己方的棋子，可能是前面猜测性添加的时候，颜色错了
+			chessBoard[theMove.dest]->color=lastMoved;
+		}else if(lastMoved=='W' && theMove.dest>theMove.src ||
 			lastMoved=='B' && theMove.dest<theMove.src)
+		//如果移动方向不是man能走出来的,那这个棋子改成king
 			chessBoard[theMove.dest]->type=king;
 		//将棋子从这一步的dest移动到src
 		swap(chessBoard[theMove.dest],chessBoard[theMove.src]);
@@ -118,34 +143,50 @@ int main(){
 			}
 		//检查当前局面,是不是有棋子可以jump,但它却没有jump
 		for(auto ch:chesses){
-			if(ch.color!=lastMoved || ch.pos==theMove.src)
+			if(ch.color!=lastMoved)
 				continue;
-			int lu,ld,ru,rd;
-			if((ch.pos-1)/4%2==0){
-				lu=ch.pos-4;
-				ld=ch.pos+4;
-				ru=ch.pos-3;
-				rd=ch.pos+5;
-			} else{
-				lu=ch.pos-5;
-				ld=ch.pos+3;
-				ru=ch.pos-4;
-				rd=ch.pos+4;
-			}
-			set<int> LBorder{5,13,21,29};
-			set<int> RBorder{4,12,20,28};
-			set<int> UBorder{1,2,3,4};
-			set<int> DBorder{29,30,31,32};
-			if(LBorder.count(ch.pos)){lu=-1;ld=-1;}
-			if(RBorder.count(ch.pos)){ru=-1;rd=-1;}
-			if(UBorder.count(ch.pos)){lu=-1;ru=-1;}
-			if(DBorder.count(ch.pos)){rd=-1;ld=-1;}
-			bool canJumpButDont= false;
+			vector<Direction> checkDirections;
+			//man chess
+			//check two dirs, if the direction
+			// if can jump but don't, must have a piece in its way
+			auto canAddDirection=[&](Direction dir)->bool{
+				int dirPos=getPosInDirection(theMove.src,dir);
+				if(dirPos==theMove.dest)
+					return false;
+				for(auto mid:theMove.midway)
+					if(dirPos == mid)
+						return false;
+				return true;
+			};
 			if(ch.type==man){
-
-			}else{
-				if(lu!=-1 && )
+				if(lastMoved=='W'){
+					if(canAddDirection(leftUp))
+						checkDirections.push_back(leftUp);
+					if(canAddDirection(rightUp))
+						checkDirections.push_back(rightUp);
+				}else {
+					if(canAddDirection(rightDown))
+						checkDirections.push_back(rightDown);
+					if(canAddDirection(leftDown))
+						checkDirections.push_back(leftDown);
+				}
+			}else {
+				if(canAddDirection(leftUp))
+					checkDirections.push_back(leftUp);
+				if(canAddDirection(rightUp))
+					checkDirections.push_back(rightUp);
+				if(canAddDirection(rightDown))
+					checkDirections.push_back(rightDown);
+				if(canAddDirection(leftDown))
+					checkDirections.push_back(leftDown);
+			}
+			for(auto dir:checkDirections){
+				if(canJumpInDirection(ch,dir))
+					addChess(getPosInDirection(ch.pos,dir),oppositeColor(lastMoved));
 			}
 		}
+		lastMoved=oppositeColor(lastMoved);
+		--moveIndex;
 	}
+
 }
