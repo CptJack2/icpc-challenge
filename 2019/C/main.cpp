@@ -197,30 +197,6 @@ int main(){
 		lastMoved=oppositeColor(lastMoved);
 		--moveIndex;
 	}
-	auto outputChessboard=[&](vector<chess*> chessBoard){
-		int row=0;
-		for (int i = 0; i < chessBoard.size(); ++i) {
-			if(row%2==0)
-				cout<<'-';
-			map<pair<char,chessType>,char> outputMap={
-					{{'W',man},'w'},
-					{{'W',king},'W'},
-					{{'B',man},'b'},
-					{{'B',man},'B'},
-			};
-			if(chessBoard[i]!=emptySquare)
-				cout<<outputMap[make_pair(chessBoard[i]->color,chessBoard[i]->type)];
-			else
-				cout<<'.';
-			if(row%2==1)
-				cout<<'-';
-			if(i%4==3){
-				++row;
-				cout<<endl;
-			}
-		}
-	};
-	outputChessboard();
 	whiteMoveIndex=0;
 	blackMoveIndex=0;
 	//因为要同时输出开始和结束的棋盘,复制一份
@@ -245,5 +221,32 @@ int main(){
 			}
 		}
 		++moveIndex;
+	}
+	//输出答案
+	int row=0;
+	for (int i = 0; i < chessBoard.size(); ++i) {
+		map<pair<char,chessType>,char> outputMap={
+				{{'W',man},'w'},
+				{{'W',king},'W'},
+				{{'B',man},'b'},
+				{{'B',man},'B'},
+		};
+		auto outputOneLine=[&](vector<chess*>& board){
+			if(row%2==0)
+				cout<<'-';
+			if(board[i] != emptySquare)
+				cout<<outputMap[make_pair(board[i]->color, board[i]->type)];
+			else
+				cout<<'.';
+			if(row%2==1)
+				cout<<'-';
+		};
+		outputOneLine(chessBoard);
+		cout<<' ';
+		outputOneLine(afterChessboard);
+		if(i%4==3){
+			++row;
+			cout<<endl;
+		}
 	}
 }
