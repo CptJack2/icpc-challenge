@@ -25,7 +25,7 @@ enum chessType{
 struct chess{
 	int id;
 	int pos;
-	color color;
+	color side;
 	chessType type;
 	bool eaten;
 };
@@ -68,7 +68,7 @@ bool canJumpInDirection(chess& ch,Direction dir){
 	int jumpPos=getPosInDirection(dirPos,dir);
 	if(dirPos==-1 || jumpPos==-1)
 		return false;
-	if(chessBoard[dirPos]!=emptySquare && chessBoard[dirPos]->color!=ch.color && chessBoard[jumpPos]==emptySquare)
+	if(chessBoard[dirPos]!=emptySquare && chessBoard[dirPos]->side != ch.side && chessBoard[jumpPos] == emptySquare)
 		return true;
 	return false;
 }
@@ -100,6 +100,7 @@ vector<int> getEatenPos(const Move& theMove){
 	return ret;
 }
 int main(){
+	chesses.reserve(128);
 	//read input
 	char tc;
 	color firstMove;
@@ -142,16 +143,16 @@ int main(){
 	};
 	int blackMoveIndex=blackMoves.size()-1,
 		whiteMoveIndex=whiteMoves.size()-1;
-	while(blackMoveIndex || whiteMoveIndex){
+	while(blackMoveIndex>=0 || whiteMoveIndex>=0){
 		auto &moveList=lastMoved==white?whiteMoves:blackMoves;
 		int& moveIndex=lastMoved==white?whiteMoveIndex:blackMoveIndex;
 		auto& theMove=moveList[moveIndex];
 		//先看看dest有没有这个棋子,没有给他加上
 		if(chessBoard[theMove.dest]==emptySquare){
 			addChess(theMove.dest,lastMoved);
-		}else if(chessBoard[theMove.dest]->color!=lastMoved){
+		}else if(chessBoard[theMove.dest]->side != lastMoved){
 		//不是己方的棋子，可能是前面猜测性添加的时候，颜色错了
-			chessBoard[theMove.dest]->color=lastMoved;
+			chessBoard[theMove.dest]->side=lastMoved;
 		}else if(lastMoved==white && theMove.dest>theMove.src ||
 			lastMoved==black && theMove.dest<theMove.src)
 		//如果移动方向不是man能走出来的,那这个棋子改成king
@@ -168,7 +169,7 @@ int main(){
 		}
 		//检查当前局面,是不是有棋子可以jump,但它却没有jump
 		for(auto ch:chesses){
-			if(ch.color!=lastMoved)
+			if(ch.side != lastMoved)
 				continue;
 			vector<Direction> checkDirections;
 			auto canAddDirection=[&](Direction dir)->bool{
@@ -248,7 +249,7 @@ int main(){
 			if(row%2==0)
 				cout<<'-';
 			if(board[i] != emptySquare)
-				cout<<outputMap[make_pair(board[i]->color, board[i]->type)];
+				cout<<outputMap[make_pair(board[i]->side, board[i]->type)];
 			else
 				cout<<'.';
 			if(row%2==1)
