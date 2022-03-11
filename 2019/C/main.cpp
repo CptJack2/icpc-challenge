@@ -1,6 +1,7 @@
 #include "bits/stdc++.h"
 using namespace std;
 
+bool printDebugInfo=false;
 int moveNum;
 enum moveType{
 	move=1,
@@ -15,6 +16,7 @@ struct Move{
 	int dest;
 	moveType type;
 	vector<int> midway;
+	string str;//for debug
 };
 vector<Move> blackMoves, whiteMoves;
 enum chessType{
@@ -55,11 +57,11 @@ map<pair<Direction,bool>,int> directionDelta{//bool true代表是偶数行, fals
 	{{rightUp, false},-4},
 	{{rightDown, false},4}
 };
+set<int> LBorder{5,13,21,29};
+set<int> RBorder{4,12,20,28};
+set<int> UBorder{1,2,3,4};
+set<int> DBorder{29,30,31,32};
 int getPosInDirection(int pos,Direction dir){
-	set<int> LBorder{5,13,21,29};
-	set<int> RBorder{4,12,20,28};
-	set<int> UBorder{1,2,3,4};
-	set<int> DBorder{29,30,31,32};
 	if(LBorder.count(pos) && (dir==leftUp || dir==leftDown))
 		return -1;
 	if(RBorder.count(pos) && (dir==rightUp || dir==rightDown))
@@ -135,6 +137,7 @@ void printChessboard(const vector<chess>& board,const Move& theMove){
 	cout.flush();
 }
 int main(){
+//	printDebugInfo=true;
 	//read input
 	char tc;
 	color firstMove;
@@ -143,23 +146,27 @@ int main(){
 	vector<Move>& move1=firstMove==white?whiteMoves:blackMoves,
 		&move2=firstMove==white?blackMoves:whiteMoves;
 	for (int i = 0; i < moveNum; ++i) {
+		string mStr;
+		cin>>mStr;
 		Move theMove;
-		cin>>theMove.src;
+		theMove.str=mStr;
+		stringstream ssin(mStr);
+		ssin>>theMove.src;
 		char c;
-		cin>>c;
+		ssin>>c;
 		if(c=='-'){
 			theMove.type=moveType::move;
-			cin>>theMove.dest;
+			ssin>>theMove.dest;
 		} else{
 			theMove.type=moveType::jump;
 			while(1){
 				int t;
-				cin >> t;
+				ssin >> t;
 				theMove.midway.push_back(t);
-				if(cin.peek()!='x')
+				if(ssin.peek()!='x')
 					break;
 				else
-					cin>>c;
+					ssin>>c;
 			}
 			theMove.dest=theMove.midway.back();
 			theMove.midway.pop_back();
@@ -261,17 +268,23 @@ int main(){
 		}
 		lastMoved=oppositeColor(lastMoved);
 		--moveIndex;
-		printChessboard(chessBoard,theMove);
-		int a=min(1,2);
+		if(printDebugInfo) {
+			printChessboard(chessBoard, theMove);
+			int a = min(1, 2);
+		}
 	}
 	vector<chess*> debugChVec;
-	for(auto& ch: chessBoard)
-		if(ch!=emptySquare)
-			debugChVec.push_back(&ch);
+	if(printDebugInfo){
+		for (auto &ch: chessBoard)
+			if (ch != emptySquare)
+				debugChVec.push_back(&ch);
+	}
 	whiteMoveIndex=0;
 	blackMoveIndex=0;
 	//因为要同时输出开始和结束的棋盘,复制一份
 	vector<chess>afterChessboard=chessBoard;
+	if(printDebugInfo)
+		cout<<"start game"<<endl;
 	while(whiteMoveIndex<whiteMoves.size() || blackMoveIndex<blackMoves.size()){
 		auto &moveList=firstMove==white?whiteMoves:blackMoves;
 		int& moveIndex=firstMove==white?whiteMoveIndex:blackMoveIndex;
@@ -280,6 +293,11 @@ int main(){
 		afterChessboard[theMove.src].pos=theMove.dest;
 		afterChessboard[theMove.dest]=afterChessboard[theMove.src];
 		afterChessboard[theMove.src]=emptySquare;
+		//晋升
+		if((firstMove==white && UBorder.count(theMove.dest) ||
+			firstMove==black && DBorder.count(theMove.dest)) &&
+			afterChessboard[theMove.dest].type==man)
+			afterChessboard[theMove.dest].type=king;
 		//如果是jump,处理被吃掉的棋子
 		if(theMove.type==jump){
 			auto eatenPos = getEatenPos(theMove);
@@ -289,11 +307,15 @@ int main(){
 		}
 		++moveIndex;
 		firstMove=oppositeColor(firstMove);
+		if(printDebugInfo)
+			printChessboard(afterChessboard,theMove);
 	}
-	debugChVec.clear();
-	for(auto& ch: afterChessboard)
-		if(ch!=emptySquare)
-			debugChVec.push_back(&ch);
+	if(printDebugInfo){
+		debugChVec.clear();
+		for (auto &ch: afterChessboard)
+			if (ch != emptySquare)
+				debugChVec.push_back(&ch);
+	}
 	//输出答案
 	for (int row = 1; row <= 8 ; ++row) {
 		auto outputOneLine=[&](vector<chess>& board){
