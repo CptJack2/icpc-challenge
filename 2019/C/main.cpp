@@ -29,6 +29,12 @@ struct chess{
 	chessType type;
 	bool eaten;
 };
+map<pair<color,chessType>,char> outputMap={
+		{{white,man},'w'},
+		{{white,king},'W'},
+		{{black,man},'b'},
+		{{black,king},'B'},
+};
 chess emptySquare{-1, color(0),chessType(0),true};
 inline bool operator==(const chess& a,const chess& b){return a.pos==b.pos && a.side==b.side && a.type==b.type && a.eaten==b.eaten;}
 inline bool operator!=(const chess& a,const chess& b){return !(a==b);}
@@ -99,6 +105,34 @@ vector<int> getEatenPos(const Move& theMove){
 		ret.push_back(eatenPos);
 	}
 	return ret;
+}
+void printChessboard(const vector<chess>& board,const Move& theMove){
+	if(theMove.type==moveType::move){
+		cout<<theMove.src<<"-"<<theMove.dest<<endl;
+	}else{
+		cout<<theMove.src;
+		for(auto m:theMove.midway)
+			cout<<"x"<<m;
+		cout<<"x"<<theMove.dest<<endl;
+	}
+	cout<<"----------------------------------"<<endl;
+	for (int row = 1; row <= 8 ; ++row) {
+		for(int col=row%2+1;col<=8;col+=2){
+			int sind=squareCordinateToIndex({row,col});
+			if (row % 2 == 1)
+				cout << "--";
+			if (board[sind] != emptySquare) {
+				char c = outputMap[make_pair(board[sind].side, board[sind].type)];
+				cout << c<<c;
+			} else
+				cout << setw(2)<<setfill('0')<<right<<sind;
+			if (row % 2 == 0)
+				cout << "--";
+		}
+		cout<<endl;
+	}
+	cout<<"----------------------------------"<<endl;
+	cout.flush();
 }
 int main(){
 	//read input
@@ -227,7 +261,13 @@ int main(){
 		}
 		lastMoved=oppositeColor(lastMoved);
 		--moveIndex;
+		printChessboard(chessBoard,theMove);
+		int a=min(1,2);
 	}
+	vector<chess*> debugChVec;
+	for(auto& ch: chessBoard)
+		if(ch!=emptySquare)
+			debugChVec.push_back(&ch);
 	whiteMoveIndex=0;
 	blackMoveIndex=0;
 	//因为要同时输出开始和结束的棋盘,复制一份
@@ -250,13 +290,11 @@ int main(){
 		++moveIndex;
 		firstMove=oppositeColor(firstMove);
 	}
+	debugChVec.clear();
+	for(auto& ch: afterChessboard)
+		if(ch!=emptySquare)
+			debugChVec.push_back(&ch);
 	//输出答案
-	map<pair<color,chessType>,char> outputMap={
-			{{white,man},'w'},
-			{{white,king},'W'},
-			{{black,man},'b'},
-			{{black,king},'B'},
-	};
 	for (int row = 1; row <= 8 ; ++row) {
 		auto outputOneLine=[&](vector<chess>& board){
 			for(int col=row%2+1;col<=8;col+=2){
