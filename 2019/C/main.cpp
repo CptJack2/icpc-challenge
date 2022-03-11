@@ -23,15 +23,16 @@ enum chessType{
 };
 //描述一个棋子的结构
 struct chess{
-	int id;
+//	int id;
 	int pos;
 	color side;
 	chessType type;
 	bool eaten;
 };
-chess* emptySquare=new chess{-1, -1, color(0),chessType(0),true};
-vector<chess> chesses;
-vector<chess*> chessBoard(33,emptySquare);
+chess emptySquare{-1, color(0),chessType(0),true};
+inline bool operator==(const chess& a,const chess& b){return a.pos==b.pos && a.side==b.side && a.type==b.type && a.eaten==b.eaten;}
+inline bool operator!=(const chess& a,const chess& b){return !(a==b);}
+vector<chess> chessBoard(33,emptySquare);
 enum Direction{
 	leftUp,
 	leftDown,
@@ -68,7 +69,7 @@ bool canJumpInDirection(chess& ch,Direction dir){
 	int jumpPos=getPosInDirection(dirPos,dir);
 	if(dirPos==-1 || jumpPos==-1)
 		return false;
-	if(chessBoard[dirPos]!=emptySquare && chessBoard[dirPos]->side != ch.side && chessBoard[jumpPos] == emptySquare)
+	if(chessBoard[dirPos]!=emptySquare && chessBoard[dirPos].side != ch.side && chessBoard[jumpPos] == emptySquare)
 		return true;
 	return false;
 }
@@ -100,7 +101,6 @@ vector<int> getEatenPos(const Move& theMove){
 	return ret;
 }
 int main(){
-	chesses.reserve(128);
 	//read input
 	char tc;
 	color firstMove;
@@ -135,11 +135,11 @@ int main(){
 	auto oppositeColor=[&](color m)->color{ if(m == white)return black; else return white;};
 	color lastMoved=moveNum%2==1? firstMove: oppositeColor(firstMove);
 	//开始放棋
-	auto addChess=[&](int pos, color color)->int{
-		int newId=static_cast<int>(chesses.size()+1);
-		chesses.push_back(chess{newId,pos,color,man, false});
-		chessBoard[pos]=&chesses.back();
-		return newId;
+	auto addChess=[&](int pos, color color){
+//		int newId=static_cast<int>(chesses.size()+1);
+//		chesses.push_back(chess{newId,pos,color,man, false});
+		chessBoard[pos]=chess{pos,color,man, false};
+		//return newId;
 	};
 	int blackMoveIndex=blackMoves.size()-1,
 		whiteMoveIndex=whiteMoves.size()-1;
@@ -150,16 +150,16 @@ int main(){
 		//先看看dest有没有这个棋子,没有给他加上
 		if(chessBoard[theMove.dest]==emptySquare){
 			addChess(theMove.dest,lastMoved);
-		}else if(chessBoard[theMove.dest]->side != lastMoved){
+		}else if(chessBoard[theMove.dest].side != lastMoved){
 		//不是己方的棋子，可能是前面猜测性添加的时候，颜色错了
-			chessBoard[theMove.dest]->side=lastMoved;
+			chessBoard[theMove.dest].side=lastMoved;
 		}else if(lastMoved==white && theMove.dest>theMove.src ||
 			lastMoved==black && theMove.dest<theMove.src)
 		//如果移动方向不是man能走出来的,那这个棋子改成king
-			chessBoard[theMove.dest]->type=king;
+			chessBoard[theMove.dest].type=king;
 		//将棋子从这一步的dest移动到src
 		swap(chessBoard[theMove.dest],chessBoard[theMove.src]);
-		chessBoard[theMove.src]->pos=theMove.src;
+		chessBoard[theMove.src].pos=theMove.src;
 		//如果这一步是jump,给他补上被吃掉的棋子
 		if(theMove.type==jump) {
 			auto eatenPos = getEatenPos(theMove);
@@ -168,7 +168,8 @@ int main(){
 					addChess(ep, oppositeColor(lastMoved));
 		}
 		//检查当前局面,是不是有棋子可以jump,但它却没有jump
-		for(auto ch:chesses){
+		for(auto ch:chessBoard){
+			if(ch==emptySquare)continue;
 			if(ch.side != lastMoved)
 				continue;
 			vector<Direction> checkDirections;
@@ -214,15 +215,14 @@ int main(){
 	whiteMoveIndex=0;
 	blackMoveIndex=0;
 	//因为要同时输出开始和结束的棋盘,复制一份
-	vector<chess>beforeChesses=chesses;
-	vector<chess*>afterChessboard=chessBoard;
+	vector<chess>afterChessboard=chessBoard;
 	while(whiteMoveIndex<whiteMoves.size() || blackMoveIndex<blackMoves.size()){
 		auto &moveList=firstMove==white?whiteMoves:blackMoves;
 		int& moveIndex=firstMove==white?whiteMoveIndex:blackMoveIndex;
 		auto& theMove=moveList[moveIndex];
 		auto pch=afterChessboard[theMove.src];
 		//操作的棋子移动位置
-		pch->pos=theMove.dest;
+		pch.pos=theMove.dest;
 		//棋盘数据同步
 		afterChessboard[theMove.dest]=pch;
 		afterChessboard[theMove.src]=emptySquare;
@@ -230,7 +230,7 @@ int main(){
 		if(theMove.type==jump){
 			auto eatenPos = getEatenPos(theMove);
 			for (auto ep:eatenPos){
-				chessBoard[ep]->eaten=true;
+				chessBoard[ep].eaten=true;
 				chessBoard[ep]=emptySquare;
 			}
 		}
@@ -245,11 +245,11 @@ int main(){
 				{{black,man},'b'},
 				{{black,king},'B'},
 		};
-		auto outputOneLine=[&](vector<chess*>& board){
+		auto outputOneLine=[&](vector<chess>& board){
 			if(row%2==0)
 				cout<<'-';
 			if(board[i] != emptySquare)
-				cout<<outputMap[make_pair(board[i]->side, board[i]->type)];
+				cout<<outputMap[make_pair(board[i].side, board[i].type)];
 			else
 				cout<<'.';
 			if(row%2==1)
