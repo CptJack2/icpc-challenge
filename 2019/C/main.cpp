@@ -72,7 +72,7 @@ int getPosInDirection(int pos,Direction dir){
 		return -1;
 	return pos+directionDelta[make_pair(dir,(pos-1)/4%2==0)];
 }
-bool canJumpInDirection(chess& ch,Direction dir){
+bool canJumpInDirection(chess& ch,Direction dir,vector<chess>& chessBoard){
 	int dirPos= getPosInDirection(ch.pos,dir);
 	int jumpPos=getPosInDirection(dirPos,dir);
 	if(dirPos==-1 || jumpPos==-1)
@@ -136,6 +136,30 @@ void printChessboard(const vector<chess>& board,const Move& theMove){
 	cout<<"----------------------------------"<<endl;
 	cout.flush();
 }
+inline color oppositeColor(color m){ if(m == white)return black; else return white;}
+inline void addChess(vector<chess>& board,int pos, color color){board[pos]=chess{pos,color,man, false};}
+void blockAllJump(vector<chess>& board, color movingColor, const Move& nextMove,vector<chess>* oldBoard){
+	for(auto ch:board){
+		if(ch==emptySquare || ch.side != movingColor)
+			continue;
+		vector<Direction> checkDirections;
+		if(ch.type==man)
+			if(movingColor == white)
+				checkDirections={leftUp,rightUp};
+			else
+				checkDirections={rightDown,leftDown};
+		else
+			checkDirections={leftUp,rightUp,rightDown,leftDown};
+		for(auto dir:checkDirections){
+			//棋子ch在这个方向能跳过去,就要堵住
+			if(canJumpInDirection(ch,dir,board)) {
+				addChess(board, getPosInDirection(ch.pos, dir), oppositeColor(movingColor));
+				if (oldBoard != nullptr)
+					addChess(*oldBoard, getPosInDirection(ch.pos, dir), oppositeColor(movingColor));
+			}
+		}
+	}
+}
 int main(){
 //	printDebugInfo=true;
 	//read input
@@ -173,15 +197,8 @@ int main(){
 		}
 		i%2? move2.push_back(theMove): move1.push_back(theMove);
 	}
-	auto oppositeColor=[&](color m)->color{ if(m == white)return black; else return white;};
 	color lastMoved=moveNum%2==1? firstMove: oppositeColor(firstMove);
 	//开始放棋
-	auto addChess=[&](int pos, color color){
-//		int newId=static_cast<int>(chesses.size()+1);
-//		chesses.push_back(chess{newId,pos,color,man, false});
-		chessBoard[pos]=chess{pos,color,man, false};
-		//return newId;
-	};
 	int blackMoveIndex=blackMoves.size()-1,
 		whiteMoveIndex=whiteMoves.size()-1;
 	while(blackMoveIndex>=0 || whiteMoveIndex>=0){
@@ -190,7 +207,7 @@ int main(){
 		auto& theMove=moveList[moveIndex];
 		//先看看dest有没有这个棋子,没有给他加上
 		if(chessBoard[theMove.dest]==emptySquare){
-			addChess(theMove.dest,lastMoved);
+			addChess(chessBoard,theMove.dest,lastMoved);
 		}else if(chessBoard[theMove.dest].side != lastMoved){
 		//不是己方的棋子，可能是前面猜测性添加的时候，颜色错了
 			chessBoard[theMove.dest].side=lastMoved;
@@ -207,7 +224,7 @@ int main(){
 			auto eatenPos = getEatenPos(theMove);
 			for (auto ep:eatenPos)
 				if (chessBoard[ep] == emptySquare)
-					addChess(ep, oppositeColor(lastMoved));
+					addChess(chessBoard, ep, oppositeColor(lastMoved));
 			//如果man向反方向jump了,将他改成king
 			for (int i = 0; i <= theMove.midway.size(); ++i) {
 				int startPos, endPos;
@@ -224,48 +241,9 @@ int main(){
 					chessBoard[theMove.src].type=king;
 			}
 		}
-		//检查当前局面,是不是有棋子可以jump,但它却没有jump
-		for(auto ch:chessBoard){
-			if(ch==emptySquare)continue;
-			if(ch.side != lastMoved)
-				continue;
-			vector<Direction> checkDirections;
-			auto canAddDirection=[&](Direction dir)->bool{
-				int dirPos=getPosInDirection(theMove.src,dir);
-				if(dirPos==theMove.dest)
-					return false;
-				for(auto mid:theMove.midway)
-					if(dirPos == mid)
-						return false;
-				return true;
-			};
-			if(ch.type==man){
-				if(lastMoved==white){
-					if(canAddDirection(leftUp))
-						checkDirections.push_back(leftUp);
-					if(canAddDirection(rightUp))
-						checkDirections.push_back(rightUp);
-				}else {
-					if(canAddDirection(rightDown))
-						checkDirections.push_back(rightDown);
-					if(canAddDirection(leftDown))
-						checkDirections.push_back(leftDown);
-				}
-			}else {
-				if(canAddDirection(leftUp))
-					checkDirections.push_back(leftUp);
-				if(canAddDirection(rightUp))
-					checkDirections.push_back(rightUp);
-				if(canAddDirection(rightDown))
-					checkDirections.push_back(rightDown);
-				if(canAddDirection(leftDown))
-					checkDirections.push_back(leftDown);
-			}
-			for(auto dir:checkDirections){
-				if(canJumpInDirection(ch,dir))
-					addChess(getPosInDirection(ch.pos,dir),oppositeColor(lastMoved));
-			}
-		}
+		//如果这一步是移动,需要检查当前局面,将所有可以jump的棋子挡住
+		if(theMove.type==moveType::move)
+			blockAllJump(chessBoard,lastMoved,theMove, nullptr);
 		lastMoved=oppositeColor(lastMoved);
 		--moveIndex;
 		if(printDebugInfo) {
@@ -291,8 +269,7 @@ int main(){
 		auto& theMove=moveList[moveIndex];
 		//操作的棋子移动位置
 		afterChessboard[theMove.src].pos=theMove.dest;
-		afterChessboard[theMove.dest]=afterChessboard[theMove.src];
-		afterChessboard[theMove.src]=emptySquare;
+		swap(afterChessboard[theMove.src],afterChessboard[theMove.dest]);
 		//晋升
 		if((firstMove==white && UBorder.count(theMove.dest) ||
 			firstMove==black && DBorder.count(theMove.dest)) &&
@@ -304,6 +281,9 @@ int main(){
 			for (auto ep:eatenPos){
 				afterChessboard[ep]=emptySquare;
 			}
+		}else if(theMove.type==moveType::move){
+		//如果这一步是移动,需要检查当前局面,将所有可以jump的棋子挡住
+			blockAllJump(afterChessboard,firstMove,theMove, &chessBoard);
 		}
 		++moveIndex;
 		firstMove=oppositeColor(firstMove);
