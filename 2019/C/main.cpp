@@ -7,7 +7,6 @@ enum moveType{
 	move=1,
 	jump=2
 };
-typedef pair<int,int> pii;
 struct Move{
 	int src;
 	int dest;
@@ -70,6 +69,14 @@ bool canJumpInDirection(chess& ch,Direction dir){
 		return true;
 	return false;
 }
+inline pair<int,int> squareIndexToCordinate(int ind){//(x,y) == ([1,8],[1,8])
+	int row=(ind-1)/4+1;
+	int col=(ind-1)%4*2+row%2+1;
+	return {row,col};
+}
+inline int squareCordinateToIndex(pair<int,int> cord){//1-32
+	return (cord.first-1)*4 + (cord.second-1)/2 + 1;
+}
 vector<int> getEatenPos(const Move& theMove){
 	vector<int> ret;
 	for (int i = 0; i <= theMove.midway.size(); ++i) {
@@ -82,7 +89,9 @@ vector<int> getEatenPos(const Move& theMove){
 			endPos = theMove.dest;
 		else
 			endPos = theMove.midway[i];
-		int eatenPos = (startPos + endPos + abs(startPos - endPos) == 7 ? 1 : -1) / 2;
+		auto sCord= squareIndexToCordinate(startPos),
+			eCord= squareIndexToCordinate(endPos);
+		int eatenPos = squareCordinateToIndex({(sCord.first+eCord.first)/2,(sCord.second+eCord.second)/2});
 		ret.push_back(eatenPos);
 	}
 	return ret;
@@ -116,13 +125,13 @@ int main(){
 		}
 		i%2? move2.push_back(theMove): move1.push_back(theMove);
 	}
-	//put chess
 	auto oppositeColor=[&](char m)->char{ if(m == 'W')return 'B'; else return 'W';	};
-	char lastMoved=moveNum%2==0? firstMove: oppositeColor(firstMove);
+	char lastMoved=moveNum%2==1? firstMove: oppositeColor(firstMove);
 	//开始放棋
 	auto addChess=[&](int pos, char color)->int{
 		int newId=static_cast<int>(chesses.size()+1);
 		chesses.push_back(chess{newId,pos,color,man, false});
+		chessBoard[pos]=&chesses.back();
 		return newId;
 	};
 	int blackMoveIndex=blackMoves.size()-1,
@@ -143,6 +152,7 @@ int main(){
 			chessBoard[theMove.dest]->type=king;
 		//将棋子从这一步的dest移动到src
 		swap(chessBoard[theMove.dest],chessBoard[theMove.src]);
+		chessBoard[theMove.src]->pos=theMove.src;
 		//如果这一步是jump,给他补上被吃掉的棋子
 		if(theMove.type==jump) {
 			auto eatenPos = getEatenPos(theMove);
@@ -155,9 +165,6 @@ int main(){
 			if(ch.color!=lastMoved)
 				continue;
 			vector<Direction> checkDirections;
-			//man chess
-			//check two dirs, if the direction
-			// if can jump but don't, must have a piece in its way
 			auto canAddDirection=[&](Direction dir)->bool{
 				int dirPos=getPosInDirection(theMove.src,dir);
 				if(dirPos==theMove.dest)
