@@ -153,9 +153,10 @@ int main(){
 		}else if(chessBoard[theMove.dest].side != lastMoved){
 		//不是己方的棋子，可能是前面猜测性添加的时候，颜色错了
 			chessBoard[theMove.dest].side=lastMoved;
-		}else if(lastMoved==white && theMove.dest>theMove.src ||
-			lastMoved==black && theMove.dest<theMove.src)
+		}
 		//如果移动方向不是man能走出来的,那这个棋子改成king
+		if(lastMoved==white && theMove.dest>theMove.src ||
+			lastMoved==black && theMove.dest<theMove.src)
 			chessBoard[theMove.dest].type=king;
 		//将棋子从这一步的dest移动到src
 		swap(chessBoard[theMove.dest],chessBoard[theMove.src]);
@@ -166,6 +167,21 @@ int main(){
 			for (auto ep:eatenPos)
 				if (chessBoard[ep] == emptySquare)
 					addChess(ep, oppositeColor(lastMoved));
+			//如果man向反方向jump了,将他改成king
+			for (int i = 0; i <= theMove.midway.size(); ++i) {
+				int startPos, endPos;
+				if (i == 0)
+					startPos = theMove.src;
+				else
+					startPos = theMove.midway[i - 1];
+				if (i == theMove.midway.size())
+					endPos = theMove.dest;
+				else
+					endPos = theMove.midway[i];
+				if(lastMoved==white && startPos>endPos ||
+				   lastMoved==black && startPos<endPos)
+					chessBoard[theMove.src].type=king;
+			}
 		}
 		//检查当前局面,是不是有棋子可以jump,但它却没有jump
 		for(auto ch:chessBoard){
@@ -220,47 +236,44 @@ int main(){
 		auto &moveList=firstMove==white?whiteMoves:blackMoves;
 		int& moveIndex=firstMove==white?whiteMoveIndex:blackMoveIndex;
 		auto& theMove=moveList[moveIndex];
-		auto pch=afterChessboard[theMove.src];
 		//操作的棋子移动位置
-		pch.pos=theMove.dest;
-		//棋盘数据同步
-		afterChessboard[theMove.dest]=pch;
+		afterChessboard[theMove.src].pos=theMove.dest;
+		afterChessboard[theMove.dest]=afterChessboard[theMove.src];
 		afterChessboard[theMove.src]=emptySquare;
 		//如果是jump,处理被吃掉的棋子
 		if(theMove.type==jump){
 			auto eatenPos = getEatenPos(theMove);
 			for (auto ep:eatenPos){
-				chessBoard[ep].eaten=true;
-				chessBoard[ep]=emptySquare;
+				afterChessboard[ep]=emptySquare;
 			}
 		}
 		++moveIndex;
+		firstMove=oppositeColor(firstMove);
 	}
 	//输出答案
-	int row=0;
-	for (int i = 0; i < chessBoard.size(); ++i) {
-		map<pair<color,chessType>,char> outputMap={
-				{{white,man},'w'},
-				{{white,king},'W'},
-				{{black,man},'b'},
-				{{black,king},'B'},
-		};
+	map<pair<color,chessType>,char> outputMap={
+			{{white,man},'w'},
+			{{white,king},'W'},
+			{{black,man},'b'},
+			{{black,king},'B'},
+	};
+	for (int row = 1; row <= 8 ; ++row) {
 		auto outputOneLine=[&](vector<chess>& board){
-			if(row%2==0)
-				cout<<'-';
-			if(board[i] != emptySquare)
-				cout<<outputMap[make_pair(board[i].side, board[i].type)];
-			else
-				cout<<'.';
-			if(row%2==1)
-				cout<<'-';
+			for(int col=row%2+1;col<=8;col+=2){
+				int sind=squareCordinateToIndex({row,col});
+				if (row % 2 == 1)
+					cout << '-';
+				if (board[sind] != emptySquare)
+					cout << outputMap[make_pair(board[sind].side, board[sind].type)];
+				else
+					cout << '.';
+				if (row % 2 == 0)
+					cout << '-';
+			}
 		};
 		outputOneLine(chessBoard);
 		cout<<' ';
 		outputOneLine(afterChessboard);
-		if(i%4==3){
-			++row;
-			cout<<endl;
-		}
+		cout<<endl;
 	}
 }
