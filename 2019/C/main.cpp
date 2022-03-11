@@ -1,11 +1,14 @@
 #include "bits/stdc++.h"
 using namespace std;
 
-char firstMove;
 int moveNum;
 enum moveType{
 	move=1,
 	jump=2
+};
+enum color{
+	white=1,
+	black=2
 };
 struct Move{
 	int src;
@@ -22,11 +25,11 @@ enum chessType{
 struct chess{
 	int id;
 	int pos;
-	char color;
+	color color;
 	chessType type;
 	bool eaten;
 };
-chess* emptySquare=new chess{-1, -1, 'o',chessType(0),true};
+chess* emptySquare=new chess{-1, -1, color(0),chessType(0),true};
 vector<chess> chesses;
 vector<chess*> chessBoard(33,emptySquare);
 enum Direction{
@@ -98,9 +101,12 @@ vector<int> getEatenPos(const Move& theMove){
 }
 int main(){
 	//read input
-	cin>>firstMove>>moveNum;
-	vector<Move>& move1=firstMove=='W'?whiteMoves:blackMoves,
-		&move2=firstMove=='W'?blackMoves:whiteMoves;
+	char tc;
+	color firstMove;
+	cin>>tc>>moveNum;
+	firstMove=tc=='W'?white:black;
+	vector<Move>& move1=firstMove==white?whiteMoves:blackMoves,
+		&move2=firstMove==white?blackMoves:whiteMoves;
 	for (int i = 0; i < moveNum; ++i) {
 		Move theMove;
 		cin>>theMove.src;
@@ -125,10 +131,10 @@ int main(){
 		}
 		i%2? move2.push_back(theMove): move1.push_back(theMove);
 	}
-	auto oppositeColor=[&](char m)->char{ if(m == 'W')return 'B'; else return 'W';	};
-	char lastMoved=moveNum%2==1? firstMove: oppositeColor(firstMove);
+	auto oppositeColor=[&](color m)->color{ if(m == white)return black; else return white;};
+	color lastMoved=moveNum%2==1? firstMove: oppositeColor(firstMove);
 	//开始放棋
-	auto addChess=[&](int pos, char color)->int{
+	auto addChess=[&](int pos, color color)->int{
 		int newId=static_cast<int>(chesses.size()+1);
 		chesses.push_back(chess{newId,pos,color,man, false});
 		chessBoard[pos]=&chesses.back();
@@ -137,8 +143,8 @@ int main(){
 	int blackMoveIndex=blackMoves.size()-1,
 		whiteMoveIndex=whiteMoves.size()-1;
 	while(blackMoveIndex || whiteMoveIndex){
-		auto &moveList=lastMoved=='W'?whiteMoves:blackMoves;
-		int& moveIndex=lastMoved=='W'?whiteMoveIndex:blackMoveIndex;
+		auto &moveList=lastMoved==white?whiteMoves:blackMoves;
+		int& moveIndex=lastMoved==white?whiteMoveIndex:blackMoveIndex;
 		auto& theMove=moveList[moveIndex];
 		//先看看dest有没有这个棋子,没有给他加上
 		if(chessBoard[theMove.dest]==emptySquare){
@@ -146,8 +152,8 @@ int main(){
 		}else if(chessBoard[theMove.dest]->color!=lastMoved){
 		//不是己方的棋子，可能是前面猜测性添加的时候，颜色错了
 			chessBoard[theMove.dest]->color=lastMoved;
-		}else if(lastMoved=='W' && theMove.dest>theMove.src ||
-			lastMoved=='B' && theMove.dest<theMove.src)
+		}else if(lastMoved==white && theMove.dest>theMove.src ||
+			lastMoved==black && theMove.dest<theMove.src)
 		//如果移动方向不是man能走出来的,那这个棋子改成king
 			chessBoard[theMove.dest]->type=king;
 		//将棋子从这一步的dest移动到src
@@ -175,7 +181,7 @@ int main(){
 				return true;
 			};
 			if(ch.type==man){
-				if(lastMoved=='W'){
+				if(lastMoved==white){
 					if(canAddDirection(leftUp))
 						checkDirections.push_back(leftUp);
 					if(canAddDirection(rightUp))
@@ -210,8 +216,8 @@ int main(){
 	vector<chess>beforeChesses=chesses;
 	vector<chess*>afterChessboard=chessBoard;
 	while(whiteMoveIndex<whiteMoves.size() || blackMoveIndex<blackMoves.size()){
-		auto &moveList=firstMove=='W'?whiteMoves:blackMoves;
-		int& moveIndex=firstMove=='W'?whiteMoveIndex:blackMoveIndex;
+		auto &moveList=firstMove==white?whiteMoves:blackMoves;
+		int& moveIndex=firstMove==white?whiteMoveIndex:blackMoveIndex;
 		auto& theMove=moveList[moveIndex];
 		auto pch=afterChessboard[theMove.src];
 		//操作的棋子移动位置
@@ -232,11 +238,11 @@ int main(){
 	//输出答案
 	int row=0;
 	for (int i = 0; i < chessBoard.size(); ++i) {
-		map<pair<char,chessType>,char> outputMap={
-				{{'W',man},'w'},
-				{{'W',king},'W'},
-				{{'B',man},'b'},
-				{{'B',man},'B'},
+		map<pair<color,chessType>,char> outputMap={
+				{{white,man},'w'},
+				{{white,king},'W'},
+				{{black,man},'b'},
+				{{black,king},'B'},
 		};
 		auto outputOneLine=[&](vector<chess*>& board){
 			if(row%2==0)
