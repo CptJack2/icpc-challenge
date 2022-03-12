@@ -74,8 +74,10 @@ inline pair<int,int> squareIndexToCordinate(int ind){//(x,y) == ([1,8],[1,8])
 	int col=(ind-1)%4*2+row%2+1;
 	return {row,col};
 }
-inline int squareCordinateToIndex(pair<int,int> cord){//1-32
-	return (cord.first-1)*4 + (cord.second-1)/2 + 1;
+inline int squareCordinateToIndex(pair<int,int> rc){//1-32
+	if(rc.first>8 || rc.first<1 || rc.second>8 || rc.second<1)
+		return -1;
+	return (rc.first - 1) * 4 + (rc.second - 1) / 2 + 1;
 }
 vector<int> getEatenPos(const Move& theMove){
 	vector<int> ret;
@@ -213,6 +215,41 @@ int main(){
 				}
 		}
 	}
+	//递归放置没被动过的棋子，以适应jump必须优先的规则
+	auto placeBlocker=[&](vector<chess>& start)->vector<chess>{//返回值是结束的局面
+		int i;
+		color moving;
+		vector<chess> board=start;
+		for(i=0, moving=firstMove;i<moves.size();++i,moving= oppositeColor(moving)){
+			//对于move，检查自己的棋子有没有可以jump的，有的话需要挡住
+			if(moves[i].type==moveType::move){
+				for (int j = 1; j <= 32; ++j) {
+					//空格或者对方的棋子，跳过
+					if (board[j] == emptySquare || board[j].side== oppositeColor(moving))
+						continue;
+					//向4个方向看看能不能跳
+					for (int dr = -1; dr <= 1; dr += 2)
+						for (int dc = -1; dc <= 1; dc += 2) {
+							//man不能向反方向跳
+							if (board[j].type == man && moving == white ^ dr == 1)
+								continue;
+							auto rc = squareIndexToCordinate(j);
+							rc.first += dr;
+							rc.second += dc;
+							int nextPos = squareCordinateToIndex(rc);
+							rc.first += dr;
+							rc.second += dc;
+							int jumpPos = squareCordinateToIndex(rc);
+							//这个棋子可以jump，需要用各种棋子挡住去测试能不能通
+							if (nextPos!=-1 && jumpPos!=-1 && board[nextPos].side==oppositeColor(moving) && board[jumpPos]==emptySquare){
+
+							}
+						}
+
+				}
+			}
+		}
+	};
 	vector<chess*> debugChVec;
 	if(printDebugInfo){
 		for (auto &ch: chessBoard)
