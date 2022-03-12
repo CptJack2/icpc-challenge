@@ -111,42 +111,7 @@ inline color oppositeColor(color m){
 pair<vector<chess>,vector<chess>> placeBlocker(vector<chess> start,color firstMove);
 //向4个方向看看能不能跳. bool表示是否继续,两个vector分别是开始和结束的局面
 pair<bool,pair<vector<chess>,vector<chess>>> checkJump(int chPos,vector<chess>& start, vector<chess>& board,color moving,color firstMove){
-	for (int dr = -1; dr <= 1; dr += 2)
-		for (int dc = -1; dc <= 1; dc += 2) {
-			//man不能向反方向跳
-			if (board[chPos].type == man && moving == white ^ dr == -1)
-				continue;
-			auto rc = squareIndexToCordinate(chPos);
-			rc.first += dr;
-			rc.second += dc;
-			int nextPos = squareCordinateToIndex(rc);
-			rc.first += dr;
-			rc.second += dc;
-			int jumpPos = squareCordinateToIndex(rc);
-			//看一下棋子的邻格有没有东西
-			if (nextPos != -1 && jumpPos != -1 &&
-				board[nextPos].side == oppositeColor(moving)) {
-				//这个格已经从未知被确认成了空格，说明这个格之前有棋子经过，用来挡住的棋子是不能动的，所以方案不可能
-				if (board[jumpPos] == emptySquare)
-					return {false,{{},{}}};
-				//这个棋子可以jump，需要用各种棋子挡住去测试能不能通,递归地检查
-				if(board[jumpPos]==unknownSquare) {
-					//先用白棋试一下
-					start[jumpPos] = chess{jumpPos, white, UBorder.count(jumpPos) ? king : man, jumpPos};
-					//调试信息
-					if (printDebugInfo)
-						printChessboard(board);
-					auto ret = placeBlocker(start, firstMove);
-					//如果挡法可行，返回
-					if (ret.first.size())
-						return {false, ret};
-					//否则用黑棋再试一下，不行的话就无解了
-					start[jumpPos] = chess{jumpPos, black, DBorder.count(jumpPos) ? king : man, jumpPos};
-					ret = placeBlocker(start, firstMove);
-					return {false, ret};
-				}
-			}
-		}
+
 	return {true,{{},{}}};
 }
 //递归放置没被动过的棋子，以适应jump必须优先的规则. 返回值是开始和结束的局面
@@ -159,9 +124,42 @@ pair<vector<chess>,vector<chess>> placeBlocker(vector<chess> start,color firstMo
 		if(moves[i].type==moveType::move){
 			for (int j = 1; j <= 32; ++j)
 				if(board[j].side==moving){
-					auto ret=checkJump(j,start,board,moving,firstMove);
-					if(!ret.first)
-						return ret.second;
+					for (int dr = -1; dr <= 1; dr += 2)
+						for (int dc = -1; dc <= 1; dc += 2) {
+							//man不能向反方向跳
+							if (board[j].type == man && moving == white ^ dr == -1)
+								continue;
+							auto rc = squareIndexToCordinate(j);
+							rc.first += dr;
+							rc.second += dc;
+							int nextPos = squareCordinateToIndex(rc);
+							rc.first += dr;
+							rc.second += dc;
+							int jumpPos = squareCordinateToIndex(rc);
+							//看一下棋子的邻格有没有东西
+							if (nextPos != -1 && jumpPos != -1 &&
+								board[nextPos].side == oppositeColor(moving)) {
+								//这个格已经从未知被确认成了空格，说明这个格之前有棋子经过，用来挡住的棋子是不能动的，所以方案不可能
+								if (board[jumpPos] == emptySquare)
+									return {{},{}};
+								//这个棋子可以jump，需要用各种棋子挡住去测试能不能通,递归地检查
+								if(board[jumpPos]==unknownSquare) {
+									//先用白棋试一下
+									start[jumpPos] = chess{jumpPos, white, UBorder.count(jumpPos) ? king : man, jumpPos};
+									//调试信息
+									if (printDebugInfo)
+										printChessboard(board);
+									auto ret = placeBlocker(start, firstMove);
+									//如果挡法可行，返回
+									if (ret.first.size())
+										return ret;
+									//否则用黑棋再试一下，不行的话就无解了
+									start[jumpPos] = chess{jumpPos, black, DBorder.count(jumpPos) ? king : man, jumpPos};
+									ret = placeBlocker(start, firstMove);
+									return ret;
+								}
+							}
+						}
 				}
 		}
 		//将棋子从这一步的dest移动到src,注意src跳一圈又回到dest的情况
@@ -184,9 +182,42 @@ pair<vector<chess>,vector<chess>> placeBlocker(vector<chess> start,color firstMo
 		}
 		//如果是jump(除去最后一跳晋升了的情况)，需要确保到达dest后不能再jump
 		if(moves[i].type==jump && !promoted){
-			auto ret=checkJump(dest,start,board,moving,firstMove);
-			if(!ret.first)
-				return ret.second;
+			for (int dr = -1; dr <= 1; dr += 2)
+				for (int dc = -1; dc <= 1; dc += 2) {
+					//man不能向反方向跳
+					if (board[dest].type == man && moving == white ^ dr == -1)
+						continue;
+					auto rc = squareIndexToCordinate(dest);
+					rc.first += dr;
+					rc.second += dc;
+					int nextPos = squareCordinateToIndex(rc);
+					rc.first += dr;
+					rc.second += dc;
+					int jumpPos = squareCordinateToIndex(rc);
+					//看一下棋子的邻格有没有东西
+					if (nextPos != -1 && jumpPos != -1 &&
+						board[nextPos].side == oppositeColor(moving)) {
+						//这个格已经从未知被确认成了空格，说明这个格之前有棋子经过，用来挡住的棋子是不能动的，所以方案不可能
+						if (board[jumpPos] == emptySquare)
+							return {{},{}};
+						//这个棋子可以jump，需要用各种棋子挡住去测试能不能通,递归地检查
+						if(board[jumpPos]==unknownSquare) {
+							//先用白棋试一下
+							start[jumpPos] = chess{jumpPos, white, UBorder.count(jumpPos) ? king : man, jumpPos};
+							//调试信息
+							if (printDebugInfo)
+								printChessboard(board);
+							auto ret = placeBlocker(start, firstMove);
+							//如果挡法可行，返回
+							if (ret.first.size())
+								return ret;
+							//否则用黑棋再试一下，不行的话就无解了
+							start[jumpPos] = chess{jumpPos, black, DBorder.count(jumpPos) ? king : man, jumpPos};
+							ret = placeBlocker(start, firstMove);
+							return ret;
+						}
+					}
+				}
 		}
 	}
 	return {start,board};
