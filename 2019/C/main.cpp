@@ -280,13 +280,14 @@ int main(){
 		//将棋子从这一步的dest移动到src,注意src跳一圈又回到dest的情况
 		auto tCh=board[src];
 		tCh.pos=dest;
-		for(auto p:theMove.route)
-			board[p]=emptySquare;
-		board[dest]=tCh;
-		//开局中，有棋子经过的点也要设成空格
-		for(auto p:theMove.route)
-			if(p!=src)
+		for(auto p:theMove.route) {
+			//局面的途经路径设为空格
+			board[p] = emptySquare;
+			//开局中，有棋子经过的未知点也要设成空格
+			if(p!=src && beginning[p]==unknownSquare)
 				beginning[p]=emptySquare;
+		}
+		board[dest]=tCh;
 		//看看是否晋升
 		for (int j = 1; j < theMove.route.size(); ++j)
 			if((moving==white && UBorder.count(dest) ||
