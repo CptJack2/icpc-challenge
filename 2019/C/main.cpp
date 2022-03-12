@@ -169,7 +169,8 @@ pair<vector<chess>,vector<chess>> placeBlocker(vector<chess> start,color firstMo
 				dest=moves[i].route.back();
 		auto tCh=board[src];
 		tCh.pos=dest;
-		board[src]=emptySquare;
+		for(auto p:moves[i].route)
+			board[p]=emptySquare;
 		board[dest]=tCh;
 		//吃子
 		if(moves[i].type==jump)
@@ -248,22 +249,31 @@ int main(){
 		//将棋子从这一步的dest移动到src,注意src跳一圈又回到dest的情况
 		auto tCh=board[src];
 		tCh.pos=dest;
-		board[src]=emptySquare;
+		for(auto p:theMove.route)
+			board[p]=emptySquare;
 		board[dest]=tCh;
+		//开局中，有棋子经过的点也要设成空格
+		for(auto p:theMove.route)
+			if(p!=src)
+				beginning[p]=emptySquare;
 		//看看是否晋升
 		for (int j = 1; j < theMove.route.size(); ++j)
 			if((moving==white && UBorder.count(dest) ||
 				moving==black && DBorder.count(dest)) &&
 	  			board[dest].type==man)
 				board[dest].type=king;
-		//如果这一步是jump,给他补上被吃掉的棋子
+		//处理jump吃子
 		if(theMove.type==jump) {
 			auto eatenPos = getEatenPos(theMove);
-			for (auto ep:eatenPos)
-				if (board[ep] == unknownSquare){
-					beginning[ep]=chess{ep,oppositeColor(moving),man,ep};
-					board[ep]=beginning[ep];
+			for (auto ep:eatenPos) {
+				//如果这里没子,说明要加一个让它吃
+				if (board[ep] == unknownSquare) {
+					beginning[ep] = chess{ep, oppositeColor(moving), man, ep};
+					board[ep] = beginning[ep];
 				}
+				//吃掉的地方变成空格
+				board[ep] = emptySquare;
+			}
 		}
 //		if(printDebugInfo)
 //			printChessboard(board,theMove);
