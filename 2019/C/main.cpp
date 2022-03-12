@@ -116,25 +116,25 @@ pair<bool,pair<vector<chess>,vector<chess>>> checkJump(int chPos,vector<chess>& 
 			rc.first += dr;
 			rc.second += dc;
 			int jumpPos = squareCordinateToIndex(rc);
-			//看一下棋子的邻格有没有东西
-			if (nextPos != -1 && jumpPos != -1 &&
-				board[nextPos].side == oppositeColor(moving)) {
-				//这个格已经从未知被确认成了空格，说明这个格之前有棋子经过，用来挡住的棋子是不能动的，所以方案不可能
-				if (board[jumpPos] == emptySquare)
-					return {false,{{},{}}};
-				//这个棋子可以jump，需要用各种棋子挡住去测试能不能通,递归地检查
-				if(board[jumpPos]==unknownSquare) {
-					//先用白棋试一下
-					start[jumpPos] = chess{jumpPos, white, UBorder.count(jumpPos) ? king : man, jumpPos};
-					auto ret = placeBlocker(start, firstMove);
-					//如果挡法可行，返回
-					if (ret.first.size())
-						return {false, ret};
-					//否则用黑棋再试一下，不行的话就无解了
-					start[jumpPos] = chess{jumpPos, black, DBorder.count(jumpPos) ? king : man, jumpPos};
-					ret = placeBlocker(start, firstMove);
+			//棋子邻格不能jump
+			if (nextPos == -1 || jumpPos == -1 ||
+				board[nextPos].side != oppositeColor(moving))
+				continue;
+			//jump到的格已经从未知被确认成了空格，说明这个格之前有棋子经过，用来挡住的棋子是不能动的，所以方案不可能
+			if (board[jumpPos] == emptySquare)
+				return {false,{{},{}}};
+			//这个棋子可以jump，需要用各种棋子挡住去测试能不能通,递归地检查
+			if(board[jumpPos]==unknownSquare) {
+				//先用白棋试一下
+				start[jumpPos] = chess{jumpPos, white, UBorder.count(jumpPos) ? king : man, jumpPos};
+				auto ret = placeBlocker(start, firstMove);
+				//如果挡法可行，返回
+				if (ret.first.size())
 					return {false, ret};
-				}
+				//否则用黑棋再试一下，不行的话就无解了
+				start[jumpPos] = chess{jumpPos, black, DBorder.count(jumpPos) ? king : man, jumpPos};
+				ret = placeBlocker(start, firstMove);
+				return {false, ret};
 			}
 		}
 	return {true,{{},{}}};
