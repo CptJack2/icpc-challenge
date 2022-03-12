@@ -19,11 +19,11 @@ fi
 input=$(ls ../icpc2019data/C-checks/*.in)
 count=0
 for inf in $input;do
-#  if(( $count <= 1 ));then
-#    count=$(( $count + 1 ))
-#    continue
-#  fi
-#  if(( $count >= 4 ));then exit; fi
+  if(( $count <= 1 ));then
+    count=$(( $count + 1 ))
+    continue
+  fi
+  #if(( $count >= 4 ));then exit; fi
   echo $inf
   cat $inf
   echo "my answer"

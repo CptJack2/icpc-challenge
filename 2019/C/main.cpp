@@ -24,7 +24,6 @@ vector<Move> moves;
 
 //描述一个棋子的结构
 struct chess{
-//	int id;
 	int pos;
 	color side;
 	chessType type;
@@ -39,12 +38,6 @@ map<pair<color,chessType>,char> outputMap={
 chess emptySquare{-1, color(0),chessType(0),-1};
 chess unknownSquare{-2, color(0),chessType(0),-1};
 inline bool operator==(const chess& a,const chess& b){return a.pos==b.pos && a.side==b.side && a.type==b.type && a.beginningPos==b.beginningPos;}
-enum Direction{
-	leftUp,
-	leftDown,
-	rightUp,
-	rightDown,
-};
 set<int> LBorder{5,13,21,29};
 set<int> RBorder{4,12,20,28};
 set<int> UBorder{1,2,3,4};
@@ -192,7 +185,6 @@ pair<vector<chess>,vector<chess>> placeBlocker(vector<chess> start,color firstMo
 	return {start,board};
 }
 int main(){
-//	printDebugInfo=true;
 	//read input
 	char tc;
 	color firstMove;
@@ -276,18 +268,15 @@ int main(){
 				board[ep] = emptySquare;
 			}
 		}
-//		if(printDebugInfo)
-//			printChessboard(board,theMove);
 	}
+	vector<chess*> ps,pe;
 	if(printDebugInfo){
-		vector<chess*> ps,pe;
 		for(auto& ch:beginning)
 			if(!(ch==emptySquare || ch==unknownSquare))
 				ps.push_back(&ch);
 		for(auto& ch:board)
 			if(!(ch==emptySquare || ch==unknownSquare))
 				pe.push_back(&ch);
-		int a=1;
 	}
 	auto ret=placeBlocker(beginning,firstMove);
 	//输出答案
