@@ -114,7 +114,7 @@ pair<bool,pair<vector<chess>,vector<chess>>> checkJump(int chPos,vector<chess>& 
 	for (int dr = -1; dr <= 1; dr += 2)
 		for (int dc = -1; dc <= 1; dc += 2) {
 			//man不能向反方向跳
-			if (board[chPos].type == man && moving == white ^ dr == 1)
+			if (board[chPos].type == man && moving == white ^ dr == -1)
 				continue;
 			auto rc = squareIndexToCordinate(chPos);
 			rc.first += dr;
@@ -171,6 +171,10 @@ pair<vector<chess>,vector<chess>> placeBlocker(vector<chess> start,color firstMo
 		tCh.pos=dest;
 		board[src]=emptySquare;
 		board[dest]=tCh;
+		//吃子
+		if(moves[i].type==jump)
+			for (auto ep: getEatenPos(moves[i]))
+				board[ep]=emptySquare;
 		//晋升
 		bool promoted=false;
 		if(board[dest].type==man && (moving==white && UBorder.count(dest) || moving==black && DBorder.count(dest))){
@@ -187,7 +191,7 @@ pair<vector<chess>,vector<chess>> placeBlocker(vector<chess> start,color firstMo
 	return {start,board};
 }
 int main(){
-	printDebugInfo=true;
+//	printDebugInfo=true;
 	//read input
 	char tc;
 	color firstMove;
@@ -282,7 +286,7 @@ int main(){
 				int sind=squareCordinateToIndex({row,col});
 				if (row % 2 == 1)
 					cout << '-';
-				if (board[sind] == emptySquare || board[sind] == unknownSquare)
+				if (!(board[sind] == emptySquare || board[sind] == unknownSquare))
 					cout << outputMap[make_pair(board[sind].side, board[sind].type)];
 				else
 					cout << '.';
