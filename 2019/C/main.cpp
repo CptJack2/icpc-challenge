@@ -1,7 +1,7 @@
 #include "bits/stdc++.h"
 using namespace std;
 
-//bool printDebugInfo=false;
+bool printDebugInfo=false;
 int moveNum;
 enum moveType{
 	move=1,
@@ -71,37 +71,120 @@ vector<int> getEatenPos(const Move& theMove){
 	}
 	return ret;
 }
-//void printChessboard(const vector<chess>& board,const Move& theMove){
-//	if(theMove.type==moveType::move){
-//		cout<<theMove.src<<"-"<<theMove.dest<<endl;
-//	}else{
-//		cout<<theMove.src;
-//		for(auto m:theMove.midway)
-//			cout<<"x"<<m;
-//		cout<<"x"<<theMove.dest<<endl;
-//	}
-//	cout<<"----------------------------------"<<endl;
-//	for (int row = 1; row <= 8 ; ++row) {
-//		for(int col=row%2+1;col<=8;col+=2){
-//			int sind=squareCordinateToIndex({row,col});
-//			if (row % 2 == 1)
-//				cout << "--";
-//			if (board[sind] != emptySquare) {
-//				char c = outputMap[make_pair(board[sind].side, board[sind].type)];
-//				cout << c<<c;
-//			} else
-//				cout << setw(2)<<setfill('0')<<right<<sind;
-//			if (row % 2 == 0)
-//				cout << "--";
-//		}
-//		cout<<endl;
-//	}
-//	cout<<"----------------------------------"<<endl;
-//	cout.flush();
-//}
-inline color oppositeColor(color m){ if(m == white)return black; else return white;}
+void printMove(const Move& theMove){
+	if(theMove.type==moveType::move){
+		cout<<theMove.route.front()<<"-"<<theMove.route.back()<<endl;
+	}else{
+		cout<<theMove.route.front();
+		for (int i = 1; i < theMove.route.size() ; ++i)
+			cout<<"x"<<theMove.route[i];
+	}
+}
+void printChessboard(const vector<chess>& board){
+	cout<<"----------------------------------"<<endl;
+	for (int row = 1; row <= 8 ; ++row) {
+		for(int col=row%2+1;col<=8;col+=2){
+			int sind=squareCordinateToIndex({row,col});
+			if (row % 2 == 1)
+				cout << "---";
+			if (board[sind] == emptySquare || board[sind] == unknownSquare) {
+				char fill=board[sind] == emptySquare?'.':'?';
+				cout << setw(3) << setfill(fill) << right << sind;
+			} else {
+				char c = outputMap[make_pair(board[sind].side, board[sind].type)];
+				cout << c<<c;
+			}
+			if (row % 2 == 0)
+				cout << "---";
+		}
+		cout<<endl;
+	}
+	cout<<"----------------------------------"<<endl;
+	cout.flush();
+}
+inline color oppositeColor(color m){
+	if(m == white)
+		return black;
+	else
+		return white;
+}
+pair<vector<chess>,vector<chess>> placeBlocker(vector<chess> start,color firstMove);
+//向4个方向看看能不能跳. bool表示是否继续,两个vector分别是开始和结束的局面
+pair<bool,pair<vector<chess>,vector<chess>>> checkJump(int chPos,vector<chess>& start, vector<chess>& board,color moving,color firstMove){
+	for (int dr = -1; dr <= 1; dr += 2)
+		for (int dc = -1; dc <= 1; dc += 2) {
+			//man不能向反方向跳
+			if (board[chPos].type == man && moving == white ^ dr == 1)
+				continue;
+			auto rc = squareIndexToCordinate(chPos);
+			rc.first += dr;
+			rc.second += dc;
+			int nextPos = squareCordinateToIndex(rc);
+			rc.first += dr;
+			rc.second += dc;
+			int jumpPos = squareCordinateToIndex(rc);
+			//这个棋子可以jump，需要用各种棋子挡住去测试能不能通,递归地检查
+			if (nextPos != -1 && jumpPos != -1 && board[nextPos].side == oppositeColor(moving)) {
+				//这个格已经从未知被确认成了空格，说明这个格之前有棋子经过，用来挡住的棋子是不能动的，所以方案不可能
+				if (board[jumpPos] == emptySquare)
+					return {false,{{},{}}};
+				//先用白棋试一下
+				start[jumpPos] = chess{jumpPos, white, UBorder.count(jumpPos) ? king : man, jumpPos};
+				//调试信息
+				if(printDebugInfo)
+					printChessboard(board);
+				auto ret = placeBlocker(start,firstMove);
+				//如果挡法可行，返回
+				if (ret.first.size())
+					return {false,ret};
+				//否则用黑棋再试一下，不行的话就无解了
+				start[jumpPos] = chess{jumpPos, black, DBorder.count(jumpPos) ? king : man, jumpPos};
+				ret = placeBlocker(start,firstMove);
+				return {false,ret};
+			}
+		}
+	return {true,{{},{}}};
+}
+//递归放置没被动过的棋子，以适应jump必须优先的规则. 返回值是开始和结束的局面
+pair<vector<chess>,vector<chess>> placeBlocker(vector<chess> start,color firstMove){
+	int i;
+	color moving;
+	vector<chess> board=start;
+	for(i=0, moving=firstMove;i<moves.size();++i,moving= oppositeColor(moving)){
+		//对于move，检查自己的棋子有没有可以jump的，有的话需要挡住
+		if(moves[i].type==moveType::move){
+			for (int j = 1; j <= 32; ++j) {
+				//空格或者对方的棋子，跳过
+				if (board[j] == emptySquare || board[j] == unknownSquare ||board[j].side== oppositeColor(moving))
+					continue;
+				auto ret=checkJump(j,start,board,moving,firstMove);
+				if(!ret.first)
+					return ret.second;
+			}
+		}
+		//将棋子从这一步的dest移动到src,注意src跳一圈又回到dest的情况
+		int src=moves[i].route.front(),
+				dest=moves[i].route.back();
+		auto tCh=board[src];
+		tCh.pos=dest;
+		board[src]=emptySquare;
+		board[dest]=tCh;
+		//晋升
+		bool promoted=false;
+		if(board[dest].type==man && (moving==white && UBorder.count(dest) || moving==black && DBorder.count(dest))){
+			board[dest].type=king;
+			promoted=true;
+		}
+		//如果是jump(除去最后一跳晋升了的情况)，需要确保到达dest后不能再jump
+		if(moves[i].type==jump && !promoted){
+			auto ret=checkJump(dest,start,board,moving,firstMove);
+			if(!ret.first)
+				return ret.second;
+		}
+	}
+};
 int main(){
-//	printDebugInfo=true;
+	printDebugInfo=true;
 	//read input
 	char tc;
 	color firstMove;
@@ -130,6 +213,7 @@ int main(){
 			else
 				ssin>>c;
 		}
+		moves.push_back(theMove);
 	}
 	//开始放棋
 	int i;
@@ -156,6 +240,7 @@ int main(){
 		}
 		//将棋子从这一步的dest移动到src,注意src跳一圈又回到dest的情况
 		auto tCh=board[src];
+		tCh.pos=dest;
 		board[src]=emptySquare;
 		board[dest]=tCh;
 		//看看是否晋升
@@ -168,81 +253,25 @@ int main(){
 		if(theMove.type==jump) {
 			auto eatenPos = getEatenPos(theMove);
 			for (auto ep:eatenPos)
-				if (board[ep] == emptySquare){
+				if (board[ep] == unknownSquare){
 					beginning[ep]=chess{ep,oppositeColor(moving),man,ep};
 					board[ep]=beginning[ep];
 				}
 		}
+//		if(printDebugInfo)
+//			printChessboard(board,theMove);
 	}
-	//递归放置没被动过的棋子，以适应jump必须优先的规则
-	function<pair<vector<chess>,vector<chess>>(vector<chess>)> placeBlocker=[&](vector<chess> start)->pair<vector<chess>,vector<chess>>{//返回值是开始和结束的局面
-		int i;
-		color moving;
-		vector<chess> board=start;
-		for(i=0, moving=firstMove;i<moves.size();++i,moving= oppositeColor(moving)){
-			//向4个方向看看能不能跳
-			auto checkJump=[&](int chPos)->pair<bool,pair<vector<chess>,vector<chess>>>{//bool表示是否继续,两个vector分别是开始和结束的局面
-				for (int dr = -1; dr <= 1; dr += 2)
-					for (int dc = -1; dc <= 1; dc += 2) {
-						//man不能向反方向跳
-						if (board[chPos].type == man && moving == white ^ dr == 1)
-							continue;
-						auto rc = squareIndexToCordinate(chPos);
-						rc.first += dr;
-						rc.second += dc;
-						int nextPos = squareCordinateToIndex(rc);
-						rc.first += dr;
-						rc.second += dc;
-						int jumpPos = squareCordinateToIndex(rc);
-						//这个棋子可以jump，需要用各种棋子挡住去测试能不能通,递归地检查
-						if (nextPos != -1 && jumpPos != -1 && board[nextPos].side == oppositeColor(moving)) {
-							//这个格已经从未知被确认成了空格，说明这个格之前有棋子经过，用来挡住的棋子是不能动的，所以方案不可能
-							if (board[jumpPos] == emptySquare)
-								return {false,{{},{}}};
-							//先用白棋试一下
-							start[jumpPos] = chess{jumpPos, white, UBorder.count(jumpPos) ? king : man, jumpPos};
-							auto ret = placeBlocker(start);
-							//如果挡法可行，返回
-							if (ret.first.size())
-								return {false,ret};
-							//否则用黑棋再试一下，不行的话就无解了
-							start[jumpPos] = chess{jumpPos, black, DBorder.count(jumpPos) ? king : man, jumpPos};
-							return {false,placeBlocker(start)};
-						}
-					}
-				return {true,{{},{}}};
-			};
-			//对于move，检查自己的棋子有没有可以jump的，有的话需要挡住
-			if(moves[i].type==moveType::move){
-				for (int j = 1; j <= 32; ++j) {
-					//空格或者对方的棋子，跳过
-					if (board[j] == emptySquare || board[j] == unknownSquare ||board[j].side== oppositeColor(moving))
-						continue;
-					auto ret=checkJump(j);
-					if(!ret.first)
-						return ret.second;
-				}
-			}
-			//将棋子从这一步的dest移动到src,注意src跳一圈又回到dest的情况
-			int src=moves[i].route.front(),
-				dest=moves[i].route.back();
-			auto tCh=board[src];
-			board[src]=emptySquare;
-			board[dest]=tCh;
-			//如果是jump(除去最后一跳晋升了的情况)，需要确保到达dest后不能再jump
-			if(moves[i].type==jump &&
-				!(board[dest].type==man &&
-				(moving==white && UBorder.count(dest) || moving==black && DBorder.count(dest)))){
-				auto ret=checkJump(dest);
-				if(!ret.first)
-					return ret.second;
-			}
-			//晋升
-			if(moving==white && UBorder.count(dest) || moving==black && DBorder.count(dest))
-				board[dest].type=king;
-		}
-	};
-	auto ret=placeBlocker(beginning);
+	if(printDebugInfo){
+		vector<chess*> ps,pe;
+		for(auto& ch:beginning)
+			if(!(ch==emptySquare || ch==unknownSquare))
+				ps.push_back(&ch);
+		for(auto& ch:board)
+			if(!(ch==emptySquare || ch==unknownSquare))
+				pe.push_back(&ch);
+		int a=1;
+	}
+	auto ret=placeBlocker(beginning,firstMove);
 	//输出答案
 	for (int row = 1; row <= 8 ; ++row) {
 		auto outputOneLine=[&](vector<chess>& board){
