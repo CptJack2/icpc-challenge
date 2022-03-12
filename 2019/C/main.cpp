@@ -153,7 +153,9 @@ void blockAllJump(vector<chess>& board, color movingColor, const Move& nextMove,
 		for(auto dir:checkDirections){
 			//棋子ch在这个方向能跳过去,就要堵住
 			if(canJumpInDirection(ch,dir,board)) {
-				addChess(board, getPosInDirection(ch.pos, dir), oppositeColor(movingColor));
+				int dirPos=getPosInDirection(ch.pos, dir);
+				int jumpPos=getPosInDirection(dirPos, dir);
+				addChess(board, jumpPos, oppositeColor(movingColor));
 				if (oldBoard != nullptr)
 					addChess(*oldBoard, getPosInDirection(ch.pos, dir), oppositeColor(movingColor));
 			}
@@ -219,6 +221,11 @@ int main(){
 		//将棋子从这一步的dest移动到src
 		swap(chessBoard[theMove.dest],chessBoard[theMove.src]);
 		chessBoard[theMove.src].pos=theMove.src;
+		//如果有晋升,回滚
+		if((lastMoved==white && UBorder.count(theMove.dest)/*!=0*/ ||
+			lastMoved==black && DBorder.count(theMove.dest)/*!=0*/) &&
+		   chessBoard[theMove.src].type==king)
+		   chessBoard[theMove.src].type=man;
 		//如果这一步是jump,给他补上被吃掉的棋子
 		if(theMove.type==jump) {
 			auto eatenPos = getEatenPos(theMove);
@@ -236,14 +243,15 @@ int main(){
 					endPos = theMove.dest;
 				else
 					endPos = theMove.midway[i];
-				if(lastMoved==white && startPos>endPos ||
-				   lastMoved==black && startPos<endPos)
+				if(lastMoved==white && startPos<endPos ||
+				   lastMoved==black && startPos>endPos)
 					chessBoard[theMove.src].type=king;
 			}
 		}
 		//如果这一步是移动,需要检查当前局面,将所有可以jump的棋子挡住
-		if(theMove.type==moveType::move)
-			blockAllJump(chessBoard,lastMoved,theMove, nullptr);
+		if(theMove.type==moveType::move) {
+			blockAllJump(chessBoard, lastMoved, theMove, nullptr);
+		}
 		lastMoved=oppositeColor(lastMoved);
 		--moveIndex;
 		if(printDebugInfo) {
@@ -267,6 +275,10 @@ int main(){
 		auto &moveList=firstMove==white?whiteMoves:blackMoves;
 		int& moveIndex=firstMove==white?whiteMoveIndex:blackMoveIndex;
 		auto& theMove=moveList[moveIndex];
+		//如果这一步是移动,需要检查当前局面,将所有可以jump的棋子挡住
+		if(theMove.type==moveType::move){
+			blockAllJump(afterChessboard,firstMove,theMove, &chessBoard);
+		}
 		//操作的棋子移动位置
 		afterChessboard[theMove.src].pos=theMove.dest;
 		swap(afterChessboard[theMove.src],afterChessboard[theMove.dest]);
@@ -281,9 +293,6 @@ int main(){
 			for (auto ep:eatenPos){
 				afterChessboard[ep]=emptySquare;
 			}
-		}else if(theMove.type==moveType::move){
-		//如果这一步是移动,需要检查当前局面,将所有可以jump的棋子挡住
-			blockAllJump(afterChessboard,firstMove,theMove, &chessBoard);
 		}
 		++moveIndex;
 		firstMove=oppositeColor(firstMove);
