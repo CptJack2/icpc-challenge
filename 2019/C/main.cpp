@@ -92,7 +92,7 @@ void printChessboard(const vector<chess>& board){
 				cout << setw(3) << setfill(fill) << right << sind;
 			} else {
 				char c = outputMap[make_pair(board[sind].side, board[sind].type)];
-				cout << c<<c;
+				cout << c<<c<<c;
 			}
 			if (row % 2 == 0)
 				cout << "---";
@@ -124,7 +124,9 @@ pair<bool,pair<vector<chess>,vector<chess>>> checkJump(int chPos,vector<chess>& 
 			rc.second += dc;
 			int jumpPos = squareCordinateToIndex(rc);
 			//这个棋子可以jump，需要用各种棋子挡住去测试能不能通,递归地检查
-			if (nextPos != -1 && jumpPos != -1 && board[nextPos].side == oppositeColor(moving)) {
+			if (nextPos != -1 && jumpPos != -1 &&
+				board[nextPos].side == oppositeColor(moving) &&
+				board[jumpPos]==unknownSquare) {
 				//这个格已经从未知被确认成了空格，说明这个格之前有棋子经过，用来挡住的棋子是不能动的，所以方案不可能
 				if (board[jumpPos] == emptySquare)
 					return {false,{{},{}}};
@@ -182,7 +184,8 @@ pair<vector<chess>,vector<chess>> placeBlocker(vector<chess> start,color firstMo
 				return ret.second;
 		}
 	}
-};
+	return {start,board};
+}
 int main(){
 	printDebugInfo=true;
 	//read input
