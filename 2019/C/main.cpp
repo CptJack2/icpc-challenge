@@ -126,9 +126,6 @@ pair<bool,pair<vector<chess>,vector<chess>>> checkJump(int chPos,vector<chess>& 
 				if(board[jumpPos]==unknownSquare) {
 					//先用白棋试一下
 					start[jumpPos] = chess{jumpPos, white, UBorder.count(jumpPos) ? king : man, jumpPos};
-					//调试信息
-					if (printDebugInfo)
-						printChessboard(board);
 					auto ret = placeBlocker(start, firstMove);
 					//如果挡法可行，返回
 					if (ret.first.size())
