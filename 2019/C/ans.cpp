@@ -33,12 +33,14 @@ pair<vector<string>, vector<string>> doit(vector<string> start) {
 									int x2 = x+dx+dx, y2 = y+dy+dy;
 									if (x2 < 0 || x2 >= 8 || y2 < 0 || y2 >= 8) continue;
 									if (toupper(board[y+dy][x+dx]) != opp(player)) continue;
-									if (board[y2][x2] == '.') return {{}, {}};  // Failure.
+									if (board[y2][x2] == '.')
+										return {{}, {}};  // Failure.
 									if (board[y2][x2] == '?') {
 										// Jump must be blocked.  Recurse!
 										start[y2][x2] = (y2 == 0) ? 'W' : 'w';
 										auto ret = doit(start);
-										if (ret.first.size()) return ret;
+										if (ret.first.size())
+											return ret;
 										start[y2][x2] = (y2 == 7) ? 'B' : 'b';
 										return doit(start);
 									}
@@ -62,12 +64,14 @@ pair<vector<string>, vector<string>> doit(vector<string> start) {
 							int x2 = x+dx+dx, y2 = y+dy+dy;
 							if (x2 < 0 || x2 >= 8 || y2 < 0 || y2 >= 8) continue;
 							if (toupper(board[y+dy][x+dx]) != opp(player)) continue;
-							if (board[y2][x2] == '.') return {{}, {}};  // Failure.
+							if (board[y2][x2] == '.')
+								return {{}, {}};  // Failure.
 							if (board[y2][x2] == '?') {
 								// Jump must be blocked.  Recurse!
 								start[y2][x2] = (y2 == 0) ? 'W' : 'w';
 								auto ret = doit(start);
-								if (ret.first.size()) return ret;
+								if (ret.first.size())
+									return ret;
 								start[y2][x2] = (y2 == 7) ? 'B' : 'b';
 								return doit(start);
 							}
