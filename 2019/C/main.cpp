@@ -36,9 +36,9 @@ map<pair<color,chessType>,char> outputMap={
 		{{black,man},'b'},
 		{{black,king},'B'},
 };
-chess emptySquare{-1, color(0),chessType(0),true};
-inline bool operator==(const chess& a,const chess& b){return a.pos==b.pos && a.side==b.side && a.type==b.type && a.eaten==b.eaten;}
-inline bool operator!=(const chess& a,const chess& b){return !(a==b);}
+chess emptySquare{-1, color(0),chessType(0),-1};
+chess unknownSquare{-2, color(0),chessType(0),-1};
+inline bool operator==(const chess& a,const chess& b){return a.pos==b.pos && a.side==b.side && a.type==b.type && a.beginningPos==b.beginningPos;}
 enum Direction{
 	leftUp,
 	leftDown,
@@ -178,14 +178,14 @@ int main(){
 	//开始放棋
 	int i;
 	color moving;
-	vector<chess> beginning(33,emptySquare), board=beginning;
+	vector<chess> beginning(33,unknownSquare), board=beginning;
 	//先将move涉及到的移动的和吃掉的棋子放上
 	for(i=0, moving=firstMove;i<moves.size();++i,moving= oppositeColor(moving)){
 		auto& theMove=moves[i];
 		//先看看dest有没有这个棋子,没有给他加上
 		int src=theMove.route.front(),
 			dest=theMove.route.back();
-		if(board[src]==emptySquare){
+		if(board[src]==unknownSquare){
 			beginning[src]=chess{src,moving,man,src};
 			board[src]=beginning[src];
 		}
@@ -198,13 +198,16 @@ int main(){
 				beginning[board[src].beginningPos].type=king;
 			}
 		}
-		//将棋子从这一步的dest移动到src
-		swap(board[dest],board[src]);
+		//将棋子从这一步的dest移动到src,注意src跳一圈又回到dest的情况
+		auto tCh=board[src];
+		board[src]=emptySquare;
+		board[dest]=tCh;
 		//看看是否晋升
-		if((moving==white && UBorder.count(dest) ||
-			moving==black && DBorder.count(dest)) &&
-		   board[dest].type==man)
-		   board[dest].type=king;
+		for (int j = 1; j < theMove.route.size(); ++j)
+			if((moving==white && UBorder.count(dest) ||
+				moving==black && DBorder.count(dest)) &&
+	  			board[dest].type==man)
+				board[dest].type=king;
 		//如果这一步是jump,给他补上被吃掉的棋子
 		if(theMove.type==jump) {
 			auto eatenPos = getEatenPos(theMove);
@@ -216,7 +219,7 @@ int main(){
 		}
 	}
 	//递归放置没被动过的棋子，以适应jump必须优先的规则
-	auto placeBlocker=[&](vector<chess>& start)->vector<chess>{//返回值是结束的局面
+	function<pair<vector<chess>,vector<chess>>(vector<chess>)> placeBlocker=[&](vector<chess> start)->pair<vector<chess>,vector<chess>>{//返回值是开始和结束的局面
 		int i;
 		color moving;
 		vector<chess> board=start;
@@ -225,7 +228,7 @@ int main(){
 			if(moves[i].type==moveType::move){
 				for (int j = 1; j <= 32; ++j) {
 					//空格或者对方的棋子，跳过
-					if (board[j] == emptySquare || board[j].side== oppositeColor(moving))
+					if (board[j] == emptySquare || board[j] == unknownSquare ||board[j].side== oppositeColor(moving))
 						continue;
 					//向4个方向看看能不能跳
 					for (int dr = -1; dr <= 1; dr += 2)
@@ -240,14 +243,25 @@ int main(){
 							rc.first += dr;
 							rc.second += dc;
 							int jumpPos = squareCordinateToIndex(rc);
-							//这个棋子可以jump，需要用各种棋子挡住去测试能不能通
-							if (nextPos!=-1 && jumpPos!=-1 && board[nextPos].side==oppositeColor(moving) && board[jumpPos]==emptySquare){
-
+							//这个棋子可以jump，需要用各种棋子挡住去测试能不能通,递归地检查
+							if (nextPos!=-1 && jumpPos!=-1 && board[nextPos].side==oppositeColor(moving)){
+								//这个格已经从未知被确认成了空格，说明这个格之前有棋子经过，用来挡住的棋子是不能动的，所以方案不可能
+								if(board[jumpPos]==emptySquare)
+									return {{},{}};
+								//先用白棋试一下
+								start[jumpPos] = chess{jumpPos,white,UBorder.count(jumpPos)?king:man,jumpPos};
+								auto ret = placeBlocker(start);
+								//如果挡法可行，返回
+								if (ret.first.size())
+									return ret;
+								//否则用黑棋再试一下，不行的话就无解了
+								start[jumpPos] = chess{jumpPos,black,DBorder.count(jumpPos)?king:man,jumpPos};
+								return placeBlocker(start);
 							}
 						}
-
 				}
 			}
+
 		}
 	};
 	vector<chess*> debugChVec;
