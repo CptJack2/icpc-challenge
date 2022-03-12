@@ -123,26 +123,28 @@ pair<bool,pair<vector<chess>,vector<chess>>> checkJump(int chPos,vector<chess>& 
 			rc.first += dr;
 			rc.second += dc;
 			int jumpPos = squareCordinateToIndex(rc);
-			//这个棋子可以jump，需要用各种棋子挡住去测试能不能通,递归地检查
+			//看一下棋子的邻格有没有东西
 			if (nextPos != -1 && jumpPos != -1 &&
-				board[nextPos].side == oppositeColor(moving) &&
-				board[jumpPos]==unknownSquare) {
+				board[nextPos].side == oppositeColor(moving)) {
 				//这个格已经从未知被确认成了空格，说明这个格之前有棋子经过，用来挡住的棋子是不能动的，所以方案不可能
 				if (board[jumpPos] == emptySquare)
 					return {false,{{},{}}};
-				//先用白棋试一下
-				start[jumpPos] = chess{jumpPos, white, UBorder.count(jumpPos) ? king : man, jumpPos};
-				//调试信息
-				if(printDebugInfo)
-					printChessboard(board);
-				auto ret = placeBlocker(start,firstMove);
-				//如果挡法可行，返回
-				if (ret.first.size())
-					return {false,ret};
-				//否则用黑棋再试一下，不行的话就无解了
-				start[jumpPos] = chess{jumpPos, black, DBorder.count(jumpPos) ? king : man, jumpPos};
-				ret = placeBlocker(start,firstMove);
-				return {false,ret};
+				//这个棋子可以jump，需要用各种棋子挡住去测试能不能通,递归地检查
+				if(board[jumpPos]==unknownSquare) {
+					//先用白棋试一下
+					start[jumpPos] = chess{jumpPos, white, UBorder.count(jumpPos) ? king : man, jumpPos};
+					//调试信息
+					if (printDebugInfo)
+						printChessboard(board);
+					auto ret = placeBlocker(start, firstMove);
+					//如果挡法可行，返回
+					if (ret.first.size())
+						return {false, ret};
+					//否则用黑棋再试一下，不行的话就无解了
+					start[jumpPos] = chess{jumpPos, black, DBorder.count(jumpPos) ? king : man, jumpPos};
+					ret = placeBlocker(start, firstMove);
+					return {false, ret};
+				}
 			}
 		}
 	return {true,{{},{}}};
@@ -155,14 +157,12 @@ pair<vector<chess>,vector<chess>> placeBlocker(vector<chess> start,color firstMo
 	for(i=0, moving=firstMove;i<moves.size();++i,moving= oppositeColor(moving)){
 		//对于move，检查自己的棋子有没有可以jump的，有的话需要挡住
 		if(moves[i].type==moveType::move){
-			for (int j = 1; j <= 32; ++j) {
-				//空格或者对方的棋子，跳过
-				if (board[j] == emptySquare || board[j] == unknownSquare ||board[j].side== oppositeColor(moving))
-					continue;
-				auto ret=checkJump(j,start,board,moving,firstMove);
-				if(!ret.first)
-					return ret.second;
-			}
+			for (int j = 1; j <= 32; ++j)
+				if(board[j].side==moving){
+					auto ret=checkJump(j,start,board,moving,firstMove);
+					if(!ret.first)
+						return ret.second;
+				}
 		}
 		//将棋子从这一步的dest移动到src,注意src跳一圈又回到dest的情况
 		int src=moves[i].route.front(),
