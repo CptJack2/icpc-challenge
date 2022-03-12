@@ -11,25 +11,24 @@ enum color{
 	white=1,
 	black=2
 };
-struct Move{
-	int src;
-	int dest;
-	moveType type;
-	vector<int> midway;
-	string str;//for debug
-};
-vector<Move> blackMoves, whiteMoves;
 enum chessType{
 	man=1,
 	king
 };
+struct Move{
+	moveType type;
+	vector<int> route;
+	string str;//for debug
+};
+vector<Move> moves;
+
 //描述一个棋子的结构
 struct chess{
 //	int id;
 	int pos;
 	color side;
 	chessType type;
-	bool eaten;
+	int beginningPos;
 };
 map<pair<color,chessType>,char> outputMap={
 		{{white,man},'w'},
@@ -40,22 +39,11 @@ map<pair<color,chessType>,char> outputMap={
 chess emptySquare{-1, color(0),chessType(0),true};
 inline bool operator==(const chess& a,const chess& b){return a.pos==b.pos && a.side==b.side && a.type==b.type && a.eaten==b.eaten;}
 inline bool operator!=(const chess& a,const chess& b){return !(a==b);}
-vector<chess> chessBoard(33,emptySquare);
 enum Direction{
 	leftUp,
 	leftDown,
 	rightUp,
 	rightDown,
-};
-map<pair<Direction,bool>,int> directionDelta{//bool true代表是偶数行, false奇数
-	{{leftUp, true},-4},
-	{{leftDown, true},4},
-	{{rightUp, true},-3},
-	{{rightDown, true},5},
-	{{leftUp, false},-5},
-	{{leftDown, false},3},
-	{{rightUp, false},-4},
-	{{rightDown, false},4}
 };
 set<int> LBorder{5,13,21,29};
 set<int> RBorder{4,12,20,28};
@@ -91,16 +79,9 @@ inline int squareCordinateToIndex(pair<int,int> cord){//1-32
 }
 vector<int> getEatenPos(const Move& theMove){
 	vector<int> ret;
-	for (int i = 0; i <= theMove.midway.size(); ++i) {
-		int startPos, endPos;
-		if (i == 0)
-			startPos = theMove.src;
-		else
-			startPos = theMove.midway[i - 1];
-		if (i == theMove.midway.size())
-			endPos = theMove.dest;
-		else
-			endPos = theMove.midway[i];
+	for (int i = 0; i <= theMove.route.size()-2; ++i) {
+		int startPos=theMove.route[i],
+			endPos=theMove.route[i+1];
 		auto sCord= squareIndexToCordinate(startPos),
 			eCord= squareIndexToCordinate(endPos);
 		int eatenPos = squareCordinateToIndex({(sCord.first+eCord.first)/2,(sCord.second+eCord.second)/2});
@@ -137,7 +118,6 @@ void printChessboard(const vector<chess>& board,const Move& theMove){
 	cout.flush();
 }
 inline color oppositeColor(color m){ if(m == white)return black; else return white;}
-inline void addChess(vector<chess>& board,int pos, color color){board[pos]=chess{pos,color,man, false};}
 void blockAllJump(vector<chess>& board, color movingColor, const Move& nextMove,vector<chess>* oldBoard){
 	for(auto ch:board){
 		if(ch==emptySquare || ch.side != movingColor)
@@ -169,94 +149,68 @@ int main(){
 	color firstMove;
 	cin>>tc>>moveNum;
 	firstMove=tc=='W'?white:black;
-	vector<Move>& move1=firstMove==white?whiteMoves:blackMoves,
-		&move2=firstMove==white?blackMoves:whiteMoves;
 	for (int i = 0; i < moveNum; ++i) {
 		string mStr;
 		cin>>mStr;
 		Move theMove;
 		theMove.str=mStr;
 		stringstream ssin(mStr);
-		ssin>>theMove.src;
+		int pos;
+		ssin>>pos;
+		theMove.route.push_back(pos);
 		char c;
 		ssin>>c;
-		if(c=='-'){
+		if(c=='-')
 			theMove.type=moveType::move;
-			ssin>>theMove.dest;
-		} else{
+		else
 			theMove.type=moveType::jump;
-			while(1){
-				int t;
-				ssin >> t;
-				theMove.midway.push_back(t);
-				if(ssin.peek()!='x')
-					break;
-				else
-					ssin>>c;
-			}
-			theMove.dest=theMove.midway.back();
-			theMove.midway.pop_back();
+		while(1){
+			ssin >> pos;
+			theMove.route.push_back(pos);
+			if(ssin.peek()!='x' && ssin.peek()!='-')
+				break;
+			else
+				ssin>>c;
 		}
-		i%2? move2.push_back(theMove): move1.push_back(theMove);
 	}
-	color lastMoved=moveNum%2==1? firstMove: oppositeColor(firstMove);
 	//开始放棋
-	int blackMoveIndex=blackMoves.size()-1,
-		whiteMoveIndex=whiteMoves.size()-1;
-	while(blackMoveIndex>=0 || whiteMoveIndex>=0){
-		auto &moveList=lastMoved==white?whiteMoves:blackMoves;
-		int& moveIndex=lastMoved==white?whiteMoveIndex:blackMoveIndex;
-		auto& theMove=moveList[moveIndex];
+	int i;
+	color moving;
+	vector<chess> beginning(33,emptySquare), board=beginning;
+	//先将move涉及到的移动的和吃掉的棋子放上
+	for(i=0, moving=firstMove;i<moves.size();++i,moving= oppositeColor(moving)){
+		auto& theMove=moves[i];
 		//先看看dest有没有这个棋子,没有给他加上
-		if(chessBoard[theMove.dest]==emptySquare){
-			addChess(chessBoard,theMove.dest,lastMoved);
-		}else if(chessBoard[theMove.dest].side != lastMoved){
-		//不是己方的棋子，可能是前面猜测性添加的时候，颜色错了
-			chessBoard[theMove.dest].side=lastMoved;
+		int src=theMove.route.front(),
+			dest=theMove.route.back();
+		if(board[src]==emptySquare){
+			beginning[src]=chess{src,moving,man,src};
+			board[src]=beginning[src];
 		}
 		//如果移动方向不是man能走出来的,那这个棋子改成king
-		if(lastMoved==white && theMove.dest>theMove.src ||
-			lastMoved==black && theMove.dest<theMove.src)
-			chessBoard[theMove.dest].type=king;
+		for (int j = 0; j <= theMove.route.size() - 2; ++j) {
+			int startPos=theMove.route[j],
+				endPos=theMove.route[j + 1];
+			if(moving==white ^ startPos>endPos && board[src].type==man){
+				board[src].type=king;
+				beginning[board[src].beginningPos].type=king;
+			}
+		}
 		//将棋子从这一步的dest移动到src
-		swap(chessBoard[theMove.dest],chessBoard[theMove.src]);
-		chessBoard[theMove.src].pos=theMove.src;
-		//如果有晋升,回滚
-		if((lastMoved==white && UBorder.count(theMove.dest)/*!=0*/ ||
-			lastMoved==black && DBorder.count(theMove.dest)/*!=0*/) &&
-		   chessBoard[theMove.src].type==king)
-		   chessBoard[theMove.src].type=man;
+		swap(board[dest],board[src]);
+		//看看是否晋升
+		if((moving==white && UBorder.count(dest) ||
+			moving==black && DBorder.count(dest)) &&
+		   board[dest].type==man)
+		   board[dest].type=king;
 		//如果这一步是jump,给他补上被吃掉的棋子
 		if(theMove.type==jump) {
 			auto eatenPos = getEatenPos(theMove);
 			for (auto ep:eatenPos)
-				if (chessBoard[ep] == emptySquare)
-					addChess(chessBoard, ep, oppositeColor(lastMoved));
-			//如果man向反方向jump了,将他改成king
-			for (int i = 0; i <= theMove.midway.size(); ++i) {
-				int startPos, endPos;
-				if (i == 0)
-					startPos = theMove.src;
-				else
-					startPos = theMove.midway[i - 1];
-				if (i == theMove.midway.size())
-					endPos = theMove.dest;
-				else
-					endPos = theMove.midway[i];
-				if(lastMoved==white && startPos<endPos ||
-				   lastMoved==black && startPos>endPos)
-					chessBoard[theMove.src].type=king;
-			}
-		}
-		//如果这一步是移动,需要检查当前局面,将所有可以jump的棋子挡住
-		if(theMove.type==moveType::move) {
-			blockAllJump(chessBoard, lastMoved, theMove, nullptr);
-		}
-		lastMoved=oppositeColor(lastMoved);
-		--moveIndex;
-		if(printDebugInfo) {
-			printChessboard(chessBoard, theMove);
-			int a = min(1, 2);
+				if (board[ep] == emptySquare){
+					beginning[ep]=chess{ep,oppositeColor(moving),man,ep};
+					board[ep]=beginning[ep];
+				}
 		}
 	}
 	vector<chess*> debugChVec;
