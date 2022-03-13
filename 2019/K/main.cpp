@@ -36,8 +36,8 @@ int main(){
 			k[i]=i;
 		memset(vis,0,sizeof(vis));//初始化
 		int x,multiple;
-		long double o=1;
-		for(i=1; i <= n && o > 1e-12 ; i++) {
+		long double passPossiblity=1;
+		for(i=1; i <= n && passPossiblity > 1e-12 ; i++) {
 			multiple = T(p[i] / gcd(P, p[i]));//缩减的周期
 			int oldK=k[multiple];
 			for ( j = 0; j < multiple; ++j) {
@@ -48,8 +48,8 @@ int main(){
 					vis[multiple][j] = 1;
 				}
 			}
-			o*=(long double)(k[multiple])/oldK;
-			f[i]+=o;
+			passPossiblity*= (long double)(k[multiple]) / oldK;
+			f[i]+=passPossiblity;
 		}
 	}
 	for(int i=1;i<=n+1;++i)
