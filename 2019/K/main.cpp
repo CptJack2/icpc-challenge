@@ -15,28 +15,6 @@ inline int T(const int & x) {
 long double k[V+5];
 int vis[V+5][V+5];
 
-inline void Solve(const int & t)/*余数为t时*/ {
- 	int i,j;
-	for(i=1;i<=V;++i) 
-		k[i]=1;
-	memset(vis,0,sizeof(vis));//初始化
- 	int x,w;
-	long double o=1;
-	for(i=1; i<=n && o>1e-12 ;i++) {
-		w = T(p[i] / gcd(P, p[i]));
-		o /= k[w];
-		for ( j = 0; j < w; ++j) {
-			x = (j * P + t) % p[i];
-			if(tg[i][x] &&!vis[w][j]){
-				//枚举时间jP+t
-				k[w] -= 1.0 / w;
-				vis[w][j] = 1;
-			}
-		}
-		o*=k[w];
-		f[i]+=o;
-	}
-}
 int main(){
 	int x,r;
 	cin>>n;
@@ -51,8 +29,28 @@ int main(){
 		}
 	}
 	f[0]=P;
-	for(int i=0;i<P;++i)
-		Solve(i);
+	for(int i=0;i<P;++i){
+		int ii,j;
+		for(ii=1; ii <= V; ++ii)
+			k[ii]=1;
+		memset(vis,0,sizeof(vis));//初始化
+		int x,w;
+		long double o=1;
+		for(ii=1; ii <= n && o > 1e-12 ; ii++) {
+			w = T(p[ii] / gcd(P, p[ii]));
+			o /= k[w];
+			for ( j = 0; j < w; ++j) {
+				x = (j * P + i) % p[ii];
+				if(tg[ii][x] && !vis[w][j]){
+					//枚举时间jP+i
+					k[w] -= 1.0 / w;
+					vis[w][j] = 1;
+				}
+			}
+			o*=k[w];
+			f[ii]+=o;
+		}
+	}
 	for(int i=1;i<=n+1;++i)
 		printf("%.12Lf\n",(f[i-1]-f[i])/P);
 	return 0;//枚举模P余数，最终答案要除以P
