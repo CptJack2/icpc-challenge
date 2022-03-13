@@ -22,12 +22,19 @@ inline void Solve(const int & t)/*余数为t时*/ {
 	memset(vis,0,sizeof(vis));//初始化
  	int x,w;
 	long double o=1;
-	for(++f[0],i=1; i<=n&&o>1e-12 ;f[i++]+=(o*=k[w]))
-		for(o/=k[w=T(p[i]/gcd(P,p[i]))],j=0;j^w;++j){
-			tg[i][x=(j*P+t)%p[i]] &&
-				!vis[w][j] &&
-				(k[w]-=1.0/w,vis[w][j]=1);//枚举时间jP+t
+	++f[0];
+	for(i=1; i<=n && o>1e-12 ;i++) {
+		for (o /= k[w = T(p[i] / gcd(P, p[i]))], j = 0; j ^ w; ++j) {
+			x = (j * P + t) % p[i];
+			if(tg[i][x] &&!vis[w][j]){
+				//枚举时间jP+t
+				k[w] -= 1.0 / w;
+				vis[w][j] = 1;
+			}
 		}
+		o*=k[w];
+		f[i]+=o;
+	}
 }
 int main(){
 	int x,r;
@@ -37,7 +44,8 @@ int main(){
 		p[i]+=r;
 		x%=p[i];
 		for (int j = 0; j < r; ++j) {
-			tg[i][(j-x+p[i])%p[i]]=1;//给红灯对应余数打标记
+			int ttt=(j-x+p[i])%p[i];
+			tg[i][ttt]=1;//给红灯对应余数打标记
 		}
 	}
 	for(int i=0;i!=P;++i)
