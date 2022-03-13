@@ -34,20 +34,20 @@ int main(){
 		for(i=1; i <= V; ++i)
 			k[i]=1;
 		memset(vis,0,sizeof(vis));//初始化
-		int x,w;
+		int x,multiple;
 		long double o=1;
 		for(i=1; i <= n && o > 1e-12 ; i++) {
-			w = T(p[i] / gcd(P, p[i]));
-			o /= k[w];
-			for ( j = 0; j < w; ++j) {
+			multiple = T(p[i] / gcd(P, p[i]));//缩减的周期
+			o /= k[multiple];
+			for ( j = 0; j < multiple; ++j) {
 				x = (j * P + remain) % p[i];
-				if(tg[i][x] && !vis[w][j]){
+				if(tg[i][x] && !vis[multiple][j]){
 					//枚举时间jP+remain
-					k[w] -= 1.0 / w;
-					vis[w][j] = 1;
+					k[multiple] -= 1.0 / multiple;
+					vis[multiple][j] = 1;
 				}
 			}
-			o*=k[w];
+			o*=k[multiple];
 			f[i]+=o;
 		}
 	}
