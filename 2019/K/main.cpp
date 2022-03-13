@@ -22,7 +22,6 @@ inline void Solve(const int & t)/*余数为t时*/ {
 	memset(vis,0,sizeof(vis));//初始化
  	int x,w;
 	long double o=1;
-	++f[0];
 	for(i=1; i<=n && o>1e-12 ;i++) {
 		w = T(p[i] / gcd(P, p[i]));
 		o /= k[w];
@@ -46,11 +45,13 @@ int main(){
 		p[i]+=r;
 		x%=p[i];
 		for (int j = 0; j < r; ++j) {
-			int ttt=(j-x+p[i])%p[i];
-			tg[i][ttt]=1;//给红灯对应余数打标记
+			//假设起始时刻为s，令pi=ri+gi，那么不能通过第i个红绿灯就意味着(s+xi)%pi<ri。
+			int s= (j - x + p[i]) % p[i];
+			tg[i][s]=1;//给红灯对应余数打标记
 		}
 	}
-	for(int i=0;i!=P;++i)
+	f[0]=P;
+	for(int i=0;i<P;++i)
 		Solve(i);
 	for(int i=1;i<=n+1;++i)
 		printf("%.12Lf\n",(f[i-1]-f[i])/P);
