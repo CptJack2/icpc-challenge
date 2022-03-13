@@ -24,7 +24,9 @@ inline void Solve(const int & t)/*余数为t时*/ {
 	long double o=1;
 	++f[0];
 	for(i=1; i<=n && o>1e-12 ;i++) {
-		for (o /= k[w = T(p[i] / gcd(P, p[i]))], j = 0; j ^ w; ++j) {
+		w = T(p[i] / gcd(P, p[i]));
+		o /= k[w];
+		for ( j = 0; j < w; ++j) {
 			x = (j * P + t) % p[i];
 			if(tg[i][x] &&!vis[w][j]){
 				//枚举时间jP+t
