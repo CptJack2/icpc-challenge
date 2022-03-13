@@ -12,7 +12,7 @@ inline int T(const int & x) {
 	return x==2||x==4?8:(x==3?9:x);
 }//把x调到可能的最大倍数
 
-long double k[V+5];
+//long double k[V+5];
 int vis[V+5][V+5];
 
 int main(){
@@ -31,23 +31,24 @@ int main(){
 	f[0]=P;
 	for(int remain=0; remain < P; ++remain){
 		int i,j;
+		int k[V];
 		for(i=1; i <= V; ++i)
-			k[i]=1;
+			k[i]=i;
 		memset(vis,0,sizeof(vis));//初始化
 		int x,multiple;
 		long double o=1;
 		for(i=1; i <= n && o > 1e-12 ; i++) {
 			multiple = T(p[i] / gcd(P, p[i]));//缩减的周期
-			o /= k[multiple];
+			int oldK=k[multiple];
 			for ( j = 0; j < multiple; ++j) {
 				x = (j * P + remain) % p[i];
 				if(tg[i][x] && !vis[multiple][j]){
 					//枚举时间jP+remain
-					k[multiple] -= 1.0 / multiple;
+					k[multiple] --;
 					vis[multiple][j] = 1;
 				}
 			}
-			o*=k[multiple];
+			o*=(long double)(k[multiple])/oldK;
 			f[i]+=o;
 		}
 	}
