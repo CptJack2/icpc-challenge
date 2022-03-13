@@ -29,26 +29,26 @@ int main(){
 		}
 	}
 	f[0]=P;
-	for(int i=0;i<P;++i){
-		int ii,j;
-		for(ii=1; ii <= V; ++ii)
-			k[ii]=1;
+	for(int remain=0; remain < P; ++remain){
+		int i,j;
+		for(i=1; i <= V; ++i)
+			k[i]=1;
 		memset(vis,0,sizeof(vis));//初始化
 		int x,w;
 		long double o=1;
-		for(ii=1; ii <= n && o > 1e-12 ; ii++) {
-			w = T(p[ii] / gcd(P, p[ii]));
+		for(i=1; i <= n && o > 1e-12 ; i++) {
+			w = T(p[i] / gcd(P, p[i]));
 			o /= k[w];
 			for ( j = 0; j < w; ++j) {
-				x = (j * P + i) % p[ii];
-				if(tg[ii][x] && !vis[w][j]){
-					//枚举时间jP+i
+				x = (j * P + remain) % p[i];
+				if(tg[i][x] && !vis[w][j]){
+					//枚举时间jP+remain
 					k[w] -= 1.0 / w;
 					vis[w][j] = 1;
 				}
 			}
 			o*=k[w];
-			f[ii]+=o;
+			f[i]+=o;
 		}
 	}
 	for(int i=1;i<=n+1;++i)
