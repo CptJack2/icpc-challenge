@@ -26,7 +26,6 @@ int main() {
 	read_tile(back_row);
     read_tile(front_row);
     //存储当前价格相同的tile
-    //auto setCmp=[&](vector<tile>::iterator t1,vector<tile>::iterator t2){return t1->price<t2->price;};
     //height -> iter in front/back row
     multimap<int,vector<tile>::iterator> front_tile_map, back_tile_map;
 	int front_index = 0, back_index = 0;
@@ -41,16 +40,15 @@ int main() {
         front_map_arg{front_tile_map, front_row, front_index},
         back_map_arg{back_tile_map, back_row, back_index};
 	while (1) {
-        //返回值代表vec是否走到了尽头
         auto insert_map=[&](insert_map_arg& arg){
-            if (arg.tile_map.empty()) {
+            //每次都尝试insert front map和back map两者中空了的那个
+        	if (arg.tile_map.empty()) {
                 int price = arg.tile_vec[arg.vec_index].price;
                 while (arg.vec_index < arg.tile_vec.size() && arg.tile_vec[arg.vec_index].price == price) {
                     arg.tile_map.insert(make_pair(arg.tile_vec[arg.vec_index].height, arg.tile_vec.begin() + arg.vec_index));
                     ++arg.vec_index;
                 }
             }
-            return true;
         };
         insert_map(front_map_arg);
         insert_map(back_map_arg);
