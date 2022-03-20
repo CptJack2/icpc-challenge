@@ -89,11 +89,18 @@ int main(){
 	}
 	//use dfs iterate over the queen tree to get answer
 	stack<QueenNode*> iterStack;
+	stack<TrieNode*> stateStack;
 	iterStack.push(&queens[1]);
 	auto state=trieRoot;
 	while(!iterStack.empty()){
 		auto pQueen=iterStack.top();
 		iterStack.pop();
+		//the child is a leaf, go back to its parent's state
+		if(pQueen== nullptr){
+			state=stateStack.top();
+			stateStack.pop();
+			continue;
+		}
 		for(auto pch:pQueen->children)
 			iterStack.push(pch);
 		bool foundChar= false;
@@ -107,6 +114,11 @@ int main(){
 			}
 		if(!foundChar)
 			state=state->failure;
+		//keep track of the route's state
+		stateStack.push(state);
+		//meet leaf, push a null pointer to indicate it
+		if(pQueen->children.empty())
+			iterStack.push(nullptr);
 	}
 	for(auto i:wordCount)
 		cout<<i<<endl;
