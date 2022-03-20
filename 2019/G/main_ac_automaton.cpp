@@ -28,12 +28,13 @@ int main(){
 	}
 	//read in query trie
 	TrieNode* trieRoot=new TrieNode();
+	trieRoot->failure=trieRoot;
 	vector<int> wordCount(k,0);
 	for (int i = 0; i < k; ++i) {
 		string queryStr;
 		cin >> queryStr;
 		TrieNode* p=trieRoot;
-		for (int j = queryStr.size() - 1; j >= 0 ; ++j) {
+		for (int j = queryStr.size() - 1; j >= 0 ; --j) {
 			bool inTrie= false;
 			for(auto pchild:p->children)
 				if(pchild->ch == queryStr[j]){
@@ -66,9 +67,11 @@ int main(){
 			bfsQue.pop();
 			for(auto pch:p->children)
 				bfsQue2.push(pch);
-			auto pf=p->parent->failure;
+			if(p==trieRoot)
+				continue;
 			bool foundFailure= false;
-			while(pf!= nullptr){
+			auto pf=p->parent->failure;
+			while(pf!= trieRoot){
 				for(auto pch:pf->children)
 					if(pch->ch==p->ch){
 						p->failure=pch;
@@ -90,6 +93,9 @@ int main(){
 	auto state=trieRoot;
 	while(!iterStack.empty()){
 		auto pQueen=iterStack.top();
+		iterStack.pop();
+		for(auto pch:pQueen->children)
+			iterStack.push(pch);
 		bool foundChar= false;
 		for(auto child:state->children)
 			if(child->ch==pQueen->N){
