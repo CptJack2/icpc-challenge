@@ -104,16 +104,23 @@ int main(){
 		for(auto pch:pQueen->children)
 			iterStack.push(pch);
 		bool foundChar= false;
-		for(auto child:state->children)
-			if(child->ch==pQueen->N){
-				state=child;
-				foundChar= true;
-				if(state->isWord)
-					++wordCount[state->index];
+		while(1){
+			for(auto child:state->children)
+				if(child->ch==pQueen->N){
+					state=child;
+					foundChar= true;
+					if(state->isWord)
+						++wordCount[state->index];
+					break;
+				}
+			//following failure link back to root, and still don't have the char, just let it go
+			if(state==trieRoot)
 				break;
-			}
-		if(!foundChar)
-			state=state->failure;
+			if(!foundChar)
+				state=state->failure;
+			else
+				break;
+		}
 		//keep track of the route's state
 		stateStack.push(state);
 		//meet leaf, push a null pointer to indicate it
