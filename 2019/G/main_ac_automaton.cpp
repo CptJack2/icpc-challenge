@@ -91,13 +91,16 @@ int main(){
 						foundFailure= true;
 						break;
 					}
-				if(!foundFailure)
-					if(pf==trieRoot){
-						p->failure=trieRoot;
-						break;
-					} else
-						pf=pf->failure;
-				else
+				//if not, keep following its failure
+				if(!foundFailure && pf!=trieRoot)
+					pf=pf->failure;
+				//can't follow more
+				else if(!foundFailure && pf==trieRoot) {
+					p->failure = trieRoot;
+					p->failureInDict = trieRoot;
+					break;
+				//found failure link, just quit
+				} else
 					break;
 			}
 		}
