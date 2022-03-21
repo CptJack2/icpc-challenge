@@ -66,6 +66,7 @@ int main(){
 		}
 	}
 	//build ac automaton failure link
+	//detail algorithm: https://www.toptal.com/algorithms/aho-corasick-algorithm
 	/*Fail指针的求法：
 	* Fail指针用BFS来求得，对于直接与根节点相连的节点来说，如果这些节点失配，他们的Fail指针直接指向root即可，其他节点其Fail指针求法如下：
 	* 假设当前节点为father，其孩子节点记为child。求child的Fail指针时，首先我们要找到其father的Fail指针所指向的节点,假如是t的话，
@@ -75,7 +76,7 @@ int main(){
 	//直接与root相连的点failure设置为root
 	for(auto pch:trieRoot->children) {
 		pch->failure = trieRoot;
-		pch->failureInDict = trieRoot;
+		pch->failureInDict = pch;
 		for(auto pgch:pch->children)
 			bfsQue.push(pgch);
 	}
@@ -93,12 +94,6 @@ int main(){
 					if(pch->ch==p->ch){
 						p->failure=pch;
 						foundFailure= true;
-						//follow failure links to find first word( or root) in dict
-						auto pd=p;
-						do{
-							pd=pd->failure;
-						}while(!(pd==trieRoot || pd->isWord));
-						p->failureInDict=pd;
 						break;
 					}
 				//if not, keep following its failure
@@ -113,6 +108,11 @@ int main(){
 				} else
 					break;
 			}
+			//follow failure links to find first word( or root) in dict
+			if(p->isWord)
+				p->failureInDict=p;
+			else
+				p->failureInDict=p->failure->failureInDict;
 		}
 		queue<TrieNode*> emptyQue;
 		bfsQue.swap(emptyQue);
@@ -145,9 +145,9 @@ int main(){
 				if(child->ch==pQueen->N){
 					state=child;
 					foundChar= true;
-					if(state->isWord)
-						for(auto ind:state->indexes)
-							++wordCount[ind];
+//					if(state->isWord)
+//						for(auto ind:state->indexes)
+//							++wordCount[ind];
 					break;
 				}
 			//following failure link back to root, and still don't have the char, just let it go
@@ -160,12 +160,14 @@ int main(){
 		}
 		//follow failure link to all the query string that is suffix of current query string, their word count should +1 too
 		auto pTraceBack=state;
-		while(pTraceBack!=trieRoot){
+		while(1){
 			pTraceBack=pTraceBack->failureInDict;
-			if(pTraceBack->isWord)
-				for(auto ind:pTraceBack->indexes) {
-					++wordCount[ind];
-				}
+			if(pTraceBack==trieRoot)
+				break;
+			for (auto ind:pTraceBack->indexes) {
+				++wordCount[ind];
+			}
+			pTraceBack=pTraceBack->failure;
 		}
 		//keep track of the route's state
 		stateStack.push(state);
