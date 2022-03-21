@@ -8,6 +8,7 @@ struct TrieNode{
 	TrieNode* failure;
 	bool isWord;
 	vector<int> indexes;//这个query string是第几号, tmd还有重复的query
+	int lv;//for debug
 };
 
 struct QueenNode{
@@ -29,6 +30,7 @@ int main(){
 	//read in query trie
 	TrieNode* trieRoot=new TrieNode();
 	trieRoot->failure=trieRoot;
+	trieRoot->lv=0;
 	vector<int> wordCount(k,0);
 	for (int i = 0; i < k; ++i) {
 		string queryStr;
@@ -43,7 +45,7 @@ int main(){
 					break;
 				}
 			if(!inTrie){
-				TrieNode* pNewNode=new TrieNode{queryStr[j], p ,{}, nullptr, false};
+				TrieNode* pNewNode=new TrieNode{queryStr[j], p ,{}, nullptr, false,{},p->lv+1};
 				p->children.push_back(pNewNode);
 				p=pNewNode;
 			}
@@ -82,13 +84,13 @@ int main(){
 						break;
 					}
 				if(!foundFailure)
-					pf=pf->failure;
+					if(pf==trieRoot){
+						p->failure=trieRoot;
+						break;
+					} else
+						pf=pf->failure;
 				else
 					break;
-				if(pf==trieRoot) {
-					p->failure=trieRoot;
-					break;
-				}
 			}
 		}
 		queue<TrieNode*> emptyQue;
