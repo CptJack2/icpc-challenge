@@ -100,6 +100,7 @@ int main(){
 	stack<TrieNode*> stateStack;
 	iterStack.push(&queens[1]);
 	auto state=trieRoot;
+	int dcount=0;
 	while(!iterStack.empty()){
 		auto pQueen=iterStack.top();
 		iterStack.pop();
@@ -111,6 +112,7 @@ int main(){
 		}
 		for(auto pch:pQueen->children)
 			iterStack.push(pch);
+		//modify current state according to input
 		bool foundChar= false;
 		while(1){
 			for(auto child:state->children)
@@ -120,14 +122,6 @@ int main(){
 					if(state->isWord)
 						for(auto ind:state->indexes)
 							++wordCount[ind];
-					//follow failure link to all the query string that is suffix of current query string, their word count should +1 too
-					auto pTraceBack=state;
-					while(pTraceBack!=trieRoot){
-						pTraceBack=pTraceBack->failure;
-						if(pTraceBack->isWord)
-							for(auto ind:pTraceBack->indexes)
-								++wordCount[ind];
-					}
 					break;
 				}
 			//following failure link back to root, and still don't have the char, just let it go
@@ -138,8 +132,25 @@ int main(){
 			else
 				break;
 		}
+		//follow failure link to all the query string that is suffix of current query string, their word count should +1 too
+		auto pTraceBack=state;
+		bool meetFinalD= false;
+		while(pTraceBack!=trieRoot){
+			pTraceBack=pTraceBack->failure;
+			if(pTraceBack->isWord)
+				for(auto ind:pTraceBack->indexes) {
+					++wordCount[ind];
+					if(state->ch=='D' && ind==4 || ind ==5)
+						meetFinalD= true;
+				}
+		}
 		//keep track of the route's state
 		stateStack.push(state);
+		if(state->ch=='D') {
+			++dcount;
+			if(!meetFinalD)
+				int b=1;
+		}
 		//meet leaf, push a null pointer to indicate it
 		if(pQueen->children.empty())
 			iterStack.push(nullptr);
