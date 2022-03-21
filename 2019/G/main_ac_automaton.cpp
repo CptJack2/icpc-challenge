@@ -14,6 +14,9 @@ struct TrieNode{
 struct QueenNode{
 	char N;
 	vector<QueenNode*> children;
+	QueenNode* parent;//for debug
+	int lv;//for debug
+	int index;//for debug
 };
 
 int n,k;
@@ -24,8 +27,13 @@ int main(){
 	for (int i = 1; i <= n; ++i) {
 		int parentIndex;
 		cin >> queens[i].N >> parentIndex;
-		if(parentIndex != 0)
+		if(parentIndex != 0){
 			queens[parentIndex].children.push_back(&queens[i]);
+			queens[i].parent=&queens[parentIndex];
+			queens[i].lv=queens[parentIndex].lv+1;
+		} else
+			queens[i].lv=1;
+		queens[i].index=i;
 	}
 	//read in query trie
 	TrieNode* trieRoot=new TrieNode();
@@ -102,7 +110,8 @@ int main(){
 	stack<TrieNode*> stateStack;
 	iterStack.push(&queens[1]);
 	auto state=trieRoot;
-	int dcount=0;
+	//todo
+	int JJCount=0;
 	while(!iterStack.empty()){
 		auto pQueen=iterStack.top();
 		iterStack.pop();
@@ -136,22 +145,20 @@ int main(){
 		}
 		//follow failure link to all the query string that is suffix of current query string, their word count should +1 too
 		auto pTraceBack=state;
-		bool meetFinalD= false;
 		while(pTraceBack!=trieRoot){
 			pTraceBack=pTraceBack->failure;
 			if(pTraceBack->isWord)
 				for(auto ind:pTraceBack->indexes) {
 					++wordCount[ind];
-					if(state->ch=='D' && ind==4 || ind ==5)
-						meetFinalD= true;
 				}
 		}
 		//keep track of the route's state
 		stateStack.push(state);
-		if(state->ch=='D') {
-			++dcount;
-			if(!meetFinalD)
-				int b=1;
+		//todo debug code
+		if(pQueen->N=='J' && pQueen->parent && pQueen->parent->N=='J') {
+			++JJCount;
+			if (JJCount!=wordCount[3])
+				int a = 111;
 		}
 		//meet leaf, push a null pointer to indicate it
 		if(pQueen->children.empty())
