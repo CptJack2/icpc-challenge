@@ -124,8 +124,8 @@ int main(){
 	iterStack.push(&queens[1]);
 	stateStack.push(nullptr);//dummy to avoid overflow
 	auto state=trieRoot;
-	//todo
-	int JJCount=0;
+	//state compute cache
+	map<pair<TrieNode*,char>,TrieNode*> runCache;
 	while(!iterStack.empty()){
 		auto pQueen=iterStack.top();
 		iterStack.pop();
@@ -138,27 +138,31 @@ int main(){
 		iterStack.push(nullptr);
 		for(auto pch:pQueen->children)
 			iterStack.push(pch);
-		//modify current state according to input
-		bool foundChar= false;
-		while(1){
-			for(auto child:state->children)
-				if(child->ch==pQueen->N){
-					state=child;
-					foundChar= true;
-//					if(state->isWord)
-//						for(auto ind:state->indexes)
-//							++wordCount[ind];
+		//check if result cached
+		if(runCache.count(make_pair(state,pQueen->N)))
+			state=runCache[make_pair(state,pQueen->N)];
+		else{//run state machine
+			//modify current state according to input
+			bool foundChar= false;
+			TrieNode* origState=state;
+			while(1){
+				for(auto child:state->children)
+					if(child->ch==pQueen->N){
+						state=child;
+						foundChar= true;
+						break;
+					}
+				//following failure link back to root, and still don't have the char, just let it go
+				if(state==trieRoot)
 					break;
-				}
-			//following failure link back to root, and still don't have the char, just let it go
-			if(state==trieRoot)
-				break;
-			if(!foundChar)
-				state=state->failure;
-			else
-				break;
+				if(!foundChar)
+					state=state->failure;
+				else
+					break;
+			}
+			runCache[make_pair(origState,pQueen->N)]=state;
 		}
-		//follow failure link to all the query string that is suffix of current query string, their word count should +1 too
+		//update word count using suffix link and end word link
 		auto pTraceBack=state;
 		while(1){
 			pTraceBack=pTraceBack->failureInDict;
@@ -171,13 +175,6 @@ int main(){
 		}
 		//keep track of the route's state
 		stateStack.push(state);
-		//todo debug code
-		//assert(state->ch==pQueen->N);
-		if(pQueen->N=='J' && pQueen->parent && pQueen->parent->N=='J') {
-			++JJCount;
-			if (JJCount!=wordCount[3])
-				int a = 111;
-		}
 	}
 	for(auto i:wordCount)
 		cout<<i<<endl;
