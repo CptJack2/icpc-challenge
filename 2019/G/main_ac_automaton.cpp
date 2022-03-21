@@ -126,6 +126,7 @@ int main(){
 	auto state=trieRoot;
 	//state compute cache
 	map<pair<TrieNode*,char>,TrieNode*> runCache;
+	int totalCal=0,hitCache=0,notHitCache=0;//todo revert
 	while(!iterStack.empty()){
 		auto pQueen=iterStack.top();
 		iterStack.pop();
@@ -139,12 +140,17 @@ int main(){
 		for(auto pch:pQueen->children)
 			iterStack.push(pch);
 		//check if result cached
-		if(runCache.count(make_pair(state,pQueen->N)))
-			state=runCache[make_pair(state,pQueen->N)];
+		++totalCal;
+		if(runCache.count(make_pair(state,pQueen->N))) {
+			state = runCache[make_pair(state, pQueen->N)];
+			++hitCache;
+		}
 		else{//run state machine
 			//modify current state according to input
+			++notHitCache;
 			bool foundChar= false;
 			TrieNode* origState=state;
+			int failureMoved=0;
 			while(1){
 				for(auto child:state->children)
 					if(child->ch==pQueen->N){
@@ -155,8 +161,10 @@ int main(){
 				//following failure link back to root, and still don't have the char, just let it go
 				if(state==trieRoot)
 					break;
-				if(!foundChar)
-					state=state->failure;
+				if(!foundChar) {
+					state = state->failure;
+					++failureMoved;
+				}
 				else
 					break;
 			}
