@@ -7,7 +7,7 @@ struct TrieNode{
 	vector<TrieNode*> children;
 	TrieNode* failure;
 	bool isWord;
-	int index;//这个query string是第几号
+	vector<int> indexes;//这个query string是第几号, tmd还有重复的query
 };
 
 struct QueenNode{
@@ -49,7 +49,7 @@ int main(){
 			}
 			if(j==0){
 				p->isWord= true;
-				p->index=i;
+				p->indexes.push_back(i);
 			}
 		}
 	}
@@ -118,7 +118,16 @@ int main(){
 					state=child;
 					foundChar= true;
 					if(state->isWord)
-						++wordCount[state->index];
+						for(auto ind:state->indexes)
+							++wordCount[ind];
+					//follow failure link to all the query string that is suffix of current query string, their word count should +1 too
+					auto pTraceBack=state;
+					while(pTraceBack!=trieRoot){
+						pTraceBack=pTraceBack->failure;
+						if(pTraceBack->isWord)
+							for(auto ind:pTraceBack->indexes)
+								++wordCount[ind];
+					}
 					break;
 				}
 			//following failure link back to root, and still don't have the char, just let it go
