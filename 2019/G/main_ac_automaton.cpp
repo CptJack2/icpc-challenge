@@ -6,6 +6,7 @@ struct TrieNode{
 	TrieNode* parent;
 	vector<TrieNode*> children;
 	TrieNode* failure;
+	TrieNode* failureInDict;
 	bool isWord;
 	vector<int> indexes;//这个query string是第几号, tmd还有重复的query
 	int lv;//for debug
@@ -38,6 +39,7 @@ int main(){
 	//read in query trie
 	TrieNode* trieRoot=new TrieNode();
 	trieRoot->failure=trieRoot;
+	trieRoot->failureInDict=trieRoot;
 	trieRoot->lv=0;
 	vector<int> wordCount(k,0);
 	for (int i = 0; i < k; ++i) {
@@ -53,7 +55,7 @@ int main(){
 					break;
 				}
 			if(!inTrie){
-				TrieNode* pNewNode=new TrieNode{queryStr[j], p ,{}, nullptr, false,{},p->lv+1};
+				TrieNode* pNewNode=new TrieNode{queryStr[j], p ,{}, nullptr, nullptr,false,{},p->lv+1};
 				p->children.push_back(pNewNode);
 				p=pNewNode;
 			}
@@ -73,6 +75,7 @@ int main(){
 	//直接与root相连的点failure设置为root
 	for(auto pch:trieRoot->children) {
 		pch->failure = trieRoot;
+		pch->failureInDict = trieRoot;
 		for(auto pgch:pch->children)
 			bfsQue.push(pgch);
 	}
@@ -85,10 +88,17 @@ int main(){
 			bool foundFailure= false;
 			auto pf=p->parent->failure;
 			while(1){
+				//find whether its parent's failure has a child with same char
 				for(auto pch:pf->children)
 					if(pch->ch==p->ch){
 						p->failure=pch;
 						foundFailure= true;
+						//follow failure links to find first word( or root) in dict
+						auto pd=p;
+						do{
+							pd=pd->failure;
+						}while(!(pd==trieRoot || pd->isWord));
+						p->failureInDict=pd;
 						break;
 					}
 				//if not, keep following its failure
@@ -151,7 +161,7 @@ int main(){
 		//follow failure link to all the query string that is suffix of current query string, their word count should +1 too
 		auto pTraceBack=state;
 		while(pTraceBack!=trieRoot){
-			pTraceBack=pTraceBack->failure;
+			pTraceBack=pTraceBack->failureInDict;
 			if(pTraceBack->isWord)
 				for(auto ind:pTraceBack->indexes) {
 					++wordCount[ind];
