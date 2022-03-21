@@ -60,28 +60,36 @@ int main(){
  	* 我们就要看t的孩子中有没有和child节点所表示的字母相同的节点，如果有的话，这个节点就是child的fail指针，如果发现没有，
  	* 则需要找father->fail->fail这个节点，然后重复上面过程，如果一直找都找不到，则child的Fail指针就要指向root。*/
 	queue<TrieNode*> bfsQue,bfsQue2;
-	bfsQue.push(trieRoot);
+	//直接与root相连的点failure设置为root
+	for(auto pch:trieRoot->children) {
+		pch->failure = trieRoot;
+		for(auto pgch:pch->children)
+			bfsQue.push(pgch);
+	}
 	while (!bfsQue.empty()){
 		while (!bfsQue.empty()) {
 			auto p=bfsQue.front();
 			bfsQue.pop();
 			for(auto pch:p->children)
 				bfsQue2.push(pch);
-			if(p==trieRoot)
-				continue;
 			bool foundFailure= false;
 			auto pf=p->parent->failure;
-			while(pf!= trieRoot){
+			while(1){
 				for(auto pch:pf->children)
 					if(pch->ch==p->ch){
 						p->failure=pch;
 						foundFailure= true;
 						break;
 					}
-				pf=pf->failure;
+				if(!foundFailure)
+					pf=pf->failure;
+				else
+					break;
+				if(pf==trieRoot) {
+					p->failure=trieRoot;
+					break;
+				}
 			}
-			if(!foundFailure)
-				p->failure=trieRoot;
 		}
 		queue<TrieNode*> emptyQue;
 		bfsQue.swap(emptyQue);
