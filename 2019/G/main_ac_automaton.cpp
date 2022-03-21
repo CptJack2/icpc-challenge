@@ -109,6 +109,7 @@ int main(){
 	stack<QueenNode*> iterStack;
 	stack<TrieNode*> stateStack;
 	iterStack.push(&queens[1]);
+	stateStack.push(nullptr);//dummy to avoid overflow
 	auto state=trieRoot;
 	//todo
 	int JJCount=0;
@@ -117,10 +118,11 @@ int main(){
 		iterStack.pop();
 		//the child is a leaf, go back to its parent's state
 		if(pQueen== nullptr){
-			state=stateStack.top();
 			stateStack.pop();
+			state=stateStack.top();
 			continue;
 		}
+		iterStack.push(nullptr);
 		for(auto pch:pQueen->children)
 			iterStack.push(pch);
 		//modify current state according to input
@@ -155,14 +157,12 @@ int main(){
 		//keep track of the route's state
 		stateStack.push(state);
 		//todo debug code
+		//assert(state->ch==pQueen->N);
 		if(pQueen->N=='J' && pQueen->parent && pQueen->parent->N=='J') {
 			++JJCount;
 			if (JJCount!=wordCount[3])
 				int a = 111;
 		}
-		//meet leaf, push a null pointer to indicate it
-		if(pQueen->children.empty())
-			iterStack.push(nullptr);
 	}
 	for(auto i:wordCount)
 		cout<<i<<endl;
