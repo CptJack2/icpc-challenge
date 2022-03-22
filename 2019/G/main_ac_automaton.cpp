@@ -120,6 +120,23 @@ int main(){
 		for(auto i:p->queryIndexes)
 			wordCount[i]=p->val;
 	};
+	struct stackFrame{
+		TrieNode* p;
+		int valCounter;
+		vector<stackFrame>::iterator parentFrame;
+	};
+	vector<stackFrame> iterStack;
+	iterStack.push_back(stackFrame{trieRoot,0,iterStack.begin()});
+	while(!iterStack.empty()){
+		auto fr=iterStack.end()-1;
+		iterStack.pop_back();
+		for(auto pch:fr->p->dfsChildren) {
+			iterStack.push_back(stackFrame{pch, 0, fr});
+			fr->p->val+=pch->val;
+		}
+		for(auto i:fr->p->queryIndexes)
+			wordCount[i]=fr->p->val;
+	}
 	dfs(trieRoot);
 	for(auto i:wordCount)
 		cout<<i<<endl;
