@@ -112,32 +112,27 @@ int main(){
 		bfsQue.swap(bfsQue2);
 	}
 	//use dfs iterate over the queen tree to get answer
-	function<void(TrieNode*)> dfs=[&](TrieNode* p){
-		for(auto pch:p->dfsChildren) {
-			dfs(pch);
-			p->val+=pch->val;
-		}
-		for(auto i:p->queryIndexes)
-			wordCount[i]=p->val;
-	};
-	struct stackFrame{
-		TrieNode* p;
-		int valCounter;
-		vector<stackFrame>::iterator parentFrame;
-	};
-	vector<stackFrame> iterStack;
-	iterStack.push_back(stackFrame{trieRoot,0,iterStack.begin()});
+	vector<TrieNode*> iterStack;
+	iterStack.push_back(trieRoot);
 	while(!iterStack.empty()){
-		auto fr=iterStack.end()-1;
-		iterStack.pop_back();
-		for(auto pch:fr->p->dfsChildren) {
-			iterStack.push_back(stackFrame{pch, 0, fr});
-			fr->p->val+=pch->val;
+		auto p=iterStack.back();
+		if(p==nullptr){
+			//pop null pointer
+			iterStack.pop_back();
+			p=iterStack.back();
+			for(auto pch:p->dfsChildren)
+				p->val+=pch->val;
+			for(auto i:p->queryIndexes)
+				wordCount[i]=p->val;
+			//pop the parent frame
+			iterStack.pop_back();
+			continue;
 		}
-		for(auto i:fr->p->queryIndexes)
-			wordCount[i]=fr->p->val;
+		//push pop frame indicator
+		iterStack.push_back(nullptr);
+		for(auto pch:p->dfsChildren)
+			iterStack.push_back(pch);
 	}
-	dfs(trieRoot);
 	for(auto i:wordCount)
 		cout<<i<<endl;
 }
