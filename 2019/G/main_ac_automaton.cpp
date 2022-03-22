@@ -100,6 +100,7 @@ int main(){
 				//can't follow more
 				else if(!foundFailure && pf==trieRoot) {
 					p->failure = trieRoot;
+					trieRoot->dfsChildren.push_back(p);
 					break;
 				//found failure link, just quit
 				} else
