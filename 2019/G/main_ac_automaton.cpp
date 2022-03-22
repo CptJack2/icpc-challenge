@@ -10,6 +10,7 @@ struct TrieNode{
 	int val;
 	vector<int> queryIndexes;//这个query string是第几号, tmd还有重复的query
 	int lv;//for debug
+	int nodeIndex;
 };
 
 int n,k;
@@ -18,12 +19,16 @@ int main(){
 	//root for the whole trie
 	TrieNode* trieRoot=new TrieNode();
 	trieRoot->lv=0;
+	trieRoot->nodeIndex=0;
+	trieRoot->val=0;
+	int totalNodeCount=1;
 	//read in queen tree
 	vector<TrieNode> queens(n+1);
 	for (int i = 1; i <= n; ++i) {
 		int parentIndex;
 		cin >> queens[i].ch >> parentIndex;
 		queens[i].val=1;
+		queens[i].nodeIndex=totalNodeCount++;
 		if(parentIndex != 0){
 			queens[parentIndex].children.push_back(&queens[i]);
 			queens[i].parent=&queens[parentIndex];
@@ -36,6 +41,7 @@ int main(){
 	}
 	//read in query trie
 	vector<int> wordCount(k,0);
+	vector<TrieNode*> queryNode(k);//for debug
 	for (int i = 0; i < k; ++i) {
 		string queryStr;
 		cin >> queryStr;
@@ -53,11 +59,14 @@ int main(){
 				pNewNode->ch=queryStr[j];
 				pNewNode->parent=p;
 				pNewNode->lv=p->lv+1;
+				pNewNode->nodeIndex=totalNodeCount++;
+				pNewNode->val=0;
 				p->children.push_back(pNewNode);
 				p=pNewNode;
 			}
 			if(j==0){
 				p->queryIndexes.push_back(i);
+				queryNode[i]=p;
 			}
 		}
 	}
