@@ -1,46 +1,50 @@
-/*AC自动机的做法,但把女王名字建成trie,父在前子在后,然后把query string反转,加入到trie中.
- * 然后对这个trie建立failure link,bfs的过程中把failure link的出发端加入到到达端的dfsChildren中,
- * 最后进行一次dfs得出答案.
- * 只用单纯的ac自动机,根据queen name不断状态转移的方法时不行的,因为不是要找单词是否出现过,而是要统计所有单词出现的次数,
- * 如果用状态转移的方法,当一个词时另一个的后缀的时候,遇到长的词,短的词也是出现了的,需要沿着failure link不断回溯,复杂度会很高*/
+/*单纯的以Query String构建AC自动机,然后用名字去匹配,secret36测试用例会因为failure跳转次数过多tle*/
 #include "bits/stdc++.h"
 using namespace std;
 
 struct TrieNode{
 	char ch;
+	TrieNode* parent;
 	TrieNode* fastLink[26];//有限的{A-Z}字符集的快速链接
 	TrieNode* failure;
-	vector<TrieNode*> dfsChildren;//dfs搜索时的子节点
-	int val;
-	vector<int> queryIndexes;//这个query string是第几号, tmd还有重复的query
+	bool isWord;
+	set<int> queryIndexes;//这个query string是第几号, tmd还有重复的query
 	int lv;//for debug
 	int nodeIndex;//for debug
+};
+
+struct QueenNode{
+	char N;
+	vector<QueenNode*> children;
+	QueenNode* parent;//for debug
+	int lv;//for debug
+	int index;//for debug
 };
 
 int n,k;
 int main(){
 	cin>>n>>k;
-	//root for the whole trie
-	TrieNode* trieRoot=new TrieNode();
-	trieRoot->lv=0;
-	trieRoot->nodeIndex=0;
-	trieRoot->val=0;
-	memset(trieRoot->fastLink,0,26*sizeof(TrieNode*));
-	int totalNodeCount=1;
 	//read in queen tree
-	vector<TrieNode> queens(n+1);
+	vector<QueenNode> queens(n+1);
 	for (int i = 1; i <= n; ++i) {
 		int parentIndex;
-		cin >> queens[i].ch >> parentIndex;
-		queens[i].val=1;
-		auto parent=parentIndex!=0 ? &queens[parentIndex]:trieRoot;
-		parent->fastLink[queens[i].ch-'A']=&queens[i];
-		queens[i].nodeIndex=totalNodeCount++;
-		queens[i].lv=queens[parentIndex].lv+1;
+		cin >> queens[i].N >> parentIndex;
+		if(parentIndex != 0){
+			queens[parentIndex].children.push_back(&queens[i]);
+			queens[i].parent=&queens[parentIndex];
+			queens[i].lv=queens[parentIndex].lv+1;
+		} else
+			queens[i].lv=1;
+		queens[i].index=i;
 	}
-	//read in query trie
+	//root for the whole trie
+	TrieNode* trieRoot=new TrieNode();
+	memset(trieRoot->fastLink,0,26*sizeof(TrieNode*));
+	trieRoot->lv=0;
+	trieRoot->nodeIndex=0;
+	int totalNodeCount=1;
 	vector<int> wordCount(k,0);
-	vector<TrieNode*> queryNode(k);//for debug
+	//read in query trie
 	for (int i = 0; i < k; ++i) {
 		string queryStr;
 		cin >> queryStr;
@@ -53,15 +57,13 @@ int main(){
 				memset(pNewNode->fastLink,0,26*sizeof(TrieNode*));
 				pNewNode->ch=queryStr[j];
 				p->fastLink[queryStr[j]-'A']=pNewNode;
-				pNewNode->val=0;
 				p=pNewNode;
 				pNewNode->lv=p->lv+1;
 				pNewNode->nodeIndex=totalNodeCount++;
 			}
-			if(j==0){
-				p->queryIndexes.push_back(i);
-				queryNode[i]=p;
-			}
+			if(j==0)
+				p->isWord= true,
+				p->queryIndexes.insert(i);
 		}
 	}
 	//build ac automaton failure link
@@ -71,8 +73,7 @@ int main(){
 	for (int i = 0; i < 26; ++i)
 		if(trieRoot->fastLink[i])
 			trieRoot->fastLink[i]->failure=trieRoot,
-					bfsQue.push(trieRoot->fastLink[i]),
-					trieRoot->dfsChildren.push_back(trieRoot->fastLink[i]);
+			bfsQue.push(trieRoot->fastLink[i]);
 		else
 			trieRoot->fastLink[i]=trieRoot;
 	//处理p每个孩子的failure和fastlink
@@ -80,35 +81,39 @@ int main(){
 		auto p = bfsQue.front();
 		bfsQue.pop();
 		for (int i = 0; i < 26; ++i) {
-			if (p->fastLink[i] != nullptr)
-				p->fastLink[i]->failure = p->failure->fastLink[i],
-						bfsQue.push(p->fastLink[i]),
-						p->fastLink[i]->failure->dfsChildren.push_back(p->fastLink[i]);
-			else
+			if (p->fastLink[i] != nullptr) {
+				p->fastLink[i]->failure = p->failure->fastLink[i];
+				//failure指向的是它的最长后缀，将它的queryIndex缓存下来，避免遇到一个query string是另一个的后缀的情况需要沿着failure不断回溯
+				for (auto ind:p->fastLink[i]->failure->queryIndexes)
+					p->fastLink[i]->queryIndexes.insert(ind);
+				bfsQue.push(p->fastLink[i]);
+			} else
 				p->fastLink[i] = p->failure->fastLink[i];
 		}
 	}
 	//use dfs iterate over the queen tree to get answer
-	vector<TrieNode*> iterStack;
-	iterStack.push_back(trieRoot);
+	stack<QueenNode*> iterStack;
+	stack<TrieNode*> stateStack;
+	iterStack.push(&queens[1]);
+	stateStack.push(nullptr);//dummy to avoid overflow
+	auto state=trieRoot;
 	while(!iterStack.empty()){
-		auto p=iterStack.back();
-		if(p==nullptr){
-			//pop null pointer
-			iterStack.pop_back();
-			p=iterStack.back();
-			for(auto pch:p->dfsChildren)
-				p->val+=pch->val;
-			for(auto i:p->queryIndexes)
-				wordCount[i]=p->val;
-			//pop the parent frame
-			iterStack.pop_back();
+		auto pQueen=iterStack.top();
+		iterStack.pop();
+		//the child is a leaf, go back to its parent's state
+		if(pQueen== nullptr){
+			stateStack.pop();
+			state=stateStack.top();
 			continue;
 		}
-		//push pop frame indicator
-		iterStack.push_back(nullptr);
-		for(auto pch:p->dfsChildren)
-			iterStack.push_back(pch);
+		iterStack.push(nullptr);
+		for(auto pch:pQueen->children)
+			iterStack.push(pch);
+		state=state->fastLink[pQueen->N-'A'];
+		if(state->isWord)
+			for(auto i:state->queryIndexes)
+				++wordCount[i];
+		stateStack.push(state);
 	}
 	for(auto i:wordCount)
 		cout<<i<<endl;
