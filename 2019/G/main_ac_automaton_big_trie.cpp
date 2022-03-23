@@ -3,7 +3,6 @@ using namespace std;
 
 struct TrieNode{
 	char ch;
-	TrieNode* parent;
 	TrieNode* fastLink[26];//有限的{A-Z}字符集的快速链接
 	TrieNode* failure;
 	vector<TrieNode*> dfsChildren;//dfs搜索时的子节点
@@ -29,8 +28,8 @@ int main(){
 		int parentIndex;
 		cin >> queens[i].ch >> parentIndex;
 		queens[i].val=1;
-		queens[i].parent=parentIndex!=0 ? &queens[parentIndex]:trieRoot;
-		queens[i].parent->fastLink[queens[i].ch-'A']=&queens[i];
+		auto parent=parentIndex!=0 ? &queens[parentIndex]:trieRoot;
+		parent->fastLink[queens[i].ch-'A']=&queens[i];
 		queens[i].nodeIndex=totalNodeCount++;
 		queens[i].lv=queens[parentIndex].lv+1;
 	}
@@ -48,7 +47,6 @@ int main(){
 				TrieNode* pNewNode=new TrieNode;
 				memset(pNewNode->fastLink,0,26*sizeof(TrieNode*));
 				pNewNode->ch=queryStr[j];
-				pNewNode->parent=p;
 				p->fastLink[queryStr[j]-'A']=pNewNode;
 				pNewNode->val=0;
 				p=pNewNode;
