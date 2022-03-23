@@ -1,3 +1,6 @@
+/*AC自动机的做法,但把女王名字建成trie,父在前子在后,然后把query string反转,加入到trie中.
+ * 然后对这个trie建立failure link,bfs的过程中把failure link的出发端加入到到达端的dfsChildren中,
+ * 最后进行一次dfs得出答案*/
 #include "bits/stdc++.h"
 using namespace std;
 
