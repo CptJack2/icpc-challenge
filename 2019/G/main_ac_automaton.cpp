@@ -1,6 +1,8 @@
 /*AC自动机的做法,但把女王名字建成trie,父在前子在后,然后把query string反转,加入到trie中.
  * 然后对这个trie建立failure link,bfs的过程中把failure link的出发端加入到到达端的dfsChildren中,
- * 最后进行一次dfs得出答案*/
+ * 最后进行一次dfs得出答案.
+ * 只用单纯的ac自动机,根据queen name不断状态转移的方法时不行的,因为不是要找单词是否出现过,而是要统计所有单词出现的次数,
+ * 如果用状态转移的方法,当一个词时另一个的后缀的时候,遇到长的词,短的词也是出现了的,需要沿着failure link不断回溯,复杂度会很高*/
 #include "bits/stdc++.h"
 using namespace std;
 
