@@ -7,7 +7,6 @@ struct TrieNode{
 	TrieNode* parent;
 	TrieNode* fastLink[26];//有限的{A-Z}字符集的快速链接
 	TrieNode* failure;
-	bool isWord;
 	set<int> queryIndexes;//这个query string是第几号, tmd还有重复的query
 	int lv;//for debug
 	int nodeIndex;//for debug
@@ -62,7 +61,6 @@ int main(){
 				pNewNode->nodeIndex=totalNodeCount++;
 			}
 			if(j==0)
-				p->isWord= true,
 				p->queryIndexes.insert(i);
 		}
 	}
@@ -110,9 +108,8 @@ int main(){
 		for(auto pch:pQueen->children)
 			iterStack.push(pch);
 		state=state->fastLink[pQueen->N-'A'];
-		if(state->isWord)
-			for(auto i:state->queryIndexes)
-				++wordCount[i];
+		for (auto i:state->queryIndexes)
+			++wordCount[i];
 		stateStack.push(state);
 	}
 	for(auto i:wordCount)
