@@ -15,3 +15,5 @@ add_executable(first_of_her_name 2019/G/main.cpp)
 add_executable(checks_post_facto 2019/C/main.cpp)
 add_executable(traffic_blights 2019/K/main.cpp)
 add_executable(first_of_her_name2 2019/G/main_ac_automaton.cpp)
+
+add_executable(Cardiology 2020/A-Cardiology/main.cpp)
