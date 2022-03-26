@@ -16,7 +16,7 @@ int main(){
 		pair<int,int> pthStart={r*p/c,r*p%c},
 			pthEnd={(r*p+c-1)/c,(r*p+c-1)%c};
 		while(1){
-			auto rcAdd=[&](const pair<int,int> rc,int v)->pair<int,int>{
+			auto rcAdd=[&](const pair<int,int>& rc,int v)->pair<int,int>{
 				auto ret=rc;
 				ret.first+=v/c;
 				v%=c;
@@ -24,11 +24,12 @@ int main(){
 				if(ret.second>=c)
 					ret.second%=c,
 					++ret.first;
+				return ret;
 			};
 			auto oS=start,
 				oE=end;
-			start=rcAdd(pthStart,start.first+1);
-			end=rcAdd(pthStart,end.first+1);
+			start=rcAdd(pthStart,start.first);
+			end=rcAdd(pthStart,end.first);
 			if(oS==start && oE==end)
 				break;
 			++iterationTime;
@@ -50,8 +51,12 @@ int main(){
 	};
 	for (int i = 0; i < stablePos.size(); ++i) {
 		auto pi=stablePos[i].rc;
-		if(pi!=pair<int,int>{-1,-1} && calDist(pi)<minDist)
+		auto dist=calDist(pi);
+		if(pi!=pair<int,int>{-1,-1} && dist<minDist)
+			minDist=dist,
 			ans=i;
 	}
-	cout<<ans<<stablePos[ans].rc.first<<stablePos[ans].rc.second<<stablePos[ans].iterationTimes;
+	cout<<ans+1<<" "<<
+	stablePos[ans].rc.first+1<<" "<<stablePos[ans].rc.second+1<<" "<<
+	stablePos[ans].iterationTimes;
 }
