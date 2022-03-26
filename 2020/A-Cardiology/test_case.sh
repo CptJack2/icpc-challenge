@@ -22,6 +22,7 @@ for inf in $input;do
 #  if(( $count >= 2 ));then exit; fi
   echo $inf
   filename=$(basename -- "$inf")
+  #if [ "$filename" == "01.in" ];then continue ;fi
   extension="${filename##*.}"
   ans_filename="${filename%.*}"".ans"
   ans=$(cat $inf |./main)

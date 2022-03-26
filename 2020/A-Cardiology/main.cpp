@@ -43,9 +43,9 @@ int main(){
 		const int mr=r/2, mc=c/2;
 		long minr=abs(rc.first-mr),
 			minc=abs(rc.second-mc);
-		if(r%2)
+		if(r%2==0)
 			minr=min(minr,abs(rc.first-mr+1));
-		if(c%2)
+		if(c%2==0)
 			minc=min(minc,abs(rc.second-mc+1));
 		return minr+minc;
 	};
