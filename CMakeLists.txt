@@ -17,3 +17,4 @@ add_executable(traffic_blights 2019/K/main.cpp)
 add_executable(first_of_her_name2 2019/G/main_ac_automaton.cpp)
 
 add_executable(Cardiology 2020/A-Cardiology/main.cpp)
+add_executable(TheCostofSpeedLimits 2020/B-TheCostofSpeedLimits/main.cpp)
