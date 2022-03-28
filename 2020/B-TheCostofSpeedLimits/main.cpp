@@ -5,47 +5,64 @@ int N, C;
 vector<vector<pair<int, int>>> graph;
 vector<int> allUniqueSpeed;
 
-//return the best cost for subtree, and even cost under corresponding speed in allSpeed
+//return the best cost for subtree with x as root, and best cost under corresponding speed in allUniqueSpeed
+//note that this function doesn't consider the influence of the street entering x
 pair<int, vector<int>> dfs(int x, int prev) {
-	int mxs = 0, signcost = 0, ps = 0;
-	for (auto [y, s] : graph[x]) {
-		mxs = max(mxs, s);
-		if (y == prev) ps = s;
-	};
-	if (graph[x].size() > 1) signcost += C * graph[x].size();
-	vector<int> v;
-	for (auto [y, s] : graph[x]) if (y != prev) {
-			auto [c2, v2] = dfs(y, x);
-			if (!v.size()) v.resize(allUniqueSpeed.size());
-			for (int i = 0; i < allUniqueSpeed.size(); i++)
-				v[i] += v2[i] + allUniqueSpeed[i] - s;
-			signcost += c2;
-		};
-	if (!v.size()) v.resize(allUniqueSpeed.size());
-	int evencost = signcost;
-	for (int i = 0; i < allUniqueSpeed.size(); i++) {
-		if (allUniqueSpeed[i] >= mxs) {
-			evencost = min(evencost, v[i] + (prev ? allUniqueSpeed[i] - ps : 0));
-			v[i] = min(v[i], signcost);
-		} else {
-			v[i] = signcost;
-		}
+	int maxSpeed = 0, signCost = 0, parentSpeed = 0;
+	//find maximum speed of this intersection, and the speed of the street entering the intersection
+	for (auto [y, speed] : graph[x]) {
+		maxSpeed = max(maxSpeed, speed);
+		if (y == prev) parentSpeed = speed;
 	}
-	return {evencost, v};
+	//cost to setup speed sign on this intersection
+	if (graph[x].size() > 1)
+		signCost += C * graph[x].size();
+	//compute the cost of changing increasing intersection speed to the speed in allUniqueSpeed
+	vector<int> costAtSpeed;
+	for (auto [y, speed] : graph[x])
+		if (y != prev) {
+			//compute the result of all the subtree first
+			auto [bestCostOfSubTree, costAtSpeedOfSubTree] = dfs(y, x);
+			//cost of putting sign should include the best cost of all sub trees. note that
+			signCost += bestCostOfSubTree;
+			//update the cost of increasing the intersection speed to allUniqueSpeed[i]
+			if (costAtSpeed.empty()) costAtSpeed.resize(allUniqueSpeed.size());
+			for (int i = 0; i < allUniqueSpeed.size(); i++)
+				costAtSpeed[i] +=
+					costAtSpeedOfSubTree[i]//if we tried to increase the speed to allUniqueSpeed[i], we should use the cost at allUniqueSpeed[i] for every subtree
+					+ allUniqueSpeed[i] - speed;//plus the cost of increasing the speed of the street leading to y. it doesn't matter if allUniqueSpeed[i] > speed, it will be filtered in line 38
+		}
+	if (costAtSpeed.empty()) costAtSpeed.resize(allUniqueSpeed.size());
+	//compare cost at each speed and cost of putting sign, to find the best cost
+	int bestCost = signCost;
+	for (int i = 0; i < allUniqueSpeed.size(); i++) {
+		if (allUniqueSpeed[i] >= maxSpeed) {
+			//cost of increasing the whole subtree rooted from x to allUniqueSpeed[i] should include the cost of increasing speed of entering x, now it's finally complete
+			//if this is a subtree, the cost of the entering tree is needed to be considered, cause we can find a best speed for the subtree, and put sign on its parent
+			bestCost = min(bestCost, costAtSpeed[i] + (prev ? allUniqueSpeed[i] - parentSpeed : 0));
+			//if putting sign is cheaper at this speed, should make it the better choice for cost at this speed
+			//note that it doesn't consider the influence of the street entering x, so allUniqueSpeed[i] - parentSpeed shouldn't be included
+			costAtSpeed[i] = min(costAtSpeed[i], signCost);
+		} else
+			//decreasing speed is not allowed, so putting sign is the only choice
+			costAtSpeed[i] = signCost;
+	}
+	return {bestCost, costAtSpeed};
 }
 
 int main() {
-	int u, v, s;
-	cin >> N >> C;
+	int u,v,s;
+	cin>>N>>C;
 	graph.resize(N + 1);
-	for (int i = 1; i < N; i++) {
-		cin >> u >> v >> s;
+	for (int i=1; i <N; i++) {
+		cin>>u>>v>>s;
 		graph[u].push_back({v, s});
 		graph[v].push_back({u, s});
 		allUniqueSpeed.push_back(s);
 	}
+	//all unique speed in the graph, sorted ascending
 	sort(allUniqueSpeed.begin(), allUniqueSpeed.end());
 	allUniqueSpeed.erase(unique(allUniqueSpeed.begin(), allUniqueSpeed.end()), allUniqueSpeed.end());
-	auto[c, v] = dfs(1, 0);
-	cout << c << endl;
+	auto[bestCost, _] = dfs(1, 0);
+	cout << bestCost;
 }
