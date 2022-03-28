@@ -44,9 +44,9 @@ static int n, csign;
 struct SubResult {
 	Edge *inc;
 	const int deg;
-	const long unbal;
-	vector<int> si, mi;
-	vector<long> ci;
+	const long unbal;//sum + deg*csign
+	vector<int> si, mi;//speed marg
+	vector<long> ci;//cost
 	int idx = 0;
 
 	/**
@@ -164,6 +164,7 @@ int main() {
 		graph[u].edges.emplace_back(graph[v], s);
 		graph[v].edges.emplace_back(graph[u], s);
 	}
-	cout << solve(graph[0], nullptr, nullptr).bestCost() << '\n';
+	auto ans=solve(graph[0], nullptr, nullptr).bestCost();
+	cout << ans << '\n';
 	return 0;
 }
