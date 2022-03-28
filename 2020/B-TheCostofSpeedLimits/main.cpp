@@ -18,7 +18,8 @@ pair<int64_t, vector<int64_t>> doit(int x, int prev) {
 	for (auto [y, s] : g[x]) if (y != prev) {
 			auto [c2, v2] = doit(y, x);
 			if (!v.size()) v.resize(alls.size());
-			for (int i = 0; i < alls.size(); i++) v[i] += v2[i] + alls[i]-s;
+			for (int i = 0; i < alls.size(); i++)
+				v[i] += v2[i] + alls[i]-s;
 			signcost += c2;
 		};
 	if (!v.size()) v.resize(alls.size());
@@ -31,9 +32,6 @@ pair<int64_t, vector<int64_t>> doit(int x, int prev) {
 			v[i] = signcost;
 		}
 	}
-//cout << x << ": " << evencost << ' ';
-//for (auto x : v) cout << ' ' << x;
-//cout << endl;
 	return {evencost, v};
 }
 
