@@ -52,8 +52,9 @@ int main(){
 				polygon2.push_back(pcross);
 			}
 		}
-		if(!polygon2.empty())
-			swap(polygon,polygon2);
+		swap(polygon,polygon2);
+		if(polygon.empty())
+			break;
 	}
 	//算面积
 	double area=0;
