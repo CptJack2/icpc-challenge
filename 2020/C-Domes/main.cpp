@@ -31,8 +31,9 @@ int main(){
 		cin>>permutaion[i];
 	
 	vector<Point> polygon={{0,0},{0,dy},{dx,dy},{dx,0}}, polygon2;
-	for(int i=0;i<=n-2;++i){
-		auto &p1=domeLocs[permutaion[i]-1], &p2=domeLocs[permutaion[i+1]-1];
+	for(int i=0;i<=n-2;++i)
+	for(int ii=i+1;ii<=n-1;++ii){
+		auto &p1=domeLocs[permutaion[i]-1], &p2=domeLocs[permutaion[ii]-1];
 		polygon2.clear();
 		//取直线一边的polygon为新多边形
 		for(int j=0;j<polygon.size();++j){
