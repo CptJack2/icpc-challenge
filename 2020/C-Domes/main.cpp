@@ -32,12 +32,12 @@ int main(){
 	
 	vector<Point> polygon={{0,0},{0,dy},{dx,dy},{dx,0}}, polygon2;
 	for(int i=0;i<=n-2;++i){
-		auto &p1=domeLocs[permutaion[i]], &p2=domeLocs[permutaion[i+1]];
+		auto &p1=domeLocs[permutaion[i]-1], &p2=domeLocs[permutaion[i+1]-1];
 		polygon2.clear();
 		//取直线一边的polygon为新多边形
 		for(int j=0;j<polygon.size();++j){
 			auto& p3=polygon[j], p4=j!=polygon.size()-1?polygon[j+1]:polygon[0];
-			auto cp3=CrossProduction(p2-p1,p3), cp4=CrossProduction(p2-p1,p4);
+			auto cp3=CrossProduction(p2-p1,p3-p1), cp4=CrossProduction(p2-p1,p4-p1);
 			//p3点在向量p1p2的右侧
 			if(cp3<=0)
 				polygon2.push_back(p3);
@@ -55,13 +55,16 @@ int main(){
 		if(!polygon2.empty())
 			swap(polygon,polygon2);
 	}
+	//算面积
 	double area=0;
 	for(auto it=polygon.begin();it!=polygon.end();++it){
 		auto nit=next(it);
 		if(nit==polygon.end())
 			nit=polygon.begin();
-		area+= CrossProduction(*it,*nit);
+		auto cp=CrossProduction(*it,*nit);
+		area+= cp;
 	}
+	area/=2;
 	cout<<setprecision(12)<<abs(area);
 	return 0;
 }
