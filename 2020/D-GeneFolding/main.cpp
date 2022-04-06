@@ -1,4 +1,5 @@
-/*经过一些修改的Manacher算法,用贪心的思路不断缩短两头的回文串*/
+/*经过一些修改的Manacher算法,用贪心的思路不断缩短两头的回文串
+ *这鸟题的问题描述有问题*/
 #include "bits/stdc++.h"
 using namespace std;
 
@@ -14,7 +15,7 @@ int main(){
 		++i;
 	mGene.back()='#';
 	vector<int>radius(mGene.size(),0);
-	int head=0, tail=mGene.size()-1;
+	int head=0, tail=mGene.size()-1;//答案的头和尾在的位置
 	int rBorder=-1, center=-1;
 	for(int i=0;i<mGene.size();++i){
 		radius[i]= rBorder >= i ? min(radius[center + center - i], rBorder - i) : 1;
@@ -26,10 +27,9 @@ int main(){
 		if(i%2==0 && radius[i]-1>=i-head)//char is a '#' and it can reach head
 			head=i;
 	}
-	for(int i=mGene.size()-1;i>=head;i-=2){
+	for(int i=mGene.size()-1;i>=head;i-=2)
 		if(radius[i]-1>=tail-i)
-			tail=i;
-	}
+			tail-=min(i-head,tail-i);//超出头的部分不给它剪了
 	int ans=(tail-head)/2;
 	cout<<ans;
 }
