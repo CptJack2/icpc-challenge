@@ -5,12 +5,13 @@ int main(){
 	int n,k;
 	cin>>n>>k;
 	//slope定义为右边斜率,比如H(x1,x2), x1斜率就为1,中点斜率为0/-1,x2斜率为0
-	vector<int>diff(n+1,0), diffSlope(n,0);
+	vector<int>diff(n+2,0), diffSlope(n+1,0);
 	for(int i=0;i<k;++i){
 		char op;
 		int x1,x2;
 		cin>>op>>x1>>x2;
 		auto addSlope=[&](int sl){
+			if(x1==x2-1)return;
 			int mid=(x1+x2)/2;
 			diffSlope[x1]+=sl;
 			if((x2-x1)%2==0)
@@ -41,14 +42,14 @@ int main(){
 			break;
 		}
 	}
-	vector<int> ret(n,0);
-	int slope=diffSlope[0];
-	for (int i = 1; i < n; ++i) {
+	vector<int> ret(n+1,0);
+	int slope=diffSlope[1];
+	for (int i = 2; i <= n; ++i) {
 		ret[i]=ret[i-1]+slope;
 		slope+=diffSlope[i];
 	}
-	int dif=diff[0];
-	for (int i = 0; i < n; ++i) {
+	int dif=diff[1];
+	for (int i = 1; i <= n; ++i) {
 		ret[i]+=dif;
 		cout<<ret[i]<<endl;
 		dif+=diff[i+1];
