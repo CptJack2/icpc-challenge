@@ -22,8 +22,8 @@ int main(){
 			diffSlope[x2]+=sl;
 		};
 		auto addHeight=[&](int h){
-			diffSlope[x1]+=h;
-			diffSlope[x2+1]-=h;
+			diff[x1]+=h;
+			diff[x2+1]-=h;
 		};
 		switch (op) {
 		case 'H':
@@ -42,13 +42,13 @@ int main(){
 			break;
 		}
 	}
-	vector<int> ret(n+1,0);
-	int slope=diffSlope[1];
+	vector<long> ret(n+1,0);
+	long slope=diffSlope[1];
 	for (int i = 2; i <= n; ++i) {
 		ret[i]=ret[i-1]+slope;
 		slope+=diffSlope[i];
 	}
-	int dif=diff[1];
+	long dif=diff[1];
 	for (int i = 1; i <= n; ++i) {
 		ret[i]+=dif;
 		cout<<ret[i]<<endl;
