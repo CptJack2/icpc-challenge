@@ -33,9 +33,9 @@ int main(){
 			auto v=points[j]-points[i];
 			if(v.len()<=t)
 				onTop.push_back(event{0,true}),
-				onTop.push_back(event{2*pi,false}),
+				onTop.push_back(event{pi,false}),
 				onBottom.push_back(event{0,true}),
-				onBottom.push_back(event{2*pi,false});
+				onBottom.push_back(event{pi,false});
 			else{
 				auto adjustAngle=[&](double ang)->double{//make angle in [0,2pi] to [0,pi]
 					if(ang>pi)
