@@ -26,6 +26,8 @@ int main(){
 	onBottom.reserve(2*n);
 	int ans=0;
 	for (int i = 0; i <n ; ++i) {
+		onTop.clear();
+		onBottom.clear();
 		for (int j = 0; j <n ; ++j) {
 			if(i==j)continue;
 			auto v=points[j]-points[i];
