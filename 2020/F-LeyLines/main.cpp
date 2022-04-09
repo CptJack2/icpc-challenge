@@ -42,10 +42,16 @@ int main(){
 				};
 				double theta=v.theta(),
 					phi= asin(double(t)/v.len());//(0,pi/2)
-				onTop.push_back(event{adjustAngle(theta),true}),
-				onTop.push_back(event{adjustAngle(theta+phi),false}),
-				onBottom.push_back(event{adjustAngle(theta-phi),true}),
-				onBottom.push_back(event{adjustAngle(theta),false});
+				if(theta<=pi)
+					onTop.push_back(event{adjustAngle(theta),true,j}),
+					onTop.push_back(event{adjustAngle(theta+phi),false,j}),
+					onBottom.push_back(event{adjustAngle(theta-phi),true,j}),
+					onBottom.push_back(event{adjustAngle(theta),false,j});
+				else
+					onTop.push_back(event{adjustAngle(theta-phi),true,j}),
+					onTop.push_back(event{adjustAngle(theta),false,j}),
+					onBottom.push_back(event{adjustAngle(theta),true,j}),
+					onBottom.push_back(event{adjustAngle(theta+phi),false,j});
 			}
 		}
 		auto cmp=[&](const event& a,const event& b){//first key angel, second key the point that is entering comes first
