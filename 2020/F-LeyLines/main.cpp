@@ -28,14 +28,12 @@ int main(){
 	for (int i = 0; i <n ; ++i) {
 		onTop.clear();
 		onBottom.clear();
+		int Ps=1;
 		for (int j = 0; j <n ; ++j) {
 			if(i==j)continue;
 			auto v=points[j]-points[i];
 			if(v.len()<=t)
-				onTop.push_back(event{0,true}),
-				onTop.push_back(event{pi,false}),
-				onBottom.push_back(event{0,true}),
-				onBottom.push_back(event{pi,false});
+				++Ps;
 			else{
 				auto adjustAngle=[&](double ang)->double{//make angle in [0,2pi] to [0,pi]
 					if(ang>pi)
@@ -56,7 +54,7 @@ int main(){
 		sort(onTop.begin(),onTop.end(),cmp);
 		sort(onBottom.begin(),onBottom.end(),cmp);
 		auto findMax=[&](const vector<event>& events)->int{
-			int maxP=1,Ps=1;
+			int maxP=Ps;
 			for(auto& ev:events)
 				if(ev.enter)
 					++Ps,
