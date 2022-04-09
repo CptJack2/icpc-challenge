@@ -7,7 +7,7 @@ struct Vec{
 	double x,y;
 	Vec operator-(const Vec& b){return Vec{x-b.x,y-b.y};}
 	double len(){return hypot(x,y);}
-	double theta(){return atan2(y,x)+pi;}//atan2 return (-pi,pi], make it (0,2pi]
+	double theta(){return fmod(atan2(y,x)+2*pi,2*pi);}//atan2 return (-pi,pi], make it (0,2pi]
 };
 
 struct event{
