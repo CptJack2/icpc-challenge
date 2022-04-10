@@ -1,17 +1,17 @@
 #include "bits/stdc++.h"
 using namespace std;
 
-const long double pi=M_PI;
+const double pi=M_PI;
 
 struct Vec{
-	long double x,y;
+	double x,y;
 	Vec operator-(const Vec& b){return Vec{x-b.x,y-b.y};}
-	long double len(){return hypot(x,y);}
-	long double theta(){return atan2(y,x);}//atan2 return (-pi,pi], make it (0,2pi]
+	double len(){return hypot(x,y);}
+	double theta(){return atan2(y,x);}
 };
 
 struct event{
-	long double angle;
+	double angle;
 	bool enter;//true enter, false leave
 	int index;//for debug
 };
@@ -31,35 +31,16 @@ int main(){
 		for (int j = 0; j <n ; ++j) {
 			if(i==j)continue;
 			auto v=points[j]-points[i];
-			long double theta=v.theta(),
-			phi= asin((long double)t/v.len());//[0,pi/2)
-			auto adjust=[&](long double a){return a;};//return fmod(a+4*pi,2*pi);};
-			auto inRange=[&](long double ang,long double st, long double ed)->bool{//clockwise range, inclusive
-				ang=adjust(ang);
-				st=adjust(st);
-				ed=adjust(ed);
-				if(st<=ed)
-					return st<=ang && ed>=ang;
-				else
-					return st-2*pi<=ang && ed>=ang;
-			};
+			double theta=v.theta(),
+			phi= asin((double)t/v.len());//[0,pi/2)
 			if(v.len()<=t) {
-				auto st=adjust(theta), ed=adjust(theta+pi);
-				events.push_back(event{st,true,j});
-				events.push_back(event{ed,false,j});
-//				if(inRange(0,st,ed))
-//					++Ps;
+				events.push_back(event{theta,true,j});
+				events.push_back(event{theta+pi,false,j});
 			}else{
-				auto st=adjust(theta), ed=adjust(theta+phi);
 				events.push_back(event{theta,true,j});
 				events.push_back(event{theta+phi,false,j});
-//				if(inRange(0,st,ed))
-//					++Ps;
-				st=adjust(theta+pi-phi), ed=adjust(theta+pi);
 				events.push_back(event{theta+pi-phi,true,j});
 				events.push_back(event{theta+pi,false,j});
-//				if(inRange(0,st,ed))
-//					++Ps;
 			}
 		}
 		auto cmp=[&](const event& a,const event& b){//first key angel, second key the point that is entering comes first
@@ -76,9 +57,9 @@ int main(){
 					--Ps;
 			return maxP;
 		};
-		int fm1=findMax(),
-			fm2=findMax();
-		ans=max(ans,fm2);
+		//spin one round ahead to make initial state right, the second round to find max
+		findMax(),
+		ans=max(ans,findMax());
 	}
 	cout<<ans<<endl;
 	return 0;
