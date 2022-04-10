@@ -7,7 +7,7 @@ struct Vec{
 	long double x,y;
 	Vec operator-(const Vec& b){return Vec{x-b.x,y-b.y};}
 	long double len(){return hypot(x,y);}
-	long double theta(){return fmod(atan2(y,x)+2*pi,2*pi);}//atan2 return (-pi,pi], make it (0,2pi]
+	long double theta(){return atan2(y,x);}//atan2 return (-pi,pi], make it (0,2pi]
 };
 
 struct event{
@@ -22,46 +22,51 @@ int main(){
 	vector<Vec> points(n);
 	for (int i = 0; i < n; ++i)
 		cin>>points[i].x>>points[i].y;
-	vector<event> onTop,onBottom;
-	onTop.reserve(2*n);
-	onBottom.reserve(2*n);
+	vector<event> events;//point[i] always on line top
+	events.reserve(4*n);
 	int ans=0;
 	for (int i = 0; i <n ; ++i) {
-		onTop.clear();
-		onBottom.clear();
+		events.clear();
 		int Ps=1;
 		for (int j = 0; j <n ; ++j) {
 			if(i==j)continue;
 			auto v=points[j]-points[i];
-			if(v.len()<=t)
-				++Ps;
-			else{
-				auto adjustAngle=[&](long double ang)->long double{//θ∈(0,2pi], φ∈[0,pi/2), ang=θ±φ∈(-pi/2,5/2pi], adjust them to (-pi/2,pi/2]
-					ang=fmod(ang+pi/2+2*pi,2*pi)-pi/2;//(-pi/2,3/2pi]
-					if(ang>pi/2)
-						return ang-pi;
-					return ang;
-				};
-				long double theta=v.theta(),
-					phi= asin((long double)t/v.len());//[0,pi/2)
-				if(theta<=pi/2 || theta>3*pi/2)
-					onTop.push_back(event{adjustAngle(theta),true,j}),
-					onTop.push_back(event{adjustAngle(theta+phi),false,j}),
-					onBottom.push_back(event{adjustAngle(theta-phi),true,j}),
-					onBottom.push_back(event{adjustAngle(theta),false,j});
+			long double theta=v.theta(),
+			phi= asin((long double)t/v.len());//[0,pi/2)
+			auto adjust=[&](long double a){return a;};//return fmod(a+4*pi,2*pi);};
+			auto inRange=[&](long double ang,long double st, long double ed)->bool{//clockwise range, inclusive
+				ang=adjust(ang);
+				st=adjust(st);
+				ed=adjust(ed);
+				if(st<=ed)
+					return st<=ang && ed>=ang;
 				else
-					onTop.push_back(event{adjustAngle(theta-phi),true,j}),
-					onTop.push_back(event{adjustAngle(theta),false,j}),
-					onBottom.push_back(event{adjustAngle(theta),true,j}),
-					onBottom.push_back(event{adjustAngle(theta+phi),false,j});
+					return st-2*pi<=ang && ed>=ang;
+			};
+			if(v.len()<=t) {
+				auto st=adjust(theta), ed=adjust(theta+pi);
+				events.push_back(event{st,true,j});
+				events.push_back(event{ed,false,j});
+//				if(inRange(0,st,ed))
+//					++Ps;
+			}else{
+				auto st=adjust(theta), ed=adjust(theta+phi);
+				events.push_back(event{theta,true,j});
+				events.push_back(event{theta+phi,false,j});
+//				if(inRange(0,st,ed))
+//					++Ps;
+				st=adjust(theta+pi-phi), ed=adjust(theta+pi);
+				events.push_back(event{theta+pi-phi,true,j});
+				events.push_back(event{theta+pi,false,j});
+//				if(inRange(0,st,ed))
+//					++Ps;
 			}
 		}
 		auto cmp=[&](const event& a,const event& b){//first key angel, second key the point that is entering comes first
 			return a.angle<b.angle || a.angle==b.angle && a.enter==true && b.enter==false;
 		};
-		sort(onTop.begin(),onTop.end(),cmp);
-		sort(onBottom.begin(),onBottom.end(),cmp);
-		auto findMax=[&](const vector<event>& events)->int{
+		sort(events.begin(),events.end(),cmp);
+		auto findMax=[&]()->int{
 			int maxP=Ps;
 			for(auto& ev:events)
 				if(ev.enter)
@@ -71,11 +76,10 @@ int main(){
 					--Ps;
 			return maxP;
 		};
-		int fmt=findMax(onTop),
-			fmb=findMax(onBottom);
-		ans=max(ans, fmt);
-		ans=max(ans, fmb);
+		int fm1=findMax(),
+			fm2=findMax();
+		ans=max(ans,fm2);
 	}
-	cout<<ans;
+	cout<<ans<<endl;
 	return 0;
 }

@@ -33,7 +33,7 @@ for inf in $input;do
 #    echo "correct " $correct
 #    echo "ans " $ans
     diff ./data/$ans_filename ./data/my_ans
-    exit
+    #exit
   else
     echo "succ"
   fi
