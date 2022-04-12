@@ -28,19 +28,19 @@ using namespace std;
 int main(){
 	int n;
 	cin>>n;
-	vector<int[3]> v(n);
+	int v[3];
 	vector<long[8]> partialSum(n);
-	int maximums[8];
-	memset(maximums,0,8*sizeof(int));
+	long maximums[8];
+	memset(maximums,0,8*sizeof(long));
 	long bestCost=LONG_MAX,ind=-1;
 	for (int i = 0; i < n; ++i) {
 		for (int j = 0; j < 3; ++j)
-			cin>>v[i][j];
+			cin>>v[j];
 		for (int j = 0; j < 8; ++j) {
-			int sum=0;
-			if(j&0b1)sum+=v[i][0];
-			if(j&0b10)sum+=v[i][1];
-			if(j&0b100)sum+=v[i][2];
+			long sum=0;
+			if(j&0b1)sum+=v[0];
+			if(j&0b10)sum+=v[1];
+			if(j&0b100)sum+=v[2];
 			maximums[j]=max(maximums[j],sum);
 			partialSum[i][j]=sum;
 		}
