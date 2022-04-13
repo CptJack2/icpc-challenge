@@ -54,7 +54,8 @@ string solve(const string& A, const string& B){//输出A排列后最大可能值
 					break;
 				}
 		return retStr;
-	}
+	}else if(A.empty())//corner case
+		return "";
 	//len(A)==len(B),需要递归去解
 	auto ret=dfs(B,0,availableDigits,true);
 	if(ret.first)
