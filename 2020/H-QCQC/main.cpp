@@ -3,6 +3,7 @@ using namespace std;
 
 //深度优先搜索去匹配
 pair<bool,string> dfs(const string& B,const int Bindex, int availableDigits[10], bool useMin){
+	if(Bindex==B.size())return {true,""};
 	string retStr="";
 	//前面的串小于B了,没有最大限制,只需要一路把剩下的数字按大到小排下去
 	if(!useMin){
@@ -70,6 +71,7 @@ int main(){
 	};
 	vector<testCase> testCases={
 		{"1234","3000","2431"},
+		{"4321","1234","1234"},//AB一样的
 		{"4321","1235","1234"},//直接摆
 		{"387656","387654","387566"},	//中间回溯
 		{"766","765","676"},	//开头回溯
@@ -78,6 +80,7 @@ int main(){
 		{"78900","8888","impossible"},//A比B长
 		{"5999","5555","impossible"},//AB等长, 但无解
 	};
+	int a=1;
 	for(auto& tc:testCases){
 		auto ret=solve(tc.A,tc.B);
 		if(ret!=tc.ans)
