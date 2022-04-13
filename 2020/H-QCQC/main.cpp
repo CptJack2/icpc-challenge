@@ -1,8 +1,10 @@
 #include "bits/stdc++.h"
 using namespace std;
 
+//深度优先搜索去匹配
 pair<bool,string> dfs(const string& B,const int Bindex, int availableDigits[10], bool useMin){
 	string retStr="";
+	//前面的串小于B了,没有最大限制,只需要一路把剩下的数字按大到小排下去
 	if(!useMin){
 		for(int i=Bindex;i<B.size();++i)
 			for(int j=9;j>=0;--j)
@@ -16,14 +18,15 @@ pair<bool,string> dfs(const string& B,const int Bindex, int availableDigits[10],
 	for(int i=9;i>=0;--i)
 		//判断当前可以填的最大数字
 		if(availableDigits[i]!=0 &&
-			i <= B[Bindex] - '0'){//如果前面一位放到最大了,后面的数字都有限制,
+			i <= B[Bindex] - '0'){//如果这一位放到最大了,后面的数字都有限制,
 			if(Bindex==0 && i==0)continue;//首位不能放0
 			//更新可用数字的数量
 			--availableDigits[i];
 			//递归去解
 			auto ret=dfs(B,Bindex+1,availableDigits,i==B[Bindex]-'0');
 			if(ret.first){//有解的话就直接返回
-				string rtmp;rtmp+=char(i+'0');
+				string rtmp;
+				rtmp+=char(i+'0');
 				return {true,rtmp+ret.second};
 			}else{
 				//回滚可用数字的数量
@@ -33,7 +36,7 @@ pair<bool,string> dfs(const string& B,const int Bindex, int availableDigits[10],
 	return {false,""};
 }
 
-string solve(string A, string B){//输出A排列后最大可能值,无解输出"impossible",要满足A<B
+string solve(const string& A, const string& B){//输出A排列后最大可能值,无解输出"impossible",要满足A<B
 	int availableDigits[10];
 	memset(availableDigits,0,sizeof(int)*10);
 	for(auto c:A)
@@ -61,7 +64,8 @@ string solve(string A, string B){//输出A排列后最大可能值,无解输出"
 }
 
 int main(){
-	string A="1234", B="3000";
+//	string A="1234", B="3000";
+	string A="387656", B="387654";
 	auto ret=solve(A,B);
 	cout<<"aaa";
 }
