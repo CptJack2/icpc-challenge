@@ -64,8 +64,22 @@ string solve(const string& A, const string& B){//输出A排列后最大可能值
 }
 
 int main(){
-//	string A="1234", B="3000";
-	string A="387656", B="387654";
-	auto ret=solve(A,B);
+	struct testCase{
+		string A,B,ans;
+	};
+	vector<testCase> testCases={
+		{"1234","3000","2431"},
+		{"387656","387654","387566"},	//中间回溯
+		{"766","765","676"},	//开头回溯
+		{"","",""},	//AB都空
+		{"789","8888","987"},	//A比B短
+		{"78900","8888","impossible"},//A比B长
+		{"5999","5555","impossible"},//AB等长, 但无解
+	};
+	for(auto& tc:testCases){
+		auto ret=solve(tc.A,tc.B);
+		if(ret!=tc.ans)
+			cout<<"failed"<<endl;
+	}
 	cout<<"aaa";
 }
