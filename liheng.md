@@ -12,11 +12,15 @@ c. 针对大量设备ID的标签数据的存储结构设计
 How Does Real-Time Bidding Work? | Explained in Under 5 Minutes https://www.youtube.com/watch?v=ylhKJSrxutM
 How an Ad is Served with Real Time Bidding (RTB) - IAB Digital Simplified https://www.youtube.com/watch?v=-Glgi9RRuJs
 
+互联网中常见的六种付费推广广告模式 https://www.nnbiog.cn/1907.html\
+互联网广告付费模式专业术语大盘点：CPC、CPM、CPT…… http://www.woshizmt.cn/dsp/bdfeed/724.html
+
 SSP(supply side platform) 内容平台,投放广告的场所,提供浏览广告的用户
 AdEx(advertisement exchange) 促成SSP和DSP进行交易的交易所,力恒属于这种类型的参与者.
 DSP(demand side platform) 广告主,将广告投放到其他平台
 
 #对于广告RTB业务模式和服务场景的扩展了解
-RTB(Real Time Binding),是一种互联网广告投放的模式, 其他的主流互联网广告投放模式包括CPM(cost per mille,每千次浏览付费),CPC(cost per click,每次点击付费),Monthly/Daily Flat(包月包天).
-RTB的主要过程如下,用户先登入SSP的网站(APP),SSP对此用户产生一个广告供应,将这个卖单连同用户画像(年龄,性别,兴趣,职业等)在AdEx下卖单,同时DSP也在AdEx对广告投放的目标客户(指定的年龄,性别,兴趣等特征)下买单,由AdEx作为交易所实时撮合成交.成交后,SSP直接从DSP处获取广告物料发送到用户处,广告就直接展示在了用户的终端上.
+RTB(Real Time Binding),是一种互联网广告投放的模式, 其他的主流互联网广告投放模式包括CPM(cost per mille,每千次展示付费),CPC(cost per click,每次点击付费),Monthly/Daily Flat(包月包天).
+RTB的主要过程如下,用户先登入SSP的网站(APP),SSP对此用户产生一个广告供应,将这个卖单连同用户画像(年龄,性别,兴趣,职业等)在AdEx下卖单,同时DSP也在AdEx对广告投放的目标客户(指定的年龄,性别,兴趣等特征)下买单,由AdEx作为交易所实时撮合成交(类似股票交易所).成交后,SSP直接从DSP处获取广告物料发送到用户处,广告就直接展示在了用户的终端上.
 整个过程的时间是很短的,近似实时,在SSP的服务器收到用户的请求时就会同时向AdEx下单,完成交易后,SSP会把DSP的广告连同自己的内容一起响应给用户(或者下发广告链接客户端自行请求),整个过程是百毫秒级的.
+RTB相对于其他的广告投放模式,主要有精准投放,自动化,成本低的优势.精准投放来自于每个订单都附带了目标用户的信息,不是目标客户可以不向其投放广告.由于整个过程都是在交易所买卖双方自动找寻最佳匹配成交的,能够节约大量谈判广告合同的人力.成本低来自于不会把广告预算花在非目标客户上,节约了经费.
