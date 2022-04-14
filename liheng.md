@@ -12,6 +12,6 @@ c. 针对大量设备ID的标签数据的存储结构设计
 How Does Real-Time Bidding Work? | Explained in Under 5 Minutes https://www.youtube.com/watch?v=ylhKJSrxutM
 How an Ad is Served with Real Time Bidding (RTB) - IAB Digital Simplified https://www.youtube.com/watch?v=-Glgi9RRuJs
 
-SSP(supply side platform)
-AdEx(advertisement exchange)
-DSP(demand side platform)
+SSP(supply side platform) 内容平台,投放广告的场所,提供浏览广告的用户
+AdEx(advertisement exchange) 促成SSP和DSP进行交易的交易所,力恒属于这种类型的参与者.
+DSP(demand side platform) 广告主,将广告投放到其他平台
