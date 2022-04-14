@@ -8,3 +8,10 @@ c. 针对大量设备ID的标签数据的存储结构设计
 方案尽量可能包含但不限于：方案思路设计、伪代码等
 
 #广告RTB
+简介视频
+How Does Real-Time Bidding Work? | Explained in Under 5 Minutes https://www.youtube.com/watch?v=ylhKJSrxutM
+How an Ad is Served with Real Time Bidding (RTB) - IAB Digital Simplified https://www.youtube.com/watch?v=-Glgi9RRuJs
+
+SSP(supply side platform)
+AdEx(advertisement exchange)
+DSP(demand side platform)
