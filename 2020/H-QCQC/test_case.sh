@@ -1,13 +1,12 @@
 #!/bin/bash
 
 if [[ $1 == "case" ]];then
-  correct=$(cat ./data/$2.ans)
-  ans=$(cat ./data/$2.in |./main)
-  if [ "$ans" != "$correct" ];then
-    echo "failed"
-  else
-    echo "succ"
-  fi
+#  str=$(python testing_tool.py --verbose ./data/$2.in python onufry.py |grep "<")
+  for s in $(python testing_tool.py --verbose ./data/$2.in python onufry.py |grep "<");do
+    if [[ $s != "<" ]];then
+      echo $s >> $2.in2
+    fi
+  done
   exit
 fi
 
