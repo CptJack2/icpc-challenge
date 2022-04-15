@@ -1,0 +1,145 @@
+Begin by observing that N=1 is special, we need no queries, the machine has
+to be good.
+
+We proceed in two phases, with one intermediate phases between them.
+
+The goal of the first phase is to locate some good machines. The goal of the
+second phase is to use the known good machines to learn the state of all
+machines.
+
+In the first step, machines will be divided into components, and components will
+be divided into three classes. A component will be a set of machines, with the
+property that all of these machines are in the same state - all broken, or all
+good. We'll call a component good/broken, if the machines in it are good/broken.
+
+After K queries, the first class of machines will consist of components
+of size 2^K, with no extra data. We'll call them "active".
+
+The second class will consist of
+a number of components, where each power of two appears at most once in the
+binary representation of all the component sizes in that class, 2^K and higher
+powers not appearing, and the components have the property that at most one of
+them all is good, all the rest are broken. We'll call these "leftover".
+
+The third class will consist of components grouped into pairs, where in each
+pair the two components are of the same size, and at most one of the two is
+good. These we'll call "paired".
+
+To begin with, we have made zero steps, all the components are of size one (that
+is, each machine in its own component), and all are active.
+
+To make a step, we do the following:
+- do nothing with paired components, they issue empty queries, and stay paired.
+- take active components, group them into pairs, and have the two components in
+  a pair query one another.
+- if the number of active components was even, the leftovers do nothing.
+  If it was odd, we take the remaining active component, and have it query and
+  be queried by each of the leftovers. Note the active component has 2^K
+  machines, and there are at most K leftover components, so it's possible to
+  do all the queries, since 2^K >= K.
+
+If two components query one another, we can get three possible results:
+1) They both say the other one is good. In that case, merge the two components
+   into one.
+2) They can both say the other one is broken. In that case, we know at most one
+   of them is good.
+3) One can say broken, the other can say good. The one saying good is obviously
+   broken, so in particular at most one of them is good, treat as case 2.
+
+If we merge two active components, the results is active in the next move. If
+two active components have at most one good, they become a pair. The leftover
+components, and the remaining active component, are the new leftover components.
+
+As long as there are at least 2 active components, we can proceed. We end phase
+one when there is one or zero active components after a move.
+
+
+Now, the intermediate phase. This phase will consist of up to one move. Let's
+make a few observations first. We know over a half of the machines are good.
+In each pair of paired components, at most half of the machines are good, and so
+over a half of the active and leftover machines have to be good. Leftovers have
+the property that the size of the largest component is larger than the sizes of
+all the other components combined, and the sum of all the sizes is smaller than
+2^K. This means that the largest non-paired component has to be good when we're
+done.
+
+If we ended phase one with zero active components, note that the last (K-th)
+move processed at least one pair, and since it didn't make a new active
+component, it had to create a pair of components, both of size 2^(K-1). Denote
+them A and B. Also, take the largest leftover component, and call it C. As noted
+above, C has to be good, and by the definition of the leftovers, any other
+leftover components have to be broken.
+
+Note that C has at most 2^K - 1 elements; while A and B in total have 2^K
+elements. Thus, at least one of A and B has to be good. So, in the intermediate
+phase, C queries A. As a result, we have at least 2^(K-1) + 1 good machines,
+and at least 2^(K-1) broken machines, and everything that we don't know the
+state of is paired.
+
+If we ended phase one with one active component, it has to be good, and it has
+size 2^K. Make one move, having this good component query all the leftover
+components (again 2^K >= K, so we can do it). If there are no leftover
+components, don't make the move; otherwise we're again left with at least
+2^K + 1 known machines, and everything else is paired. If we didn't make the
+move, we've made (K-1) + 1 moves, and are left with 2^K >= 2^(K-1) + 1 known
+machines.
+
+So, at the end of the intermediate phase, we made K+1 steps in total, we know
+the state of at least 2^K + 1 machines, and everything else is paired.
+
+In phase two, at each step, we have G good machines, B broken machines, and
+the remaining (N - G - B) machines are paired.
+
+If G - B <= 2, then in each pair we have exactly one good component and exactly 
+one bad. So, if G - B <= 2, each good machine picks a pair, and queries one
+element of that pair. If it's good, the other one is bad; if it's bad, the other
+one is good. Add to the appropriate groups (note they both increased by the same
+amount, which is G). If we denote P = G+B, we have G = floor(P/2) + 1, and so
+in each move P increases by 2 * floor(P/2) + 2.
+
+If G - B > 2, we group the good machines in pairs, and each pair handles one
+pair of unknown components. If we had P = G+B known machines, we have
+G >= floor((P-3) / 2) + 3. After one move, P increases by at least
+2 * floor((floor((P-3) / 2)  + 3) / 2).
+
+Of course, if the resulting value of P is larger than N, this means that in
+this move we can gain the knowledge about the state of all machines, and we
+are done.
+
+So, in each case, after one move P increases by at least
+2 * floor((floor((P-3)/2) + 3) / 2), which can be rewritten as
+2 * floor ((P+3) / 4). Let F(P) = P + 2 * floor((P+3)/4).
+
+If P = 2, then we're in the first case, and so the subsequent values of P are
+2, 6, 14, 30, 62, 126. So, we're done in 5 moves.
+
+If P >= 66, then f(P) >= 100, so we'll be done in at most 1 move.
+If P >= 44, then f(P) >= 66, so we'll be done in at most 2 moves.
+If P >= 29, then f(P) >= 45, so we'll be done in at most 3 moves.
+If P >= 19, then f(P) >= 29, so we'll be done in at most 4 moves.
+If P >= 13, then f(P) >= 21, so we'll be done in at most 5 moves.
+If P >= 9, then f(P) >= 15, so we'll be done in at most 6 moves.
+If P >= 5, then f(P) >= 9, so we'll be done in at most 7 moves.
+If P >= 3, then f(P) >= 5, so we'll be done in at most 8 moves.
+Notice that if P = 2, then we're in the first case, and we'll be done in 5
+  moves, so switch that to
+If P >= 2, we'll be done in at most 8 moves.
+
+
+We proceed thus until we know everything, and then output the answer.
+
+OK, now let's look at how many steps this requires. Let K be the number of
+steps we took in the first phase (and so after K+1 steps, we have at least
+2^K + 1 known machines).
+
+If K = 0 (this is a special case, we took one step and had an empty intermediate
+phase), then P >= 2, and we'll be done in 8 moves. So, a total of 9 moves.
+If K = 1, P >= 3, total of 10 moves.
+If K = 2, P >= 5, total of 10 moves.
+If K = 3, P >= 9, total of 10 moves.
+If K = 4, P >= 17, total of 10 moves.
+If K = 5, P >= 33, total of 9 moves.
+If K = 6, P >= 65, total of 9 moves.
+If K = 7, P >= 100, total of 8 moves.
+
+So, the whole thing finishes in at most 10 moves. Cool :)
