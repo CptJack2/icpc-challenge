@@ -96,15 +96,11 @@ for testnum in range(testcnt):
       else:
         good += paired[-1][1]
         bad += paired[-1][0]
-      for pai in paired[:-1]:
-        for a, b in zip(pai[0], pai[1]):
-          pairs.append((a,b))
+      pairs=paired[:-1]
     else:
       assert len(active) == 1 
       good += active[0]
-      for pai in paired:
-        for a, b in zip(pai[0], pai[1]):
-          pairs.append((a, b))
+      pairs=paired
       if leftovers:
         for lefto, goo in zip(leftovers, good):
           queries.append((lefto[0], goo))
@@ -121,38 +117,38 @@ for testnum in range(testcnt):
     new_pairs = []
     if len(good) - len(bad) < 3:
       for g, p in zip(good, pairs):
-        queries.append((g, p[0]))
+        queries.append((g, p[0][0]))
       res = query(queries)
       for i, p in enumerate(pairs):
         if i >= len(good):
           new_pairs.append(p) 
       for g, p in list(zip(good, pairs)):
         if res[g]:
-          good.append(p[0])
-          bad.append(p[1])
+          good+=list(p[0])
+          bad+=list(p[1])
         else:
-          good.append(p[1])
-          bad.append(p[0])
+          good+=list(p[1])
+          bad+=list(p[0])
     else:
       goodpairs = []
       for i in range(len(good) // 2):
         goodpairs.append((good[2 * i], good[2 * i + 1]))
       for g, p in zip(goodpairs, pairs):
-        queries.append((g[0], p[0]))
-        queries.append((g[1], p[1]))
+        queries.append((g[0], p[0][0]))
+        queries.append((g[1], p[1][0]))
       res = query(queries)
       for i, p in enumerate(pairs):
         if i >= len(goodpairs):
           new_pairs.append(p)
       for (g, p) in zip(goodpairs, pairs):
         if res[g[0]]:
-          good.append(p[0])
+          good+=list(p[0])
         else:
-          bad.append(p[0])
+          bad+=list(p[0])
         if res[g[1]]:
-          good.append(p[1])
+          good+=list(p[1])
         else:
-          bad.append(p[1])
+          bad+=list(p[1])
     return good, bad, new_pairs
   
   # MAIN
