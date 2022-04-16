@@ -114,7 +114,59 @@ int main(){
 			leftOver.clear();
 		}
 		//phase 2
-
+		while(!paired.empty()){
+			vector<int> queries(n+1,0);
+			auto git = good.begin();
+			auto pit = paired.begin();
+			if (good.size() - bad.size() <= 2) {
+				for (; git != good.end() && pit!=paired.end();++git,++pit)
+					queries[*git]=pit->first.front();
+				auto res=query(queries);
+				git = good.begin();
+				pit = paired.begin();
+				for (; git != good.end() && pit!=paired.end();++git) {
+					if (res[*git])
+						good.splice(good.end(), pit->first),
+						bad.splice(bad.end(), pit->second);
+					else
+						good.splice(good.end(), pit->second),
+						bad.splice(bad.end(), pit->first);
+					auto tpit=next(pit);
+					paired.erase(pit);
+					pit=tpit;
+				}
+			}else{
+				for(int i=0;i<good.size()/2;++i,++pit,advance(git,2))
+					queries[*git]=pit->first.front(),
+					queries[*next(git)]=pit->second.front();
+				auto res=query(queries);
+				pit=paired.begin();
+				git=good.begin();
+				for(int i=0;i<good.size()/2;++i,++pit,advance(git,2)){
+					if(res[*git])
+						good.splice(good.end(),pit->first);
+					else
+						bad.splice(bad.end(),pit->first);
+					if(res[*next(git)])
+						good.splice(good.end(),pit->second);
+					else
+						bad.splice(bad.end(),pit->second);
+					auto tpit=next(pit);
+					paired.erase(pit);
+					pit=tpit;
+				}
+			}
+		}
+		//output
+		vector<bool> ans(n+1);
+		for(auto g:good)
+			ans[g]=true;
+		for(auto b:bad)
+			ans[b]=false;
+		cout<<"answer ";
+		for (int j = 1; j <=n ; ++j)
+			cout<<(ans[j]?1:0);
+		cout<<endl;
 	}
 	return 0;
 }
