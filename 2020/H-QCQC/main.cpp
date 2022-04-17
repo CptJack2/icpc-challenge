@@ -16,7 +16,9 @@ int main(){
 			tc.push_back(j);
 			active.push_back(tc);
 		}
+		int queriedTime=0;
 		auto query = [&](const vector<int> &queries) -> vector<bool> {
+			++queriedTime;
 			cout << "test";
 			for (int i = 1; i <= n; ++i)
 				cout << " " << queries[i];
@@ -42,26 +44,28 @@ int main(){
 				it = next(nit);
 				if (it == active.end())break;
 			}
-			//if active has odd components, query with left over, or put it to left over
-			if(it!=active.end())
-				if(!leftOver.empty()) {//at most 2 elements in leftOver and component in active always has more elements
-					queries[it->front()] = leftOver.front().front();
-					queries[leftOver.front().front()] =it->front();
-				}else{
-					leftOver.splice(leftOver.end(),active,it);
-					it=active.end();
-				}
+			//if active has odd components, query each other with each left over
+			if(it!=active.end()) {
+				auto ait = it->begin();
+				for (auto lo:leftOver)
+					queries[*ait] = lo.front(),
+					queries[lo.front()] = *ait,
+					++ait;
+			}
 			auto res = query(queries);
 			//merge the remaining active with left over
-			if(it!=active.end() && !leftOver.empty()){
-				if(res[it->front()] == res[leftOver.front().front()] && res[it->front()]==true)
-					leftOver.front().splice(leftOver.front().end(),*it),
-					active.erase(it);
-				else if(leftOver.size()==2)
-					next(leftOver.begin())->splice(next(leftOver.begin())->end(),*it),
-					active.erase(it);
-				else
-					leftOver.splice(leftOver.end(),active,it);
+			if(it!=active.end()){
+				for(auto lit=leftOver.begin();lit!=leftOver.end();) {
+					auto lo=*lit;
+					if (res[lo.front()] == res[queries[lo.front()]] && res[lo.front()] == true) {
+						it->splice(it->end(), lo);
+						auto tlit=next(lit);
+						leftOver.erase(lit);
+						lit=tlit;
+					}else
+						++lit;
+				}
+				leftOver.splice(leftOver.end(),active,it);
 			}
 			//put active pair to paired or group them together according to query result
 			it = active.begin();
@@ -79,6 +83,7 @@ int main(){
 					it=tit;
 				}
 			}
+			int a=1;
 		}
 		//intermediate phase
 		Component good,bad;
@@ -87,19 +92,15 @@ int main(){
 			good.splice(good.begin(),active.front());
 			active.clear();
 			if(!leftOver.empty()){
-				queries[good.front()]=leftOver.front().front();
-				if(leftOver.size()==2)
-					queries[*next(good.begin())]=next(leftOver.begin())->front();
+				auto git=good.begin();
+				for(auto& lo:leftOver)
+					queries[*(git++)]=lo.front();
 				auto res=query(queries);
-				if(res[leftOver.front().front()])
-					good.splice(good.end(),leftOver.front());
-				else
-					bad.splice(bad.end(),leftOver.front());
-				if(leftOver.size()==2)
-					if(res[next(leftOver.begin())->front()])
-						good.splice(good.end(),*next(leftOver.begin()));
+				for(auto& lo:leftOver)
+					if(res[lo.front()])
+						good.splice(good.end(),lo);
 					else
-						bad.splice(bad.end(),*next(leftOver.begin()));
+						bad.splice(bad.end(),lo);
 				leftOver.clear();
 			}
 		}else{
