@@ -21,11 +21,12 @@ for inf in $input;do
 #  if(( $count >= 2 ));then exit; fi
   echo $inf
   filename=$(basename -- "$inf")
-  succ=$(python testing_tool.py $inf python onufry.py |grep "Accepted")
-  if [ "$succ" != "" ];then
+  succ=$(python testing_tool.py $inf ./main |grep "Wrong answer")
+  if [ "$succ" == "" ];then
     echo "succ"
   else
     echo "failed"
+    exit
   fi
   count=$(( $count + 1 ))
 done
