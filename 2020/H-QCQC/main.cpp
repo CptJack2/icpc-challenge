@@ -16,9 +16,7 @@ int main(){
 			tc.push_back(j);
 			active.push_back(tc);
 		}
-		int queriedTime=0;
 		auto query = [&](const vector<int> &queries) -> vector<bool> {
-			++queriedTime;
 			cout << "test";
 			for (int i = 1; i <= n; ++i)
 				cout << " " << queries[i];
@@ -83,7 +81,6 @@ int main(){
 					it=tit;
 				}
 			}
-			int a=1;
 		}
 		//intermediate phase
 		Component good,bad;
