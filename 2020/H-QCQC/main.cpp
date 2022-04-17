@@ -82,7 +82,7 @@ int main(){
 		}
 		//intermediate phase
 		Component good,bad;
-		vector<int> queries(n,0);
+		vector<int> queries(n+1,0);
 		if(active.size()==1){
 			good.splice(good.begin(),active.front());
 			active.clear();
@@ -138,13 +138,13 @@ int main(){
 				}
 			}else{
 				int gsize=good.size();
-				for(int i=0;i<gsize/2;++i,++pit,advance(git,2))
+				for(int i=0;i<gsize/2 && pit!=paired.end();++i,++pit,advance(git,2))
 					queries[*git]=pit->first.front(),
 					queries[*next(git)]=pit->second.front();
 				auto res=query(queries);
 				pit=paired.begin();
 				git=good.begin();
-				for(int i=0;i<gsize/2;++i,++pit,advance(git,2)){
+				for(int i=0;i<gsize/2 && pit!=paired.end();++i,++pit,advance(git,2)){
 					if(res[pit->first.front()])
 						good.splice(good.end(),pit->first);
 					else
