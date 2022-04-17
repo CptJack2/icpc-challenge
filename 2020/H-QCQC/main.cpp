@@ -58,7 +58,7 @@ int main(){
 					leftOver.front().splice(leftOver.front().end(),*it),
 					active.erase(it);
 				else if(leftOver.size()==2)
-					next(leftOver.begin())->splice(leftOver.front().end(),*it),
+					next(leftOver.begin())->splice(next(leftOver.begin())->end(),*it),
 					active.erase(it);
 				else
 					leftOver.splice(leftOver.end(),active,it);
@@ -144,7 +144,7 @@ int main(){
 				auto res=query(queries);
 				pit=paired.begin();
 				git=good.begin();
-				for(int i=0;i<gsize/2 && pit!=paired.end();++i,++pit,advance(git,2)){
+				for(int i=0;i<gsize/2 && pit!=paired.end();++i,advance(git,2)){
 					if(res[pit->first.front()])
 						good.splice(good.end(),pit->first);
 					else
