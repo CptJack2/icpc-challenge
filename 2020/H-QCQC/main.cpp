@@ -26,8 +26,6 @@ int main(){
 			for (int i = 1; i <= n; ++i)
 				cin >> c,
 				ret[queries[i]] = c == '1';
-			bool db=true;
-			while(db){}
 			return ret;
 		};
 		//phase 1, query active
@@ -37,36 +35,33 @@ int main(){
 			//group active components into pairs for query
 			while (1) {
 				nit = next(it);
-				if (nit == active.end()) {
-					leftOver.splice(leftOver.end(), active, it);
+				if (nit == active.end())
 					break;
-				}
 				queries[it->front()] = nit->front();
 				queries[nit->front()] = it->front();
 				it = next(nit);
 				if (it == active.end())break;
 			}
-			//if active has odd components, put it to left over
+			//if active has odd components, query with left over, or put it to left over
 			if(it!=active.end())
 				if(!leftOver.empty()) {//at most 2 elements in leftOver and component in active always has more elements
 					queries[it->front()] = leftOver.front().front();
 					queries[leftOver.front().front()] =it->front();
 				}else{
 					leftOver.splice(leftOver.end(),active,it);
-					active.erase(it);
 					it=active.end();
 				}
 			auto res = query(queries);//do query
 			//merge the remaining active with left over
 			if(it!=active.end() && !leftOver.empty()){
 				if(res[it->front()] == res[leftOver.front().front()] && res[it->front()]==true)
-					leftOver.front().splice(leftOver.front().end(),*it);
+					leftOver.front().splice(leftOver.front().end(),*it),
+					active.erase(it);
 				else if(leftOver.size()==2)
-					next(leftOver.begin())->splice(leftOver.front().end(),*it);
+					next(leftOver.begin())->splice(leftOver.front().end(),*it),
+					active.erase(it);
 				else
 					leftOver.splice(leftOver.end(),active,it);
-				active.erase(it),
-				it=active.end();
 			}
 			//put active pair to paired or group them together according to query result
 			it = active.begin();
