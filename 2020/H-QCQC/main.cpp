@@ -18,8 +18,9 @@ int main(){
 		}
 		auto query = [&](const vector<int> &queries) -> vector<bool> {
 			cout << "test";
-			for (auto &q:queries)
-				cout << " " << q;
+			for (int i = 1; i <= n; ++i)
+				cout << " " << queries[i];
+			cout<<endl;
 			vector<bool> ret(n+1, false);
 			char c;
 			for (int i = 1; i <= n; ++i)
@@ -38,6 +39,7 @@ int main(){
 					break;
 				}
 				queries[it->front()] = nit->front();
+				queries[nit->front()] = it->front();
 				it = next(nit);
 				if (it == active.end())break;
 			}
