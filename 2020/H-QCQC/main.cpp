@@ -51,7 +51,7 @@ int main(){
 					leftOver.splice(leftOver.end(),active,it);
 					it=active.end();
 				}
-			auto res = query(queries);//do query
+			auto res = query(queries);
 			//merge the remaining active with left over
 			if(it!=active.end() && !leftOver.empty()){
 				if(res[it->front()] == res[leftOver.front().front()] && res[it->front()]==true)
@@ -123,9 +123,10 @@ int main(){
 					queries[*git]=pit->first.front();
 				auto res=query(queries);
 				git = good.begin();
+				int gsize=good.size();
 				pit = paired.begin();
-				for (; git != good.end() && pit!=paired.end();++git) {
-					if (res[*git])
+				for (int i=0; i<gsize && pit!=paired.end();++git,++i) {
+					if (res[pit->first.front()])
 						good.splice(good.end(), pit->first),
 						bad.splice(bad.end(), pit->second);
 					else
@@ -136,18 +137,19 @@ int main(){
 					pit=tpit;
 				}
 			}else{
-				for(int i=0;i<good.size()/2;++i,++pit,advance(git,2))
+				int gsize=good.size();
+				for(int i=0;i<gsize/2;++i,++pit,advance(git,2))
 					queries[*git]=pit->first.front(),
 					queries[*next(git)]=pit->second.front();
 				auto res=query(queries);
 				pit=paired.begin();
 				git=good.begin();
-				for(int i=0;i<good.size()/2;++i,++pit,advance(git,2)){
-					if(res[*git])
+				for(int i=0;i<gsize/2;++i,++pit,advance(git,2)){
+					if(res[pit->first.front()])
 						good.splice(good.end(),pit->first);
 					else
 						bad.splice(bad.end(),pit->first);
-					if(res[*next(git)])
+					if(res[pit->second.front()])
 						good.splice(good.end(),pit->second);
 					else
 						bad.splice(bad.end(),pit->second);
