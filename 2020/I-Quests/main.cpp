@@ -11,17 +11,27 @@ int main() {
 
 		vector<bool> dyn(N * 2000 + 2001);
 		dyn[0] = true;
-		for (auto& [d, x] : DX) d = (d*V-1)/C + x;
-		sort(DX.begin(), DX.end());
+//		for (auto& [d, x] : DX) d = (d*V-1)/C + x;
+		sort(DX.begin(), DX.end(),
+	   		[&](const pair<int,int>& a,const pair<int,int>& b){
+				int av=C*a.first+a.second*V, bv=C*b.first+b.second*V;
+				return av<bv ;
+			});
 		int totx = 0;
 		for (auto [d, x] : DX) {
-			for (int i = min(totx, d-x); i >= 0; i--) if (dyn[i]) dyn[i+x] = true;
+			vector<int> dynt;
+			int t=(d*V-1)/C;
+			int oi = min(totx, t);
+			for (int i=oi; i >= 0; i--)
+				if (dyn[i])
+//					dynt.push_back(i+x),
+					dyn[i+x] = true;
 			totx += x;
 		}
 
-		int64_t ret = 0;
-		for (auto [_, x] : DX) ret += x;
-		for (int64_t i = totx; ; i--) if (dyn[i]) {
+		int64_t ret = totx;
+		for (int64_t i = totx; ; i--)
+			if (dyn[i]) {
 				ret += i * (C-1);
 				break;
 			}
