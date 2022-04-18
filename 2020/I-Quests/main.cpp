@@ -14,7 +14,7 @@ int main() {
 //		for (auto& [d, x] : DX) d = (d*V-1)/C + x;
 		sort(DX.begin(), DX.end(),
 	   		[&](const pair<int,int>& a,const pair<int,int>& b){
-				long av=(long)C*a.first+a.second*V, bv=(long)C*b.first+b.second*V;
+				long av=(long)C*a.second+a.first*V, bv=(long)C*b.second+b.first*V;
 				return av<bv;
 			});
 		int totx = 0;
