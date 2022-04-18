@@ -44,10 +44,10 @@ int main() {
 	for(auto[x,d] : xd) {
 		//当前quest能加入bonus集合的充要条件,当前总分<=d*v-1,由于bonus任务先做,所以总分等于bonus集合内已有任务的总分
 		int maxBonusSetScore = (d * v - 1) / c;
-		for (int i = min(baseScoreTotal, maxBonusSetScore); i >= 0; i--)
-			if (dp[i])
-				dp[i + x] = true,
-				maxBonus=max(maxBonus,i+x);
+		for (int bsco = min(baseScoreTotal, maxBonusSetScore); bsco >= 0; bsco--)
+			if (dp[bsco])
+				dp[bsco + x] = true,
+				maxBonus=max(maxBonus, bsco + x);
 		baseScoreTotal += x;
 	}
 	//基础得分+最大bonus
