@@ -14,8 +14,8 @@ int main() {
 //		for (auto& [d, x] : DX) d = (d*V-1)/C + x;
 		sort(DX.begin(), DX.end(),
 	   		[&](const pair<int,int>& a,const pair<int,int>& b){
-				int av=C*a.first+a.second*V, bv=C*b.first+b.second*V;
-				return av<bv ;
+				long av=(long)C*a.first+a.second*V, bv=(long)C*b.first+b.second*V;
+				return av<bv;
 			});
 		int totx = 0;
 		for (auto [d, x] : DX) {
@@ -24,7 +24,7 @@ int main() {
 			int oi = min(totx, t);
 			for (int i=oi; i >= 0; i--)
 				if (dyn[i])
-//					dynt.push_back(i+x),
+//					dynt.push_back(i),
 					dyn[i+x] = true;
 			totx += x;
 		}
