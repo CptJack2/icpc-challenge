@@ -36,7 +36,7 @@ int main() {
 	/* 首先每一个任务都能得到基础的xi分,接下来要使总得分最大,
 	 * 称能得到bonus的任务的集合为bonus集合,
 	 * 只需要bonus集合内的任务总分为最大即可,
-	 * 通过动态规划的方法尝试将不同的任务加入bonus集合*/
+	 * 通过动态规划的方法尝试将不同的任务加入bonus集合，dp数组的下标是bonus集合的总分*/
 	//这里不用set是因为O(N)的更新跑不掉了，vector<bool>的实现就是一个bitset。size=n*max(v)+1
 	vector<bool> dp(n * 2000 + 1,false);
 	dp[0] = true;
