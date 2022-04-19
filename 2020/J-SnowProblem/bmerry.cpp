@@ -58,13 +58,27 @@ static void recurse(int cur, int parent)
      * subtree that the first path descends to, or they're unrelated.
      */
     n.max_path_up = path_up[0].total;
-    for (int i = 0; i < 2; i++)
-        for (int j = 0; j < 2; j++)
-            if (height[i].child == -1 || path[j].child != height[i].child)
-            {
-                int score = height[i].total + path[j].total;
-                n.max_path_up = max(n.max_path_up, score);
-            }
+
+	auto cross=[&](const records& ra,const records& rb){
+		int ret=0;
+
+		int poss1=ra[0].total;
+		int i=0;
+		while(ra[0].child!=-1 && rb[i].child==ra[0].child)++i;
+		poss1+=rb[i].total;
+		ret=max(ret,poss1);
+
+		int poss2=rb[0].total;
+		i=0;
+		while(rb[0].child!=-1 && ra[i].child==rb[0].child)++i;
+		poss2+=ra[i].total;
+		ret=max(ret,poss2);
+
+		return ret;
+	};
+
+	n.max_path_up=max(n.max_path_up,cross(height,path));
+
     n.max_path_up = max(n.max_path_up, height[0].total + height[1].total + height[2].total);
 
     /* A pair of maximal paths in this subtree consists of either:
@@ -77,13 +91,8 @@ static void recurse(int cur, int parent)
     n.full = max(n.full, n.max_path_up);
     n.full = max(n.full, path[0].total + path[1].total);
     n.full = max(n.full, height[0].total + height[1].total + height[2].total + height[3].total);
-    for (int i = 0; i < 2; i++)
-        for (int j = 0; j < 2; j++)
-            if (height[i].child == -1 || path_up[j].child != height[i].child)
-            {
-                int score = height[i].total + path_up[j].total;
-                n.full = max(n.full, score);
-            }
+
+	n.full=max(n.full,cross(height,path_up));
     for (int i = 0; i < 3; i++)
         for (int j = i + 1; j < 3; j++)
             for (int k = 0; k < 3; k++)
