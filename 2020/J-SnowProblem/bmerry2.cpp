@@ -12,17 +12,14 @@ struct node{
     vector<edge> edges;
 };
 
-static vector<int> recurse(vector<node> &nodes, int cur, int parent, int E)
-{
+static vector<int> recurse(vector<node> &nodes, int cur, int parent, int E) {
     node &n = nodes[cur];
     vector<int> dp(E + 1, 0);
     for (const auto &e : n.edges)
-        if (e.dest != parent)
-        {
+        if (e.dest != parent) {
             auto sub = recurse(nodes, e.dest, cur, E);
             for (int i = E; i >= 0; i--)
-                for (int j = E - i; j >= 0; j--)
-                {
+                for (int j = E - i; j >= 0; j--) {
                     int score = dp[i] + sub[j] + ((j & 1) ? e.len : 0);//if(j==1,3) score+=e.second
                     dp[i + j] = max(dp[i + j], score);
                 }
@@ -30,15 +27,13 @@ static vector<int> recurse(vector<node> &nodes, int cur, int parent, int E)
     return dp;
 }
 
-int main()
-{
+int main() {
     int N;
     cin >> N;
     vector<node> nodes(N+1);
-    int K = 2;
+    int K = 2;//two longest sub path?
     int tdist = 0;
-    for (int i = 0; i < N - 1; i++)
-    {
+    for (int i = 0; i < N - 1; i++) {
         int u, v, d;
         cin >> u >> v >> d;
         nodes[u].edges.emplace_back(v, d);
