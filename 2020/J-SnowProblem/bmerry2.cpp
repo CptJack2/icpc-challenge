@@ -29,20 +29,18 @@ int main()
 {
     int N;
     cin >> N;
-    vector<node> nodes(N);
+    vector<node> nodes(N+1);
     int K = 2;
     int tdist = 0;
     for (int i = 0; i < N - 1; i++)
     {
         int u, v, d;
         cin >> u >> v >> d;
-        u--;
-        v--;
         nodes[u].edges.emplace_back(v, d);
         nodes[v].edges.emplace_back(u, d);
         tdist += d;
     }
-    auto dp = recurse(nodes, 3, -1, 2 * K);
+    auto dp = recurse(nodes, 4, -1, 2 * K);
     int ans = 2 * tdist - dp.back();
     cout << ans <<'\n';
 
