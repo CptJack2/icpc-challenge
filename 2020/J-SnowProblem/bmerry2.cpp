@@ -2,9 +2,14 @@
 
 using namespace std;
 
-struct node
-{
-    vector<pair<int, int>> edges;
+struct edge{
+	int dest;
+	int len;
+	edge(int d,int l):dest(d),len(l){}
+};
+
+struct node{
+    vector<edge> edges;
 };
 
 static vector<int> recurse(vector<node> &nodes, int cur, int parent, int E)
@@ -12,13 +17,13 @@ static vector<int> recurse(vector<node> &nodes, int cur, int parent, int E)
     node &n = nodes[cur];
     vector<int> dp(E + 1, 0);
     for (const auto &e : n.edges)
-        if (e.first != parent)
+        if (e.dest != parent)
         {
-            auto sub = recurse(nodes, e.first, cur, E);
+            auto sub = recurse(nodes, e.dest, cur, E);
             for (int i = E; i >= 0; i--)
                 for (int j = E - i; j >= 0; j--)
                 {
-                    int score = dp[i] + sub[j] + ((j & 1) ? e.second : 0);//if(j==1,3) score+=e.second
+                    int score = dp[i] + sub[j] + ((j & 1) ? e.len : 0);//if(j==1,3) score+=e.second
                     dp[i + j] = max(dp[i + j], score);
                 }
         }
