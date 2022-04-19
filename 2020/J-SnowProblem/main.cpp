@@ -27,26 +27,25 @@ SubTreeResult dfs(int cur,int parent){
 		//因为更新用到的变量,需要表示的取最大范围是"前面所有的子树"(以避免有重复的路径),所以在各变量更新顺序如下
 		//更新当前树"最长的两条"
 		updateMax(LongestTwo,{
-			LongestTwoFromRoot+subRes.longestFromRoot+d,	//前面的子树中最长的"其中一条从根出发,最长的两条"+根伸入当前子树的最长路径
-			longestOne + subRes.longestOne,						 	//前面的子树中"最长的一条条"+当前子树最长的一条条
-			longestFromRoot + subRes.longestTwoFromRoot+d,			//从根伸入前面的子树中最长的路径,接入当前子树往下延申到最深,成为一条路径.另外当前子树也提供了另一条路径
-			subRes.longestTwo										//各个子树中最长的两条
+			LongestTwoFromRoot + subRes.longestFromRoot + d,	//前面的子树中最长的"其中一条从根出发,最长的两条"+根伸入当前子树的最长路径
+			longestOne + subRes.longestOne,						//前面的子树中"最长的一条条"+当前子树最长的一条条
+			longestFromRoot + subRes.longestTwoFromRoot + d,	//从根伸入前面的子树中最长的路径,接入当前子树往下延申到最深,成为一条路径.另外当前子树也提供了另一条路径
+			subRes.longestTwo									//各个子树中最长的两条
 		});
 		//更新当前树"其中一条从根出发最长的两条路径"
 		updateMax(LongestTwoFromRoot, {
-			longestOne + subRes.longestFromRoot+d,	//前面子树中最长的一条+从根伸入当前子树中的最长
-			longestFromRoot + subRes.longestOne,	//从根伸入前面一堆子树中最长的路径+当前子树中最长的路径
-			subRes.longestTwoFromRoot+d				//各子树中最长的"其中一条从根出发,最长的两条"
+			longestOne + subRes.longestFromRoot + d,	//前面子树中最长的一条+从根伸入当前子树中的最长
+			longestFromRoot + subRes.longestOne,		//从根伸入前面一堆子树中最长的路径+当前子树中最长的路径
+			subRes.longestTwoFromRoot + d				//各子树中最长的"其中一条从根出发,最长的两条"
 		});
 		//更新当前树最长
 		updateMax(longestOne,{
-			longestFromRoot+subRes.longestFromRoot+d,
+			longestFromRoot + subRes.longestFromRoot + d,
 			subRes.longestOne
 		});
 		//更新从根出发最长的路径
 		updateMax(longestFromRoot,{subRes.longestFromRoot + d});
 	}
-	//cout<<"dp "<<cur<<" 0 "<<longestFromRoot<< " "<<longestOne<< " "<<LongestTwoFromRoot<< " "<<LongestTwo<<endl;
 	return {longestFromRoot, longestOne, LongestTwoFromRoot, LongestTwo};
 }
 
