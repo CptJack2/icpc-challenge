@@ -2,67 +2,76 @@
 using namespace std;
 
 typedef pair<int,int> pii;
-int longest=0;
-vector<pii> longestPath;
 vector<vector<pii>> g;
 
-pair<int,vector<pii>> findLongestPath(int cur,int parent,bool findPath){
-	int h1=0,h2=0;
-	vector<pii> vh1,vh2;
-	for(auto& [ch,d]:g[cur]){
+struct SubTreeResult{
+	int longestFromRoot;//整个子树中，从根出发，最长的路径
+	int longestOne;//整个子树中,最长的一条路径
+	int longestTwoFromRoot;//整个子树中,最长的两条路径,其中一条从根出发
+	int longestTwo;//整个子树中,最长的两条路径的长度的和
+};
+
+void inline updateMax(int& num,initializer_list<int> candis){
+	for(auto i:candis)
+		num=max(num,i);
+}
+
+SubTreeResult dfs(int cur,int parent){
+	int longestFromRoot=0,secondLongestFromRoot=0,//从cur出发，伸入各子树，第一和第二长的
+		subLongestOne=0,//在"各子树中最长的一条"之中最长的
+		subLongestTwo=0,//在"各子树中最长的两条"之中最长的
+		potentialLongestTwoFromRoot=0,//"其中一条从根出发,最长的两条"的候选
+		potentialLongestTwo=0;//"最长的两条"的候选
+	for(auto [ch,d]:g[cur]){
 		if(ch==parent)continue;
-		auto [hch,vhch]= findLongestPath(ch,cur,findPath);
-		int h=hch+d;
-		if(h>h1)
-			h2=h1,
-			h1=h,
-			vh2=vh1,
-			vhch.emplace_back(cur,ch),
-			vh1=vhch;
-		else if(h>h2)
-			vhch.emplace_back(cur,ch),
-			vh2=vhch,
-			h2=h;
+		auto subRes=dfs(ch,cur);
+		//更新当前树"最长的两条"
+		updateMax(potentialLongestTwo,{
+			potentialLongestTwoFromRoot+subRes.longestFromRoot+d,//前面的子树中最长的"其中一条从根出发,最长的两条"+根伸入当前子树的最长路径
+			subLongestTwo + subRes.longestTwo,//前面的子树中"最长的两条"+当前子树最长的两条
+			longestFromRoot + subRes.longestTwoFromRoot+d,//从根伸入前面的子树中最长的路径,接入当前子树往下延申到最深,成为一条路径.另外当前子树也提供了另一条路径
+			subRes.longestTwo//各个子树中最长的两条
+		});
+		//更新当前树"其中一条从根出发最长的两条路径"
+		updateMax(potentialLongestTwoFromRoot, {
+		longestFromRoot + subRes.longestOne,		//从根伸入前面一堆子树中最长的路径+当前子树中最长的路径
+			subLongestOne + subRes.longestFromRoot + d	//前面一堆子树中最长的路径+从根伸入当前子树最长
+		});
+		//更新从根出发第一和第二长的路径
+		if(subRes.longestFromRoot+d > longestFromRoot)
+			secondLongestFromRoot=longestFromRoot,
+			longestFromRoot= subRes.longestFromRoot + d;
+		else if(subRes.longestFromRoot+d > secondLongestFromRoot)
+			secondLongestFromRoot= subRes.longestFromRoot + d;
+		//更新各子树中最长路径,因为上面用到的以下变量,需要表示的取最大范围是"前面所有的子树"(以避免有重复的路径),所以在后面更新
+		updateMax(subLongestOne, {subRes.longestOne});//,longestFromRoot+subRes.longestFromRoot+d
+		updateMax(subLongestTwo, {subRes.longestTwo});
+
 	}
-	if(h1+h2>longest){
-		longest=h1+h2;
-		if(findPath) {
-			vector<pii> newlp(h1 + h2);
-			copy(vh1.begin(), vh1.end(), newlp.begin());
-			copy(vh2.rbegin(), vh2.rend(), newlp.begin() + h1);
-		}
-	}
-	return {h1,vh1};
+	SubTreeResult ret{0,0,0,0};
+	ret.longestFromRoot=longestFromRoot;
+	//树中最长路径等于：各子树中最长路径、从根出发第一第二长的路径的和，之中最大的
+	updateMax(ret.longestOne,{
+		subLongestOne,
+		longestFromRoot + secondLongestFromRoot
+	});
+	ret.longestTwoFromRoot=potentialLongestTwoFromRoot;
+	ret.longestTwo=potentialLongestTwo;
+	return ret;
 }
 
 int main(){
 	int n;
 	cin>>n;
 	g.resize(n+1);
-	int total=0;
-	for (int i = 0; i < n; ++i) {
+	int totalLength=0;
+	for (int i = 0; i < n-1; ++i) {
 		int a,b,d;
 		cin>>a>>b>>d;
 		g[a].emplace_back(b,d);
-		total+=2*d;
+		totalLength+= 2 * d;
 	}
-	longest=0,longestPath.clear();
-	findLongestPath(1,0, true);
-	total-=longest;
-	for(auto edge:longestPath){
-		for(auto it=g[edge.first].begin();it!=g[edge.first].end();++it)
-			if(it->first==edge.second) {
-				g[edge.first].erase(it);
-				break;
-			}
-		for(auto it=g[edge.second].begin();it!=g[edge.second].end();++it)
-			if(it->first==edge.first) {
-				g[edge.second].erase(it);
-				break;
-			}
-	}
-	longest=0,longestPath.clear();
-	findLongestPath(1,0, false);
-	cout<<total-longest;
+	auto res=dfs(1,0);
+	cout<<totalLength-res.longestTwo;
 	return 0;
 }
