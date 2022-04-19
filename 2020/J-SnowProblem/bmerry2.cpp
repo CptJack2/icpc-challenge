@@ -19,7 +19,7 @@ static vector<int> recurse(vector<node> &nodes, int cur, int parent, int E) {
 		if (ch.dest == parent) continue;
 		auto sub = recurse(nodes, ch.dest, cur, E);
 		for (int i = E-1; i >= 0; i--)
-			for (int j = E - i; j >= 0; j--) {
+			for (int j = E - i; j >= 1; j--) {
 				int score = dp[i] + sub[j] + ((j & 1) ? ch.len : 0);
 				dp[i + j] = max(dp[i + j], score);
 			}
