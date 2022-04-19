@@ -14,13 +14,13 @@ struct node{
 
 static vector<int> recurse(vector<node> &nodes, int cur, int parent, int E) {
     node &n = nodes[cur];
-    vector<int> dp(E + 1, 0);
+    vector<int> dp(E + 1, 0);//dp[0]永远等于0.dp[1]为cur到任意叶子的最长高度.dp[2]为子树中最长路径
     for (const auto &ch : n.edges) {
 		if (ch.dest == parent) continue;
 		auto sub = recurse(nodes, ch.dest, cur, E);
-		for (int i = E; i >= 0; i--)
+		for (int i = E-1; i >= 0; i--)
 			for (int j = E - i; j >= 0; j--) {
-				int score = dp[i] + sub[j] + ((j & 1) ? ch.len : 0);//if(j==1,3) score+=ch.second
+				int score = dp[i] + sub[j] + ((j & 1) ? ch.len : 0);
 				dp[i + j] = max(dp[i + j], score);
 			}
 	}
@@ -40,7 +40,7 @@ int main() {
         nodes[v].edges.emplace_back(u, d);
         tdist += d;
     }
-    auto dp = recurse(nodes, 4, -1, 2 * K);
+    auto dp = recurse(nodes, 1, -1, 2 * K);
     int ans = 2 * tdist - dp.back();
     cout << ans <<'\n';
 
