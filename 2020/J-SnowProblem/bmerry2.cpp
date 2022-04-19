@@ -31,7 +31,7 @@ int main() {
     int N;
     cin >> N;
     vector<node> nodes(N+1);
-    int K = 2;//two longest sub path?
+    int K = 2;//two longest sub path without common edge, modify it to get k longest sub path
     int tdist = 0;
     for (int i = 0; i < N - 1; i++) {
         int u, v, d;
