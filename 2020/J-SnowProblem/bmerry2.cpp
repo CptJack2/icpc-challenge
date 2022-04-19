@@ -15,15 +15,15 @@ struct node{
 static vector<int> recurse(vector<node> &nodes, int cur, int parent, int E) {
     node &n = nodes[cur];
     vector<int> dp(E + 1, 0);
-    for (const auto &e : n.edges)
-        if (e.dest != parent) {
-            auto sub = recurse(nodes, e.dest, cur, E);
-            for (int i = E; i >= 0; i--)
-                for (int j = E - i; j >= 0; j--) {
-                    int score = dp[i] + sub[j] + ((j & 1) ? e.len : 0);//if(j==1,3) score+=e.second
-                    dp[i + j] = max(dp[i + j], score);
-                }
-        }
+    for (const auto &ch : n.edges) {
+		if (ch.dest == parent) continue;
+		auto sub = recurse(nodes, ch.dest, cur, E);
+		for (int i = E; i >= 0; i--)
+			for (int j = E - i; j >= 0; j--) {
+				int score = dp[i] + sub[j] + ((j & 1) ? ch.len : 0);//if(j==1,3) score+=ch.second
+				dp[i + j] = max(dp[i + j], score);
+			}
+	}
     return dp;
 }
 
