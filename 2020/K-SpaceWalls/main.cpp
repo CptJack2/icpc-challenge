@@ -144,6 +144,7 @@ int main(){
 	int N, K;
 	cin >> N >> K;
 	vector<cuboid> cuboids(N);
+	//读入空间站范围
 	for (int i = 0; i < N; i++)
 		for (int j = 0; j < 2; j++)
 			for (int k = 0; k < 3; k++){
@@ -244,6 +245,7 @@ int main(){
 		// Decompress coordinates and convert back to 3-space
 		ll time = -1;
 		pnt3 prev = {};
+		//计算robot运行轨迹
 		for (const pnt2 &p : segs){
 			int x = coords[0][p[0]];
 			int y = coords[1][p[1]];
@@ -301,8 +303,7 @@ int main(){
 							hits++;
 							ans = min(ans, t);
 						}
-					}
-					else if (dotp == 0){
+					} else if (dotp == 0){
 						ll ti = times[i][u] + dot(aj, di) - dot(ai, di);
 						ll tj = times[j][v] + dot(ai, dj) - dot(aj, dj);
 						auto solve = crt(ti, times[i].back(), tj, times[j].back());
