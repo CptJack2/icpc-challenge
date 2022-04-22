@@ -167,32 +167,32 @@ int main(){
 	vector<vector<pnt3>> paths(K);
 	vector<vector<ll>> times(K);
 	for (int i = 0; i < K; i++){
-		pnt3 c;//机器人起始坐标
+		pnt3 robotInitPos;//机器人起始坐标
 		string fs, ds;
-		cin >> c[0] >> c[1] >> c[2] >> fs >> ds;
-		pnt3 f = dirmap[fs];
-		pnt3 d = dirmap[ds];
+		cin >> robotInitPos[0] >> robotInitPos[1] >> robotInitPos[2] >> fs >> ds;
+		pnt3 initFace = dirmap[fs];
+		pnt3 initDirection = dirmap[ds];
 		for (int j = 0; j < 3; j++)
-			c[j] = 2 * c[j] + 1 + f[j];
+			robotInitPos[j] = 2 * robotInitPos[j] + 1 + initFace[j];
 		int za = 0;
-		while (f[za] || d[za])
+		while (initFace[za] || initDirection[za])
 			za++;
 
 		vector<rect> rects;
 		map<int, int> cmaps[2];
-		pnt2 c2{{dot(c, d), dot(c, f)}};
+		pnt2 c2{{dot(robotInitPos, initDirection), dot(robotInitPos, initFace)}};
 		for (int j = 0; j < 2; j++){
 			cmaps[j][c2[j]] = -1;
 			cmaps[j][INT_MIN] = -1;
 			cmaps[j][INT_MAX] = -1;
 		}
 		for (int j = 0; j < N; j++){
-			if (cuboids[j][0][za] > c[za] || cuboids[j][1][za] < c[za])
+			if (cuboids[j][0][za] > robotInitPos[za] || cuboids[j][1][za] < robotInitPos[za])
 				continue;
 			rect r;
 			for (int k = 0; k < 2; k++){
-				r[k][0] = dot(cuboids[j][k], d);
-				r[k][1] = dot(cuboids[j][k], f);
+				r[k][0] = dot(cuboids[j][k], initDirection);
+				r[k][1] = dot(cuboids[j][k], initFace);
 				cmaps[0][r[k][0]] = -1;
 				cmaps[1][r[k][1]] = -1;
 			}
@@ -260,8 +260,8 @@ int main(){
 		for (const pnt2 &p : segs){
 			int x = coords[0][p[0]];
 			int y = coords[1][p[1]];
-			pnt3 q = d * x + f * y;
-			q[za] = c[za];
+			pnt3 q = initDirection * x + initFace * y;
+			q[za] = robotInitPos[za];
 			paths[i].push_back(q);
 			if (time == -1)
 				time = 0;
