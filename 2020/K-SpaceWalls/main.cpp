@@ -1,5 +1,5 @@
 /*
- * 将所有点的坐标先x2,每个立方体有两个面,负轴方向的面+0,正轴方向的+1
+ * 将所有点的坐标先x2,每个立方体有两个面,负轴方向的面+0,正轴方向的+1. 注意:0的x+面和1的x-面是同一面
  * 3个坐标轴分别对各个方块的坐标排序
  * 然后对每个robot，先求出它的起始点，找出它落在哪个方块的区域中
  * 然后从它的方向，找刚刚排好序的坐标，然后模拟在那个方向上前进，遇到转弯就记录转弯点，找回一圈之后就能得到整个轨迹的端点
@@ -105,6 +105,7 @@ static void add_seg(vector<pnt2> &segs, pnt2 p){
 	if (M >= 2){
 		const pnt2 &a = segs[M - 2];
 		const pnt2 &b = segs[M - 1];
+		//合并同一直线上的点
 		if ((a[0] == b[0] && b[0] == p[0])
 			|| (a[1] == b[1] && b[1] == p[1]))
 			segs.pop_back();
@@ -179,23 +180,27 @@ int main(){
 			za++;
 
 		vector<rect> rects;
-		map<int, int> cmaps[2];
-		pnt2 c2{{dot(robotInitPos, initDirection), dot(robotInitPos, initFace)}};
+		map<int, int> cordMaps[2];//map cord to index,将三维的坐标降到二维,用d和f做基
+		pnt2 initPosInd{{dot(robotInitPos, initDirection), dot(robotInitPos, initFace)}};
 		for (int j = 0; j < 2; j++){
-			cmaps[j][c2[j]] = -1;
-			cmaps[j][INT_MIN] = -1;
-			cmaps[j][INT_MAX] = -1;
+			cordMaps[j][initPosInd[j]] = -1;
+			cordMaps[j][INT_MIN] = -1;
+			cordMaps[j][INT_MAX] = -1;
 		}
+		//将各个方块降维成矩形
 		for (int j = 0; j < N; j++){
+			//第三轴不在范围内的排除
 			if (cuboids[j][0][za] > robotInitPos[za] || cuboids[j][1][za] < robotInitPos[za])
 				continue;
 			rect r;
 			for (int k = 0; k < 2; k++){
+				//投影到d和f为基的坐标
 				r[k][0] = dot(cuboids[j][k], initDirection);
 				r[k][1] = dot(cuboids[j][k], initFace);
-				cmaps[0][r[k][0]] = -1;
-				cmaps[1][r[k][1]] = -1;
+				cordMaps[0][r[k][0]] = -1;
+				cordMaps[1][r[k][1]] = -1;
 			}
+			//调整成左下角右上角的坐标
 			for (int k = 0; k < 2; k++)
 				if (r[0][k] > r[1][k])
 					swap(r[0][k], r[1][k]);
@@ -205,21 +210,21 @@ int main(){
 		vector<int> coords[2];
 		int X[2];
 		for (int j = 0; j < 2; j++){
-			X[j] = cmaps[j].size();
+			X[j] = cordMaps[j].size();
 			coords[j].resize(X[j]);
 			int id = 0;
-			for (auto &e : cmaps[j]){
+			for (auto &e : cordMaps[j]){
 				coords[j][id] = e.first;
 				e.second = id++;
 			}
-			c2[j] = cmaps[j][c2[j]];
+			initPosInd[j] = cordMaps[j][initPosInd[j]];
 		}
-
+		//cordMap所有顶点放到一张grid上
 		vector<vector<int>> grid(X[1], vector<int>(X[0]));
 		for (auto &r : rects){
 			for (int j = 0; j < 2; j++)
 				for (int k = 0; k < 2; k++)
-					r[j][k] = cmaps[k][r[j][k]];
+					r[j][k] = cordMaps[k][r[j][k]];
 			gget(grid, r[0])++;
 			gget(grid, r[1])++;
 			gget(grid, r[1][0], r[0][1])--;
@@ -236,27 +241,31 @@ int main(){
 					v -= gget(grid, x - 1, y - 1);
 				gget(grid, x, y) = v;
 			}
-		assert(gget(grid, c2[0], c2[1] - 1) > 0);
-		assert(gget(grid, c2) == 0);
-		pnt2 p = c2;
-		int dir = 0;
-		vector<pnt2> segs{c2};
+		assert(gget(grid, initPosInd[0], initPosInd[1] - 1) > 0);
+		assert(gget(grid, initPosInd) == 0);
+		pnt2 p = initPosInd;
+		int dir = 0;//dir 0,1,2,3 对应 d,f,-d,-f
+		vector<pnt2> segs{initPosInd};
+		//找出grid坐标下的轨迹,存入segs
 		do
 		{
 			p = p + delta[dir];
 			add_seg(segs, p);
+			//df坐标,d是东,-f是南,-d西,f北. 右就是顺着当前矩形走的方向,左是遇上障碍物
 			pnt2 left = get_left(p, dir);
 			pnt2 right = get_right(p, dir);
+			//看看左右两边是否需要走过去
 			if (gget(grid, left))
 				dir = (dir + 1) & 3;
 			else if (!gget(grid, right))
 				dir = (dir + 3) & 3;
-		} while (p != c2);
+			//不然的话继续往前
+		} while (p != initPosInd);
 
 		// Decompress coordinates and convert back to 3-space
 		ll time = -1;
 		pnt3 prev = {};
-		//计算robot运行轨迹
+		//计算robot运行轨迹，将segs的轨迹还原为3维坐标
 		for (const pnt2 &p : segs){
 			int x = coords[0][p[0]];
 			int y = coords[1][p[1]];
