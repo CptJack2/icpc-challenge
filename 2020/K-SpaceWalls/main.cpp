@@ -82,12 +82,12 @@ static array<int, N> direction(const array<int, N> &a, const array<int, N> &b){
 
 template<typename T>
 static T &gget(vector<vector<T>> &grid, pnt2 pos){
-	return grid[pos[1]][pos[0]];
+	return grid[pos[0]][pos[1]];
 }
 
 template<typename T>
 static T &gget(vector<vector<T>> &grid, int x, int y){
-	return grid[y][x];
+	return grid[x][y];
 }
 
 static pnt2 get_left(const pnt2 &p, int dir){
@@ -220,7 +220,7 @@ int main(){
 			initPosInd[j] = cordMaps[j][initPosInd[j]];
 		}
 		//cordMap所有顶点放到一张grid上
-		vector<vector<int>> grid(X[1], vector<int>(X[0]));
+		vector<vector<int>> grid(X[0], vector<int>(X[1]));
 		for (auto &r : rects){
 			for (int j = 0; j < 2; j++)
 				for (int k = 0; k < 2; k++)
