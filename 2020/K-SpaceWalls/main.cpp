@@ -1,4 +1,15 @@
-#pragma GCC optimize("O3")
+/*
+ * 将所有点的坐标先x2,每个立方体有两个面,负轴方向的面+0,正轴方向的+1
+ * 3个坐标轴分别对各个方块的坐标排序
+ * 然后对每个robot，先求出它的起始点，找出它落在哪个方块的区域中
+ * 然后从它的方向，找刚刚排好序的坐标，然后模拟在那个方向上前进，遇到转弯就记录转弯点，找回一圈之后就能得到整个轨迹的端点
+ *
+ * 因为最多有100个方块，所以一条轨迹最多有400个点。每两个轨迹之间进行相交判断.取出每条轨迹的每一段来判断是否相交,并求出交点, 整个复杂度是O(N^4)
+ *
+ * 获得轨迹的骄交点后,算出它们的相遇时间,每一对轨迹处理完后,给出最小相遇时间
+ */
+
+//#pragma GCC optimize("O3")
 // TODO: check what conditions the final problem puts on robots starting on
 // the same position.
 
@@ -156,7 +167,7 @@ int main(){
 	vector<vector<pnt3>> paths(K);
 	vector<vector<ll>> times(K);
 	for (int i = 0; i < K; i++){
-		pnt3 c;
+		pnt3 c;//机器人起始坐标
 		string fs, ds;
 		cin >> c[0] >> c[1] >> c[2] >> fs >> ds;
 		pnt3 f = dirmap[fs];
@@ -259,6 +270,7 @@ int main(){
 			times[i].push_back(time);
 			prev = q;
 		}
+		int a=1;
 	}
 
 #if 0
