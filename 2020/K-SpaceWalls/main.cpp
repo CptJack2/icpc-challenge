@@ -162,7 +162,7 @@ int main(){
 			for (int k = 0; k < 3; k++){
 				int x;
 				cin >> x;
-				cuboids[i][j][k] = x * 2;
+				cuboids[i][j][k] = x * 2;//整个坐标体系x2
 			}
 
 	vector<vector<pnt3>> paths(K);
@@ -174,23 +174,25 @@ int main(){
 		pnt3 initFace = dirmap[fs];
 		pnt3 initDirection = dirmap[ds];
 		for (int j = 0; j < 3; j++)
-			robotInitPos[j] = 2 * robotInitPos[j] + 1 + initFace[j];
-		int za = 0;
-		while (initFace[za] || initDirection[za])
-			za++;
+			robotInitPos[j] = 2 * robotInitPos[j] + 1 + initFace[j];//因为机器人初始在一个面的中心,所以这里+1
+		//robot只会在d和f组成的平面内运动,有一条坐标轴可以忽略
+		int axisIgnored = 0;
+		while (initFace[axisIgnored] || initDirection[axisIgnored])
+			axisIgnored++;
 
 		vector<rect> rects;
 		map<int, int> cordMaps[2];//map cord to index,将三维的坐标降到二维,用d和f做基
-		pnt2 initPosInd{{dot(robotInitPos, initDirection), dot(robotInitPos, initFace)}};
+		//df坐标下的起始位置
+		pnt2 initPos{{dot(robotInitPos, initDirection), dot(robotInitPos, initFace)}};
 		for (int j = 0; j < 2; j++){
-			cordMaps[j][initPosInd[j]] = -1;
+			cordMaps[j][initPos[j]] = -1;
 			cordMaps[j][INT_MIN] = -1;
 			cordMaps[j][INT_MAX] = -1;
 		}
 		//将各个方块降维成矩形
 		for (int j = 0; j < N; j++){
 			//第三轴不在范围内的排除
-			if (cuboids[j][0][za] > robotInitPos[za] || cuboids[j][1][za] < robotInitPos[za])
+			if (cuboids[j][0][axisIgnored] > robotInitPos[axisIgnored] || cuboids[j][1][axisIgnored] < robotInitPos[axisIgnored])
 				continue;
 			rect r;
 			for (int k = 0; k < 2; k++){
@@ -217,7 +219,7 @@ int main(){
 				coords[j][id] = e.first;
 				e.second = id++;
 			}
-			initPosInd[j] = cordMaps[j][initPosInd[j]];
+			initPos[j] = cordMaps[j][initPos[j]];
 		}
 		//cordMap所有顶点放到一张grid上
 		vector<vector<int>> grid(X[0], vector<int>(X[1]));
@@ -244,11 +246,11 @@ int main(){
 				gget(grid, x, y) = v;
 			}
 		//断言起始点在一条矩形的上边界. 起始点位置为0,其下方点不为0
-		assert(gget(grid, initPosInd[0], initPosInd[1] - 1) > 0);
-		assert(gget(grid, initPosInd) == 0);
-		pnt2 p = initPosInd;
+		assert(gget(grid, initPos[0], initPos[1] - 1) > 0);
+		assert(gget(grid, initPos) == 0);
+		pnt2 p = initPos;
 		int dir = 0;//dir 0,1,2,3 对应 d,f,-d,-f
-		vector<pnt2> segs{initPosInd};
+		vector<pnt2> segs{initPos};
 		//找出grid坐标下的轨迹,存入segs
 		do
 		{
@@ -257,13 +259,13 @@ int main(){
 			//df坐标,d是东,-f是南,-d西,f北. 右就是顺着当前矩形走的方向,左是遇上障碍物
 			pnt2 left = get_left(p, dir);
 			pnt2 right = get_right(p, dir);
-			//看看左右两边是否需要走过去
+			//看看左右两边是否能够走过去
 			if (gget(grid, left))
 				dir = (dir + 1) & 3;
 			else if (!gget(grid, right))
 				dir = (dir + 3) & 3;
 			//不然的话继续往前
-		} while (p != initPosInd);
+		} while (p != initPos);
 
 		// Decompress coordinates and convert back to 3-space
 		ll time = -1;
@@ -273,7 +275,7 @@ int main(){
 			int x = coords[0][p[0]];
 			int y = coords[1][p[1]];
 			pnt3 q = initDirection * x + initFace * y;
-			q[za] = robotInitPos[za];
+			q[axisIgnored] = robotInitPos[axisIgnored];
 			paths[i].push_back(q);
 			if (time == -1)
 				time = 0;
@@ -302,6 +304,7 @@ int main(){
 				pnt3 ai = paths[i][u];
 				pnt3 bi = paths[i][u + 1];
 				pnt3 di = direction(ai, bi);
+				//轨迹都是平行于坐标轴的,所以两个坐标只有一维不同
 				bool upi = ai[0] + ai[1] + ai[2] < bi[0] + bi[1] + bi[2];
 				pnt3 li = upi ? ai : bi;
 				pnt3 hi = upi ? bi : ai;
@@ -317,11 +320,11 @@ int main(){
 							goto skip;
 					}
 					dj = direction(aj, bj);
-					dotp = dot(di, dj);
+					dotp = dot(di, dj);//dotp只可能等于0,1,-1
 					if (dotp < 0){
 						// Parallel and in opposite directions
-						ll sep = dot(aj, di) - dot(ai, di);
-						ll t = (sep + times[i][u] + times[j][v]) / 2;
+						ll separateDistance = dot(aj, di) - dot(ai, di);
+						ll t = (separateDistance + times[i][u] + times[j][v]) / 2;
 						if (t >= times[i][u] && t <= times[i][u + 1] &&
 							t >= times[j][v] && t <= times[j][v + 1]){
 							hits++;
