@@ -3,4 +3,4 @@ project(untitled)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(SpaceWalls 2020/K-SpaceWalls/main.cpp)
+add_executable(SweepStakes 2020/L-SweepStakes/dk-tree.cc)
