@@ -221,6 +221,7 @@ int main(){
 		}
 		//cordMap所有顶点放到一张grid上
 		vector<vector<int>> grid(X[0], vector<int>(X[1]));
+		//下面的操作会将rect的区域,除了上边界和右边界是0,其他区域都是1
 		for (auto &r : rects){
 			for (int j = 0; j < 2; j++)
 				for (int k = 0; k < 2; k++)
@@ -230,6 +231,7 @@ int main(){
 			gget(grid, r[1][0], r[0][1])--;
 			gget(grid, r[0][0], r[1][1])--;
 		}
+		//用泛洪一次过将矩形区域染色
 		for (int y = 0; y < X[1]; y++)
 			for (int x = 0; x < X[0]; x++){
 				int v = gget(grid, x, y);
@@ -241,6 +243,7 @@ int main(){
 					v -= gget(grid, x - 1, y - 1);
 				gget(grid, x, y) = v;
 			}
+		//断言起始点在一条矩形的上边界. 起始点位置为0,其下方点不为0
 		assert(gget(grid, initPosInd[0], initPosInd[1] - 1) > 0);
 		assert(gget(grid, initPosInd) == 0);
 		pnt2 p = initPosInd;
