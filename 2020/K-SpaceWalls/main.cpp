@@ -208,7 +208,7 @@ int main(){
 					swap(r[0][k], r[1][k]);
 			rects.push_back(r);
 		}
-
+		//对坐标排序
 		vector<int> coords[2];
 		int X[2];
 		for (int j = 0; j < 2; j++){
@@ -298,8 +298,10 @@ int main(){
 
 	ll ans = LLONG_MAX;
 	ll hits = 0;
+	//每两条轨迹求交
 	for (int i = 0; i < K; i++)
 		for (int j = i + 1; j < K; j++){
+			//轨迹中的每一段拎出来互相判断是否碰撞(相交)
 			for (size_t u = 0; u + 1 < paths[i].size(); u++){
 				pnt3 ai = paths[i][u];
 				pnt3 bi = paths[i][u + 1];
