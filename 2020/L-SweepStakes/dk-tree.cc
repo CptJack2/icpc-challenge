@@ -5,7 +5,7 @@
 #include <vector>
 using namespace std;
 
-#define EPS` 1e-15
+#define EPS 1e-15
 
 struct Distribution {
   vector<double> v;
@@ -35,13 +35,13 @@ struct Distribution {
 
 int X, Y, T, Q;
 vector<double> XP, YP;
-vector<vector<pair<int, int>>> q;
+vector<vector<pair<int, int>>> queries;
 
 map<pair<int, int>, vector<pair<int, int>>> node;
 const vector<pair<int, int>>& domerge(int s, int e) {
   auto& v = node[{s, e}];
   if (s+1 == e) {
-    v = q[s];
+    v = queries[s];
   } else {
     auto const& a = domerge(s, (s+e)/2);
     auto const& b = domerge((s+e)/2, e);
@@ -57,10 +57,10 @@ void doit(int s, int e, const Distribution& dn) {
   if (s+1 == e) {
     if (s == Q) return;
     Distribution dy;
-    for (auto [x, y] : q[s]) dy.Add(XP[x] + YP[y]);
+    for (auto [x, y] : queries[s]) dy.Add(XP[x] + YP[y]);
     double tot = 0;
-    for (int i = 0; i <= q[s].size(); i++) tot += dy[i] * dn[T-i];
-    for (int i = 0; i <= q[s].size(); i++) {
+    for (int i = 0; i <= queries[s].size(); i++) tot += dy[i] * dn[T - i];
+    for (int i = 0; i <= queries[s].size(); i++) {
       printf("%.9lf ", dy[i] * dn[T-i] / tot);
     }
     printf("\n");
@@ -90,18 +90,18 @@ int main() {
     XP.resize(X); YP.resize(Y);
     for (auto& p : XP) cin >> p;
     for (auto& p : YP) cin >> p;
-    q.clear();
-    q.resize(Q+1);
+    queries.clear();
+    queries.resize(Q + 1);
     for (int i = 0; i < Q; i++) {
       int S;
       cin >> S;
       for (int j = 0; j < S; j++) {
         int x, y;
         cin >> x >> y;
-        q[i].emplace_back(x-1, y-1);
+        queries[i].emplace_back(x - 1, y - 1);
       }
     }
-    for (int x = 0; x < X; x++) for (int y = 0; y < Y; y++) q[Q].emplace_back(x, y);
+    for (int x = 0; x < X; x++) for (int y = 0; y < Y; y++) queries[Q].emplace_back(x, y);
     domerge(0, Q+1);
     doit(0, Q+1, Distribution());
   }
