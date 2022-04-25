@@ -4,7 +4,7 @@ using namespace std;
 #define EPS 1e-15
 
 struct Distribution {
-	vector<long double> v;
+	vector<double> v;
 	int base = 0, ignoredLB = 0, ignoredUB;
 
 	Distribution() : v{1.0},ignoredUB(1) {}
@@ -15,30 +15,29 @@ struct Distribution {
 		ignoredUB=v.size();
 	}
 
-	long double operator[](int i) const {//在管理的方格集合内有i个mine的概率
+	double operator[](int i) const {//在管理的方格集合内有i个mine的概率
 		if (i < base + ignoredLB) return 0.0;
 		if (i >= base + ignoredUB) return 0.0;
 		return v[i-base];
 	}
 
-	void Add(long double p) {
+	void Add(double p) {
 		v.push_back(0);
-		if(ignoredUB==v.size()-1)
-			ignoredUB=v.size();
-		auto trunc=[&](double vv){
-			return vv>EPS?vv:0;
-		};
-		for (int i = ignoredUB-1; i >= ignoredLB; i--)
-			v[i] = i>=1 ? (1 - p) * trunc(v[i]) + p * trunc(v[i - 1]) : (1-p)*trunc(v[i]);
+//		if(ignoredUB==v.size()-1)
+//			ignoredUB=v.size();
+		for (int i = min(int(v.size())-1,ignoredUB+2); i >= 0; i--)
+			v[i] = i>=1 ? (1 - p) * v[i] + p * v[i - 1] : (1-p)*v[i];
 //    v[ignoredLB] *= (1 - p);
 		//忽略掉尾部和头部的概率
 		while (ignoredLB<ignoredUB && v[ignoredLB] <= EPS) ignoredLB++;
-		while (ignoredUB>ignoredLB && v[ignoredUB-1] <= EPS) --ignoredUB;
+		while (ignoredUB>ignoredLB && v[ignoredUB-1] <= EPS)
+			--ignoredUB;
+		while (ignoredUB<v.size() && v[ignoredUB] > EPS) ++ignoredUB;
 	}
 };
 
 int X, Y, T, Q;
-vector<long double> XP, YP;
+vector<double> XP, YP;
 vector<vector<pair<int, int>>> queries;
 
 map<pair<int, int>, vector<pair<int, int>>> node;//queries[s,e)里的查询涉及的所有方格坐标
@@ -56,7 +55,7 @@ const vector<pair<int, int>>& domerge(int s, int e) {
 	v.erase(unique(v.begin(), v.end()), v.end());
 	return v;
 }
-long double tot = -1;
+double tot = -1;
 void doit(int s, int e, const Distribution& dn) {
 	if (s+1 == e) {
 		if (s == Q) return;
@@ -65,7 +64,7 @@ void doit(int s, int e, const Distribution& dn) {
 		if(tot==-1) {
 			tot=0;
 			for (int i = 0; i <= queries[s].size(); i++) {
-				long double tt = dy[i] * dn[T - i];
+				double tt = dy[i] * dn[T - i];
 				tot += tt;//有i个在前面的,T-i个在后面的
 			}
 			if(tot<=1e-5)
