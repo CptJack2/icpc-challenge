@@ -15,8 +15,9 @@ with open('data/my_ans') as fans:
             for i,j in zip(a,b):
                 col+=1
                 if(abs(i-j)>1e-6):
-                    print("failed, row: ",row," col: ",col)
-                    print(i)
-                    print(j)
+                    # print("failed, row: ",row," col: ",col)
+                    # print("ans: ",i)
+                    # print("correct: ",j)
+                    print("failed")
                     exit(0)
 print("succ")
