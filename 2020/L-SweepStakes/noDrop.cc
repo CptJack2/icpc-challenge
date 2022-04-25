@@ -25,14 +25,17 @@ struct Distribution {
 		v.push_back(0);
 //		if(ignoredUB==v.size()-1)
 //			ignoredUB=v.size();
-		for (int i = min(int(v.size())-1,ignoredUB+2); i >= 0; i--)
+//v'[UB]<ε  ==>  v[UB+1]=p*v'[UB]+(1-p)*v'[UB+1]<ε
+		ignoredUB=min(int(v.size()),ignoredUB+1);
+		for (int i = ignoredUB-1; i >= ignoredLB; i--)
 			v[i] = i>=1 ? (1 - p) * v[i] + p * v[i - 1] : (1-p)*v[i];
 //    v[ignoredLB] *= (1 - p);
 		//忽略掉尾部和头部的概率
 		while (ignoredLB<ignoredUB && v[ignoredLB] <= EPS) ignoredLB++;
-		while (ignoredUB>ignoredLB && v[ignoredUB-1] <= EPS)
+		while (ignoredLB<ignoredUB && v[ignoredUB-1] <= EPS)
+//			v.pop_back(),
 			--ignoredUB;
-		while (ignoredUB<v.size() && v[ignoredUB] > EPS) ++ignoredUB;
+//		while (ignoredUB<v.size() && v[ignoredUB] > EPS) ++ignoredUB;
 	}
 };
 
