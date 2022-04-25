@@ -23,19 +23,21 @@ struct Distribution {
 
 	void Add(double p) {
 		v.push_back(0);
-//		if(ignoredUB==v.size()-1)
-//			ignoredUB=v.size();
-//v'[UB]<ε  ==>  v[UB+1]=p*v'[UB]+(1-p)*v'[UB+1]<ε
+		//v'[UB]<ε  ==>  v[UB+1]=p*v'[UB]+(1-p)*v'[UB+1]<ε
 		ignoredUB=min(int(v.size()),ignoredUB+1);
-		for (int i = ignoredUB-1; i >= ignoredLB; i--)
-			v[i] = i>=1 ? (1 - p) * v[i] + p * v[i - 1] : (1-p)*v[i];
-//    v[ignoredLB] *= (1 - p);
+		for (int i = ignoredUB-1; i > ignoredLB; i--)
+//			v[i] = i>=1 ? (1 - p) * v[i] + p * v[i - 1] : (1-p)*v[i];  don't do condition in loop!
+			v[i] = (1 - p) * v[i] + p * v[i - 1];
+		/*if( __builtin_expect(ignoredLB>=1,1))
+			v[ignoredLB]=(1-p)*v[ignoredLB]+p*v[ignoredLB-1];
+		else
+	doesn't work either, still tle*/
+			v[ignoredLB]*=(1-p);
 		//忽略掉尾部和头部的概率
 		while (ignoredLB<ignoredUB && v[ignoredLB] <= EPS) ignoredLB++;
 		while (ignoredLB<ignoredUB && v[ignoredUB-1] <= EPS)
-//			v.pop_back(),
+//			v.pop_back(),  no need for this, memory allocation isn't the bottleneck
 			--ignoredUB;
-//		while (ignoredUB<v.size() && v[ignoredUB] > EPS) ++ignoredUB;
 	}
 };
 
