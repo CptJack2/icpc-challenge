@@ -9,26 +9,27 @@ using namespace std;
 
 struct Distribution {
   vector<double> v;
-  int base = 0, mn = 0;
+  int base = 0, ignoredLB = 0, ignoredUB = 0;
 
   Distribution() : v{1.0} {}
 
   Distribution(const Distribution& d) {
-    base = d.base + d.mn;
-    v.insert(v.begin(), d.v.begin()+d.mn, d.v.end());
+    base = d.base + d.ignoredLB;
+    v.insert(v.begin(), d.v.begin()+d.ignoredLB, d.v.end());
   }
 
-  double operator[](int i) const {
-    if (i < base+mn) return 0.0;
-    if (i-base >= v.size()) return 0.0;
+  double operator[](int i) const {//在管理的方格集合内有i个mine的概率
+    if (i < base + ignoredLB) return 0.0;
+    if (i >= base + v.size()) return 0.0;
     return v[i-base];
   }
 
   void Add(double p) {
     v.push_back(p * v.back());
-    for (int i = v.size()-2; i > mn; i--) v[i] = (1-p) * v[i] + p * v[i-1];
-    v[mn] *= (1-p);
-    while (v[mn] < EPS) mn++;
+    for (int i = v.size()-2; i > ignoredLB; i--) v[i] = (1 - p) * v[i] + p * v[i - 1];
+    v[ignoredLB] *= (1 - p);
+    //忽略掉尾部和头部的概率
+    while (v[ignoredLB] < EPS) ignoredLB++;
     while (v.back() < EPS) v.pop_back();
   }
 };
@@ -37,7 +38,7 @@ int X, Y, T, Q;
 vector<double> XP, YP;
 vector<vector<pair<int, int>>> queries;
 
-map<pair<int, int>, vector<pair<int, int>>> node;
+map<pair<int, int>, vector<pair<int, int>>> node;//queries[s,e)里的查询涉及的所有方格坐标
 const vector<pair<int, int>>& domerge(int s, int e) {
   auto& v = node[{s, e}];
   if (s+1 == e) {
