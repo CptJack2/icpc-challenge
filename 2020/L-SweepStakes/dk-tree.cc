@@ -53,14 +53,19 @@ const vector<pair<int, int>>& domerge(int s, int e) {
   v.erase(unique(v.begin(), v.end()), v.end());
   return v;
 }
-long double tot = 0;
+long double tot = -1;
 void doit(int s, int e, const Distribution& dn) {
   if (s+1 == e) {
     if (s == Q) return;
     Distribution dy;
     for (auto [x, y] : queries[s]) dy.Add(XP[x] + YP[y]);
-    if(tot==0)
-    	for (int i = 0; i <= queries[s].size(); i++) tot += dy[i] * dn[T - i];//有i个在前面的,T-i个在后面的
+    if(tot==-1) {
+    	tot=0;
+		for (int i = 0; i <= queries[s].size(); i++) tot += dy[i] * dn[T - i];//有i个在前面的,T-i个在后面的
+		if(tot<=1e-5)
+			cerr<<"total too small: "<<tot<<endl;
+    }
+
     for (int i = 0; i <= queries[s].size(); i++) {
 //      printf("%.9lf ", dy[i] * dn[T-i] / tot);
 		cout<<setprecision(9)<<dy[i] * dn[T-i] / tot<<" ";
@@ -90,6 +95,11 @@ void doit(int s, int e, const Distribution& dn) {
 }
 
 int main() {
+	/*
+./data/013_NM_SMALL_Q_SMALL_S_SMALL_P_LARGE_T_MAX.in
+./data/026_NM_LARGE_Q_HUGE_S_ANY_P_ONECOL1_T_MAX.in
+./data/027_NM_LARGE_Q_HUGE_S_ANY_P_ONEROW1_T_MAX.in
+	 */
   while (cin >> X >> Y >> T >> Q) {
     XP.resize(X); YP.resize(Y);
     for (auto& p : XP) cin >> p;
