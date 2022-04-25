@@ -3,4 +3,4 @@ project(untitled)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(SweepStakes 2020/L-SweepStakes/dk-tree.cc)
+add_executable(SweepStakes 2020/L-SweepStakes/main.cpp)
