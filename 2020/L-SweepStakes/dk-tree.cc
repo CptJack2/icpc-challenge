@@ -52,14 +52,14 @@ const vector<pair<int, int>>& domerge(int s, int e) {
   v.erase(unique(v.begin(), v.end()), v.end());
   return v;
 }
-
+double tot = 0;
 void doit(int s, int e, const Distribution& dn) {
   if (s+1 == e) {
     if (s == Q) return;
     Distribution dy;
     for (auto [x, y] : queries[s]) dy.Add(XP[x] + YP[y]);
-    double tot = 0;
-    for (int i = 0; i <= queries[s].size(); i++) tot += dy[i] * dn[T - i];
+    if(tot==0)
+    	for (int i = 0; i <= queries[s].size(); i++) tot += dy[i] * dn[T - i];//有i个在前面的,T-i个在后面的
     for (int i = 0; i <= queries[s].size(); i++) {
       printf("%.9lf ", dy[i] * dn[T-i] / tot);
     }
