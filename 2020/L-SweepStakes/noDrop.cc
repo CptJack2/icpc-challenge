@@ -41,7 +41,7 @@ struct Distribution {
 	}
 };
 
-int X, Y, T, Q;
+int m, n, t, q;
 vector<double> XP, YP;
 vector<vector<pair<int, int>>> queries;
 
@@ -60,27 +60,18 @@ const vector<pair<int, int>>& domerge(int s, int e) {
 	v.erase(unique(v.begin(), v.end()), v.end());
 	return v;
 }
-double tot = -1;
+double tot = 0;
 void doit(int s, int e, const Distribution& dn) {
 	if (s+1 == e) {
-		if (s == Q) return;
+		if (s == q) return;
 		Distribution dy;
 		for (auto [x, y] : queries[s]) dy.Add(XP[x] + YP[y]);
-		if(tot==-1) {
-			tot=0;
-			for (int i = 0; i <= queries[s].size(); i++) {
-				double tt = dy[i] * dn[T - i];
-				tot += tt;//有i个在前面的,T-i个在后面的
-			}
-			if(tot<=1e-5)
-				cerr<<"total too small: "<<tot<<endl;
-		}
-
-		for (int i = 0; i <= queries[s].size(); i++) {
-//      printf("%.9lf ", dy[i] * dn[T-i] / tot);
-			cout<<setprecision(9)<<dy[i] * dn[T-i] / tot<<" ";
-		}
-//    printf("\n");
+		//计算minefield内恰有t个地雷的概率
+		if(tot==0)
+			for (int i = 0; i <= queries[s].size(); i++)
+				tot += dy[i] * dn[t - i];//有i个在前面的,T-i个在后面的
+		for (int i = 0; i <= queries[s].size(); i++)
+			cout << setprecision(9) << dy[i] * dn[t - i] / tot << " ";
 		cout<<endl;
 		return;
 	}
@@ -105,29 +96,24 @@ void doit(int s, int e, const Distribution& dn) {
 }
 
 int main() {
-	/*
-./data/013_NM_SMALL_Q_SMALL_S_SMALL_P_LARGE_T_MAX.in
-./data/026_NM_LARGE_Q_HUGE_S_ANY_P_ONECOL1_T_MAX.in
-./data/027_NM_LARGE_Q_HUGE_S_ANY_P_ONEROW1_T_MAX.in
-	 */
-	while (cin >> X >> Y >> T >> Q) {
-		XP.resize(X); YP.resize(Y);
-		for (auto& p : XP) cin >> p;
-		for (auto& p : YP) cin >> p;
-		queries.clear();
-		queries.resize(Q + 1);
-		for (int i = 0; i < Q; i++) {
-			int S;
-			cin >> S;
-			for (int j = 0; j < S; j++) {
-				int x, y;
-				cin >> x >> y;
-				queries[i].emplace_back(x - 1, y - 1);
-			}
+	cin >> m >> n >> t >> q;
+	XP.resize(m);
+	YP.resize(n);
+	for (auto &p : XP) cin >> p;
+	for (auto &p : YP) cin >> p;
+	queries.clear();
+	queries.resize(q + 1);
+	for (int i = 0; i < q; i++) {
+		int S;
+		cin >> S;
+		for (int j = 0; j < S; j++) {
+			int x, y;
+			cin >> x >> y;
+			queries[i].emplace_back(x - 1, y - 1);
 		}
-		//需要一个全集来处理差异
-		for (int x = 0; x < X; x++) for (int y = 0; y < Y; y++) queries[Q].emplace_back(x, y);
-		domerge(0, Q+1);
-		doit(0, Q+1, Distribution());
 	}
+	//需要一个全集来处理差异
+	for (int x = 0; x < m; x++) for (int y = 0; y < n; y++) queries[q].emplace_back(x, y);
+	domerge(0, q + 1);
+	doit(0, q + 1, Distribution());
 }
