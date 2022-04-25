@@ -15,6 +15,7 @@ fi
 input=$(ls ./data/*.in)
 for inf in $input;do
   echo $inf
+  #if [[ $(ls -s $inf|awk '{print $1}') -gt 1000 ]];then continue; fi
   filename=$(basename -- "$inf")
   extension="${filename##*.}"
   ans_filename="${filename%.*}"".ans"

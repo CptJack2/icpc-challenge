@@ -57,7 +57,8 @@ void doit(int s, int e, const Distribution& dn) {
     for (auto [x, y] : queries[s]) dy.Add(XP[x] + YP[y]);
     if(tot==-1) {
     	tot=0;
-		for (int i = 0; i <= queries[s].size(); i++) tot += dy[i] * dn[T - i];//有i个在前面的,T-i个在后面的
+		for (int i = 0; i <= queries[s].size(); i++)
+			tot += dy[i] * dn[T - i];//有i个在前面的,T-i个在后面的
 		if(tot<=1e-5)
 			cerr<<"total too small: "<<tot<<endl;
     }
