@@ -71,7 +71,8 @@ void doit(int s, int e, const Distribution& dn) {
   auto const& a = node[{s, (s+e)/2}];
   auto const& b = node[{(s+e)/2, e}];
   for (int ai = 0, bi = 0; ai < a.size() || bi < b.size(); ) {
-    if (bi == b.size() || (ai < a.size() && a[ai] < b[bi])) {
+    //将a,b的差异部分加入到对方的distribution内
+  	if (bi == b.size() || (ai < a.size() && a[ai] < b[bi])) {
       dnb.Add(XP[a[ai].first] + YP[a[ai].second]);
       ai++;
     } else if (ai == a.size() || b[bi] < a[ai]) {
@@ -102,6 +103,7 @@ int main() {
         queries[i].emplace_back(x - 1, y - 1);
       }
     }
+    //需要一个全集来处理差异
     for (int x = 0; x < X; x++) for (int y = 0; y < Y; y++) queries[Q].emplace_back(x, y);
     domerge(0, Q+1);
     doit(0, Q+1, Distribution());
