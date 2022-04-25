@@ -3,7 +3,7 @@
 if [[ $1 == "case" ]];then
   inf="data/$2.in"
   cat $inf |./main > ./data/my_ans
-  ./calc.py $2
+  ./calc.py $2 detail
   exit
 fi
 

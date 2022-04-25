@@ -3,6 +3,9 @@ import pdb
 import sys
 
 fileName=str(sys.argv[1])
+detail=False
+if len(sys.argv)>=3:
+    detail=bool(sys.argv[2] == "detail")
 
 row=0
 with open('data/my_ans') as fans:
@@ -15,9 +18,11 @@ with open('data/my_ans') as fans:
             for i,j in zip(a,b):
                 col+=1
                 if(abs(i-j)>1e-6):
-                    # print("failed, row: ",row," col: ",col)
-                    # print("ans: ",i)
-                    # print("correct: ",j)
-                    print("failed")
-                    exit(0)
+                    if detail:
+                        print("failed, row: ",row," col: ",col)
+                        print("ans: ",i)
+                        print("correct: ",j)
+                    else:
+                        print("failed")
+                        exit(0)
 print("succ")
