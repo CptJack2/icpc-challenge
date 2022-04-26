@@ -16,8 +16,7 @@ struct ProbabilityCalc{
 		for(auto pi:cords){
 			double p=probRow[pi.first]+probCol[pi.second];
 			//prob'[UB]<ε  ==>  prob[UB+1] = p*prob'[UB] + (1-p)*prob'[UB+1] < ε
-			ignoredUB+=1;
-			ignoredUB=min(t+1,ignoredUB);//最多只能有t个雷,超过就不用算了
+			ignoredUB=min(t+1,ignoredUB+1);//最多只能有t个雷,超过就不用算了
 			for (int i = ignoredUB - 1; i > ignoredLB; --i) 
 				//多加一个格子,由于各格有地雷的概率独立,所以有i个mine的概率等于:前面的有i-1个mine,加上新格有1个;前面有i个,新格没有
 				prob[i] = (1-p)*prob[i]+p*prob[i-1];
