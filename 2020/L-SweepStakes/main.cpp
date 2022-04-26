@@ -105,7 +105,6 @@ int main(){
 			if(pTMinesInField==0)
 				for (int i = 0; i <= t; ++i)
 					pTMinesInField+=pInSet[i]*pNotInSet[t-i];
-			int aaaa=11111;
 			for (int i = 0; i <= pnode->cords.size(); ++i) {
 				//贝叶斯公式,已知雷场共有t个雷的情况下,要查询的格子里面有i个雷的概率,等于查询格子里面有i个的概率*全集减去查询集中有t-i个的概率/整个雷场有t个的概率
 				double pIMinesInQueryCords= pInSet[i] * pNotInSet[t-i] / pTMinesInField;
