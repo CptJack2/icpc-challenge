@@ -1,10 +1,11 @@
 #include "bits/stdc++.h"
 using namespace std;
 
-constexpr double epsilon=1e-12;
+constexpr double epsilon=1e-12;//误差界限,浮点数小于ε就当作0舍弃
 vector<double> probRow,probCol;
 int t;
 
+//计算坐标集合中有0-i个地雷的概率
 struct ProbabilityCalc{
 	vector<double> prob;//指定的格子集合中有0-i个地雷的概率
 	int base,//prob下标与实际地雷数的偏移(因为前面的概率太小直接忽略)
@@ -39,6 +40,7 @@ struct ProbabilityCalc{
 		ignoredUB=prob.size();
 	}
 
+	//获取集合中有i个雷的概率
 	double operator[](int i) const{
 		if(i<base+ignoredLB ||
 			i>=base+ignoredUB ||
@@ -48,6 +50,7 @@ struct ProbabilityCalc{
 	}
 };
 
+//查询树节点
 struct QueryNode{
 	QueryNode* left= nullptr, *right= nullptr;
 	set<pair<int,int>> cords;
