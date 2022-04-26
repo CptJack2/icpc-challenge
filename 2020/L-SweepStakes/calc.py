@@ -10,10 +10,12 @@ if len(sys.argv)>=3:
 row=0
 with open('data/my_ans') as fans:
     with open('data/'+fileName+'.ans') as fcor:
-        for al in fans:
+        for bl in fcor:
             row+=1
-            a=[float(x) for x in al.split()]
-            b=[float(x) for x in fcor.readline().split()]
+            a=[float(x) for x in fcor.readline().split()]
+            b=[float(x) for x in bl.split()]
+            if(len(a)!=len(b)):
+                print("failed, res len")
             col=0
             for i,j in zip(a,b):
                 col+=1
