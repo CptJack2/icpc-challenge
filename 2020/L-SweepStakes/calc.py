@@ -12,10 +12,11 @@ with open('data/my_ans') as fans:
     with open('data/'+fileName+'.ans') as fcor:
         for bl in fcor:
             row+=1
-            a=[float(x) for x in fcor.readline().split()]
+            a=[float(x) for x in fans.readline().split()]
             b=[float(x) for x in bl.split()]
             if(len(a)!=len(b)):
                 print("failed, res len")
+                exit(0)
             col=0
             for i,j in zip(a,b):
                 col+=1

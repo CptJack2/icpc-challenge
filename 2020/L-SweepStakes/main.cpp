@@ -12,18 +12,18 @@ struct ProbabilityCalc{
 	//向集合中添加cords里面的格子,更新集合中有0-i个地雷的概率
 	void calcProb(set<pair<int,int>> cords){
 		prob.resize(prob.size()+cords.size());
-		for(auto it=cords.begin();it!=cords.end();++it){
-			double p=probRow[it->first]+probCol[it->second];
+		for(auto pi:cords){
+			double p=probRow[pi.first]+probCol[pi.second];
 			//prob'[UB]<ε  ==>  prob[UB+1] = p*prob'[UB] + (1-p)*prob'[UB+1] < ε
 			ignoredUB+=1;
 			for (int i = ignoredUB - 1; i > ignoredLB; --i) 
-				//多加一个格子,由于各格有mine概率独立,所以有i个mine的概率等于:前面的有i-1个mine,加上新格有1个;前面有i个,新格没有
+				//多加一个格子,由于各格有地雷的概率独立,所以有i个mine的概率等于:前面的有i-1个mine,加上新格有1个;前面有i个,新格没有
 				prob[i] = (1-p)*prob[i]+p*prob[i-1];
 			prob[ignoredLB]*=(1-p);//循环里面不放if,这里由于ignoredLB前面的概率<ε,所以直接把它当作0
 			//收缩概率小于ε的边界,那些地方就不计算概率了
 			while(prob[ignoredLB]<epsilon)
 				++ignoredLB;
-			while(prob[ignoredUB]<epsilon)
+			while(prob[ignoredUB-1]<epsilon)
 				--ignoredUB;
 		}
 	}
@@ -55,11 +55,11 @@ struct QueryNode{
 int main(){
 	int m,n,t,q;
 	cin>>m>>n>>t>>q;
-	probRow.resize(m),
-	probCol.resize(n);
-	for (int i = 0; i <m ; ++i) 
+	probRow.resize(m+1),
+	probCol.resize(n+1);
+	for (int i = 1; i <=m ; ++i)
 		cin>>probRow[i];
-	for (int i = 0; i <n ; ++i)
+	for (int i = 1; i <=n ; ++i)
 		cin>>probCol[i];
 	vector<QueryNode> queries(q+1);//最后一个是所有m*n个格子的全集,来保证查询树根上一定是格子全集
 	for (int i = 0; i < q; ++i) {
@@ -68,31 +68,36 @@ int main(){
 		pair<int,int> cord;
 		for (int j = 0; j < s; ++j)
 			cin>>cord.first>>cord.second,
-			queries[i].cords.insert(cord),
-			queries.back().cords.insert(cord);
+			queries[i].cords.insert(cord);
 	}
+	//格子全集
+	for (int i = 1; i <=m ; ++i)
+		for (int j = 1; j <=n ; ++j)
+			queries.back().cords.emplace(i,j);
 	//聚合成二叉树
 	function<QueryNode*(int,int)> buildTree=[&](int s,int e)->QueryNode*{
-		QueryNode* ret=new QueryNode;
 		if(s+1==e){
 			return &queries[s];
 		}else{
+			QueryNode* ret=new QueryNode;
 			ret->left=buildTree(s,(s+e)/2);
 			ret->right=buildTree((s+e)/2,e);
 			for(auto p:ret->left->cords)
 				ret->cords.insert(p);
 			for(auto p:ret->right->cords)
 				ret->cords.insert(p);
+			return ret;
 		}
-		return ret;
 	};
 	auto root=buildTree(0,q+1);
 	//计算概率
 	double pTMinesInField=0;
+	int queryCount=0;
 	function<void(QueryNode*,const ProbabilityCalc&)>
 	calcProbability=[&](QueryNode* pnode,const ProbabilityCalc& pNotInSet){
 		if(pnode->left== nullptr && pnode->right==nullptr){//到达查询树的叶子
-			if(pnode->cords.size()==m*n)
+			++queryCount;
+			if(queryCount==q+1)
 				return;//辅助用的格子全集
 			ProbabilityCalc pInSet;
 			pInSet.calcProb(pnode->cords);
@@ -100,6 +105,7 @@ int main(){
 			if(pTMinesInField==0)
 				for (int i = 0; i <= t; ++i)
 					pTMinesInField+=pInSet[i]*pNotInSet[t-i];
+			int aaaa=11111;
 			for (int i = 0; i <= pnode->cords.size(); ++i) {
 				//贝叶斯公式,已知雷场共有t个雷的情况下,要查询的格子里面有i个雷的概率,等于查询格子里面有i个的概率*全集减去查询集中有t-i个的概率/整个雷场有t个的概率
 				double pIMinesInQueryCords= pInSet[i] * pNotInSet[t-i] / pTMinesInField;
@@ -122,7 +128,7 @@ int main(){
 			pRNotInSet.calcProb(rNotInSet);
 			calcProbability(pnode->right,pRNotInSet);
 		}
-		calcProbability(root,ProbabilityCalc());
 	};
+	calcProbability(root,ProbabilityCalc());
 	return 0;
 }
