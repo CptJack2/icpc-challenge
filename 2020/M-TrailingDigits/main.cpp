@@ -1,3 +1,4 @@
+/*解同余方程10^l*x+dddd...(l个)≡0(mod b)*/
 #include "bits/stdc++.h"
 using namespace std;
 
