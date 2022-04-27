@@ -21,14 +21,15 @@ int gcdEx(int a,int b,int*x,int*y)
 }
 
 //求解同余方程a*x≡m(mod b)
-int solveCongruenceEquation(int a,int b,int m){
+pair<int,int> solveCongruenceEquation(int a,int b,int m){//返回解和gcd(a,b)
 	int x,y;
 	int d= gcdEx(a,b,&x,&y);
 	//m不是gcd(a,b)的整数倍，方程无整数解
 	if(m/d!=(double)m/d)
-		return -1;
+		return {-1,-1};
 	//将x调整为正数
-	return (x*m/d%b+b)%b;
+	x=(x*m/d%b+b)%b;
+	return {x, d};
 }
 
 int main(){
@@ -69,14 +70,27 @@ int main(){
 				return true;
 		}
 	};
-	//求解同余方程10^l*x+ddd...≡0(mod b)，即ten2LMod[i]*x≡-dMod[i](mod b)
-	for (int i = l; i >=0 ; --i) {
-		int x= solveCongruenceEquation(ten2LMod[i],b,-dMod[i]);
-		if(d==0 && x==0)
-			continue;
-		if(x!=-1 && leA(x,i)) {
-			cout << i;
-			return 0;
+	int ans=0,iLB=0,lenb=0,tb=b;
+	while(tb)++lenb,tb/=10;//计算b的长度
+	for (int i = l; i >= iLB ; --i) {
+		//求解同余方程10^l*x+ddd...≡0(mod b)，即ten2LMod[i]*x≡-dMod[i](mod b)
+		auto [x,gcd]= solveCongruenceEquation(ten2LMod[i],b,-dMod[i]);
+		if(x==-1)continue;
+		//0不能做数字开头
+		if(x==0)x+=b/gcd;
+		while(x<=b) {//x+k*b/gcd都是方程的解
+			if (leA(x, i)) {
+				//让后缀尽量长
+				int cnt=0,tx=x;
+				while (tx && tx % 10 == d)
+					++cnt, tx /= 10;
+				ans=max(ans,i+cnt);
+				iLB= max(i - lenb,0);//再往后算lenb个,能保证长度一定不超过现在的
+			}else
+				break;
+			x+=b/gcd;
 		}
 	}
+	cout<<ans;
+	return 0;
 }
