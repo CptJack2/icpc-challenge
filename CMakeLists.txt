@@ -3,4 +3,4 @@ project(untitled)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(SweepStakes 2020/L-SweepStakes/main.cpp)
+add_executable(TrailingDigits 2020/M-TrailingDigits/main.cpp)
