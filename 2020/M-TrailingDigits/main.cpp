@@ -27,9 +27,10 @@ pair<int,int> solveCongruenceEquation(int a,int b,int m){//返回解和gcd(a,b)
 	//m不是gcd(a,b)的整数倍，方程无整数解
 	if(m/d!=(double)m/d)
 		return {-1,-1};
-	//将x调整为正数
-	x=(x*m/d%b+b)%b;
-	return {x, d};
+	//将x调整为正数,并且小于b/gcd(a,b)
+	long ret;
+	ret=((long)x*m/d%b+b)%(b/d);
+	return {ret, d};
 }
 
 int main(){
