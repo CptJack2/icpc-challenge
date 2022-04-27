@@ -72,7 +72,9 @@ int main(){
 	//求解同余方程10^l*x+ddd...≡0(mod b)，即ten2LMod[i]*x≡-dMod[i](mod b)
 	for (int i = l; i >=0 ; --i) {
 		int x= solveCongruenceEquation(ten2LMod[i],b,-dMod[i]);
-		if(leA(x,i)) {
+		if(d==0 && x==0)
+			continue;
+		if(x!=-1 && leA(x,i)) {
 			cout << i;
 			return 0;
 		}

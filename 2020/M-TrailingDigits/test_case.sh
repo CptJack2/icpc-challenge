@@ -34,7 +34,6 @@ for inf in $input;do
     echo "failed"
     echo "correct " $correct
     echo "ans " $ans
-    diff ./data/$ans_filename ./data/my_ans
     exit
   else
     echo "succ"
