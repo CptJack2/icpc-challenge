@@ -27,9 +27,8 @@ int solveCongruenceEquation(int a,int b,int m){
 	//m不是gcd(a,b)的整数倍，方程无整数解
 	if(m/d!=(double)m/d)
 		return -1;
-	int t=(a*b/d);
 	//将x调整为正数
-	return (x*m/d%t+t)%t;
+	return (x*m/d%b+b)%b;
 }
 
 int main(){
