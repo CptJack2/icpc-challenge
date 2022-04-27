@@ -35,7 +35,7 @@ int main(){
 	int b,d;
 	vector<int>a;
 	cin>>b>>d;
-	while (!cin.eof()){
+	while (!cin.eof() && cin.peek()!='\n'){
 		char c;
 		cin>>c;
 		a.push_back(c-'0');
@@ -54,17 +54,18 @@ int main(){
 		while(m)
 			mm.push_back(m%10),
 			m/=10;
+		reverse(mm.begin(),mm.end());
 		if(l+mm.size()>a.size())
 			return false;
 		if(l+mm.size()<a.size())
 			return true;
-		for(int i=a.size()-1;i>=0;--i) {
-			int di=i>=l?mm[i-l]:d;
-			if (a[i] > d)
+		for(int i=0;i<a.size();++i) {
+			int di=i<mm.size()?mm[i]:d;
+			if (a[i] > di)
 				return true;
-			if(a[i]<d)
+			if(a[i]<di)
 				return false;
-			if(i==0)
+			if(i==a.size()-1)
 				return true;
 		}
 	};
