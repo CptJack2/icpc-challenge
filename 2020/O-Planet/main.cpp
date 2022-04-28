@@ -22,8 +22,9 @@ int main(){
 		for(int i=0;i<n;++i) {
 			double lo, la;
 			cin >> la >> lo;
-			pMap[i].latitude = int(la*scale);//(int(la*scale) + 90*scale) % (180*scale);
-			pMap[i].longitude = int(lo*scale);//(int(lo*scale) + 180*scale);// % (360*scale);
+			auto toInt=[&](double f){return floor(f*scale+0.5);};//double stores in binary, error exists when converts to decimal
+			pMap[i].latitude = toInt(la);//(int(la*scale) + 90*scale) % (180*scale);
+			pMap[i].longitude = toInt(lo);//(int(lo*scale) + 180*scale);// % (360*scale);
 		}
 	};
 	readMap(map1);
