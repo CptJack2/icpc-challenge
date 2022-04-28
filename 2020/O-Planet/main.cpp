@@ -63,8 +63,7 @@ int main(){
 			met=0;
 		if(met>=n) {
 			cout << "Same";
-			break;
-//			return 0;
+			return 0;
 		}
 	}
 	cout<<"Different";
