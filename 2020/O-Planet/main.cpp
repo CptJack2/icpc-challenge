@@ -1,73 +1,67 @@
 #include <bits/stdc++.h>
-
 using namespace std;
 
-using ll = long long;
-using pii = pair<int, int>;
-using vi = vector<int>;
-using vll = vector<ll>;
+struct Point{
+	int longitude;//(0,360)
+	int latitude;//(0,180)
+	int deltaLongitude;//difference of longitude between this point and previous
+};
 
-static constexpr int SCALE = 10000;
-
-static int load_coord()
-{
-	double x;
-	cin >> x;
-	return int(round(x * SCALE));
+bool operator==(const Point& a, const Point& b){
+	return a.deltaLongitude==b.longitude && a.latitude==b.latitude;
 }
 
-static vll load_map(int N)
-{
-	vector<pii> points;
-	for (int i = 0; i < N; i++)
-	{
-		int lat = load_coord();
-		int lon = load_coord();
-		points.emplace_back(lon, lat);
-	}
-	sort(points.begin(), points.end());
-	vll out(N);
-	ll plon = points.back().first - 360 * SCALE;
-	for (int i = 0; i < N; i++)
-	{
-		out[i] = (points[i].first - plon) * 1000000000LL + points[i].second;
-		plon = points[i].first;
-	}
-	return out;
-}
+constexpr int scale=10000;
 
-int main()
-{
-	ios::sync_with_stdio(false);
-	int N;
-	cin >> N;
-	vll map1 = load_map(N);
-	vll map2 = load_map(N);
-	vi fail(N + 1);
-	fail[0] = -1;
-	for (int i = 1; i <= N; i++)
-	{
-		ll s = map1[i - 1];
-		int f = fail[i - 1];
-		while (f >= 0 && map1[f] != s)
-			f = fail[f];
-		fail[i] = f + 1;
+int main(){
+	//read in data
+	int n;
+	cin>>n;
+	vector<Point> map1(n+1),map2(n+1);
+	auto readMap=[&](vector<Point>& pMap){
+		for(int i=1;i<=n;++i) {
+			double lo, la;
+			cin >> la >> lo;
+			pMap[i].latitude = (int(la*scale) + 90*scale) % (180*scale);
+			pMap[i].longitude = (int(lo*scale) + 180*scale) % (360*scale);
+		}
+	};
+	readMap(map1);
+	readMap(map2);
+	//sort according to (longitude, latitude)
+	auto cmp=[&](const Point& a, const Point& b){
+		return a.longitude<b.longitude || a.longitude==b.longitude && a.latitude<b.latitude;
+	};
+	sort(map1.begin(),map1.end(),cmp);
+	sort(map2.begin(),map2.end(),cmp);
+	//compute delta longitude
+	map1[1].deltaLongitude-=map1.back().longitude+360*scale;
+	map2[1].deltaLongitude-=map2.back().longitude+360*scale;
+	for(int i=2;i<=n;++i)
+		map1[i].deltaLongitude=map1[i].longitude-map1[i-1].longitude,
+		map2[i].deltaLongitude=map2[i].longitude-map2[i-1].longitude;
+	//build fail link
+	vector<int> fail(n+1,0);//[0] is fake root
+	fail[0]=0;
+	for(int i=1;i<=n;++i){
+		int fPar=fail[i-1];
+		auto po=map1[i];
+		while( fPar!=0 && !(map1[fPar+1]==po) )
+			fPar=fail[fPar];
+		fail[i]= fPar!=0 ? fPar+1 : 0 ;
 	}
-
-	int m = 0;
-	for (int i = 0; i < 2 * N; i++)
-	{
-		ll s = map2[(i >= N) ? i - N : i];
-		while (m >= 0 && map1[m] != s)
-			m = fail[m];
-		m++;
-		if (m == N)
-		{
-			cout << "Same\n";
+	//use fail link to accelerate comparison
+	int met=1;
+	//spin the globe 2 rounds, if still no match point found, the 2 maps are different
+	for(int i=1;i<=2*n;++i){
+		while(!(map2[i]==map1[met]))
+			met=fail[met];
+		++met;
+		if(met>n) {
+			cout << "Same";
 			return 0;
 		}
 	}
-
-	cout << "Different\n";
+	cout<<"Different";
 	return 0;
 }
