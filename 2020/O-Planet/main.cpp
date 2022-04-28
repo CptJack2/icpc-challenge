@@ -8,7 +8,7 @@ struct Point{
 };
 
 bool operator==(const Point& a, const Point& b){
-	return a.deltaLongitude==b.longitude && a.latitude==b.latitude;
+	return a.deltaLongitude==b.deltaLongitude && a.latitude==b.latitude;
 }
 
 constexpr int scale=10000;//at most four digit after decimal point, transfer float to int by multiplying
@@ -55,8 +55,13 @@ int main(){
 	int met=0;
 	//spin the globe 2 rounds, if still no match point found, the 2 maps are different
 	for(int i=0;i<=2*n-2;++i){
-		while(!(map2[i%n]==map1[met]) && getFail(met-1)!=-1)
-			met=getFail(met-1)+1;
+		while(!(map2[i%n]==map1[met])) {
+			met=getFail(met - 1);
+			if(met==-1)
+				break;
+			else
+				++met;
+		}
 		if(met!=-1)
 			++met;
 		else
