@@ -73,8 +73,10 @@ int main() {
 		}
 
 		Point ret(D);
+		//选择一个随机坐标,投影到超平面上
 		for (int i = 0; i < D; i++) ret.c[i] = rand()%1000000 + 1000000;
 		for (auto const& v : comp) ret = ret - v * ret.dot(v);
+		//如果comp中的向量组成了空间的一个基,上面的操作后,ret必为0,同时sc代表的圆心就是唯一答案;否则取sc为圆心的圆上任意一点输出即可
 		ret = ret.len() < EPS ? sc : sc - ret * (sr / ret.len());
 		for (int i = 0; i < D; i++) {
 			if (i) putchar(' ');
