@@ -3,4 +3,4 @@ project(untitled)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(Vector 2020/N-Vector/main.cpp)
+add_executable(Vector 2020/N-Vector/dk-modified.cpp)
