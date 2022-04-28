@@ -37,7 +37,7 @@ int main(){
 	//compute delta longitude
 	map1[0].deltaLongitude=map1[0].longitude-map1.back().longitude+360*scale;
 	map2[0].deltaLongitude=map2[0].longitude-map2.back().longitude+360*scale;
-	for(int i=1;i<=n;++i)
+	for(int i=1;i<n;++i)
 		map1[i].deltaLongitude=map1[i].longitude-map1[i-1].longitude,
 		map2[i].deltaLongitude=map2[i].longitude-map2[i-1].longitude;
 	//build fail link
@@ -62,10 +62,10 @@ int main(){
 		else
 			met=0;
 		if(met>=n) {
-			cout << "Same";
+			cout << "Same"<<endl;
 			return 0;
 		}
 	}
-	cout<<"Different";
+	cout<<"Different"<<endl;
 	return 0;
 }
