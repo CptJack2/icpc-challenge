@@ -62,13 +62,12 @@ int main(){
 		if(fPar!=-1)
 			fail[i]= fPar+1;
 	}
-	auto getFail=[&](int i){return i!=-1 ? fail[i] : -1 ;};
 	//use fail link to accelerate comparison
 	int indexHasMatchInMap2=-1;
 	//spin the globe 2 rounds, if still no match point found, the 2 maps are different
 	for(int i=0;i<=2*n-2;++i){
 		while(!(map2[i%n]==map1[indexHasMatchInMap2 + 1])) {
-			indexHasMatchInMap2=fail[indexHasMatchInMap2];//getFail(met - 1);
+			indexHasMatchInMap2=fail[indexHasMatchInMap2];
 			if(indexHasMatchInMap2 == -1 && !(map2[i % n] == map1[indexHasMatchInMap2 + 1])){
 				indexHasMatchInMap2=-2;
 				break;

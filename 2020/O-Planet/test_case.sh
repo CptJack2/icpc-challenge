@@ -34,7 +34,7 @@ for inf in $input;do
     echo "failed"
     echo "correct " $correct
     echo "ans " $ans
-    #exit
+    exit
   else
     echo "succ"
   fi
