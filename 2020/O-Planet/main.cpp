@@ -5,10 +5,11 @@ struct Point{
 	int latitude;//(-90,90)
 	int longitude;//(0,360)
 	int deltaLongitude;//difference of longitude between this point and previous
+	int prevLatitude;
 };
 
 bool operator==(const Point& a, const Point& b){
-	return a.deltaLongitude==b.deltaLongitude && a.latitude==b.latitude;
+	return a.deltaLongitude==b.deltaLongitude && a.latitude==b.latitude && a.prevLatitude==b.prevLatitude;
 }
 
 constexpr int scale=10000;//at most four digit after decimal point, transfer float to int by multiplying
@@ -38,36 +39,43 @@ int main(){
 	//compute delta longitude
 	map1[0].deltaLongitude=map1[0].longitude-map1.back().longitude+360*scale;
 	map2[0].deltaLongitude=map2[0].longitude-map2.back().longitude+360*scale;
+	map1[0].prevLatitude=map1.back().latitude;
+	map2[0].prevLatitude=map2.back().latitude;
 	for(int i=1;i<n;++i)
 		map1[i].deltaLongitude=map1[i].longitude-map1[i-1].longitude,
-		map2[i].deltaLongitude=map2[i].longitude-map2[i-1].longitude;
+		map2[i].deltaLongitude=map2[i].longitude-map2[i-1].longitude,
+		map1[i].prevLatitude=map1[i-1].latitude,
+		map2[i].prevLatitude=map2[i-1].latitude;
 	//build fail link
-	vector<int> fail(n,0);//use -1 as a fake root
+	vector<int> fail(n);//use -1 as a fake root
 	fail[0]=-1;
 	for(int i=1;i<n;++i){
 		int fPar=fail[i-1];
-		const auto& pnt=map1[i];
-		while( fPar!=-1 && !(map1[fPar+1] == pnt) )
-			fPar=fail[fPar];
-		fail[i]= fPar!=-1 ? fPar+1 : -1 ;
+		while(!(map1[fPar+1] == map1[i])) {
+			fPar = fail[fPar];
+			if(fPar==-1) {
+				if (map1[0] == map1[i]) fail[i] = 0;
+				else fail[i] = -1;
+				break;
+			}
+		}
+		if(fPar!=-1)
+			fail[i]= fPar+1;
 	}
 	auto getFail=[&](int i){return i!=-1 ? fail[i] : -1 ;};
 	//use fail link to accelerate comparison
-	int met=0;
+	int met=-1;
 	//spin the globe 2 rounds, if still no match point found, the 2 maps are different
 	for(int i=0;i<=2*n-2;++i){
-		while(!(map2[i%n]==map1[met])) {
-			met=getFail(met - 1);
-			if(met==-1)
+		while(!(map2[i%n]==map1[met+1])) {
+			met=fail[met];//getFail(met - 1);
+			if(met==-1 && !(map2[i%n]==map1[met+1])){
+				met=-2;
 				break;
-			else
-				++met;
+			}
 		}
-		if(met!=-1)
-			++met;
-		else
-			met=0;
-		if(met>=n) {
+		++met;
+		if(met>=n-1) {
 			cout << "Same"<<endl;
 			return 0;
 		}
