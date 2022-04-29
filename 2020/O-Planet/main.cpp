@@ -52,30 +52,30 @@ int main(){
 	for(int i=1;i<n;++i){
 		int fPar=fail[i-1];
 		while(!(map1[fPar+1] == map1[i])) {
-			fPar = fail[fPar];
 			if(fPar==-1) {
 				if (map1[0] == map1[i]) fail[i] = 0;
 				else fail[i] = -1;
 				break;
 			}
+			fPar = fail[fPar];
 		}
 		if(fPar!=-1)
 			fail[i]= fPar+1;
 	}
 	auto getFail=[&](int i){return i!=-1 ? fail[i] : -1 ;};
 	//use fail link to accelerate comparison
-	int met=-1;
+	int indexHasMatchInMap2=-1;
 	//spin the globe 2 rounds, if still no match point found, the 2 maps are different
 	for(int i=0;i<=2*n-2;++i){
-		while(!(map2[i%n]==map1[met+1])) {
-			met=fail[met];//getFail(met - 1);
-			if(met==-1 && !(map2[i%n]==map1[met+1])){
-				met=-2;
+		while(!(map2[i%n]==map1[indexHasMatchInMap2 + 1])) {
+			indexHasMatchInMap2=fail[indexHasMatchInMap2];//getFail(met - 1);
+			if(indexHasMatchInMap2 == -1 && !(map2[i % n] == map1[indexHasMatchInMap2 + 1])){
+				indexHasMatchInMap2=-2;
 				break;
 			}
 		}
-		++met;
-		if(met>=n-1) {
+		++indexHasMatchInMap2;
+		if(indexHasMatchInMap2 >= n - 1) {
 			cout << "Same"<<endl;
 			return 0;
 		}
