@@ -19,7 +19,7 @@ pair<int, vector<int>> dfs(int x, int prev) {
 		signCost += C * graph[x].size();
 	//compute the cost of changing intersection speed to the speed in allUniqueSpeed
 	vector<int> costAtSpeed;
-	for (auto [y, speed] : graph[x])
+	for (auto [y, _ ] : graph[x])
 		if (y != prev) {
 			//compute the result of all the subtree first
 			auto [bestCostOfSubTree, costAtSpeedOfSubTree] = dfs(y, x);
@@ -28,21 +28,19 @@ pair<int, vector<int>> dfs(int x, int prev) {
 			//update the cost of increasing the intersection speed to allUniqueSpeed[i]
 			if (costAtSpeed.empty()) costAtSpeed.resize(allUniqueSpeed.size());
 			for (int i = 0; i < allUniqueSpeed.size(); i++)
-				costAtSpeed[i] +=
-					costAtSpeedOfSubTree[i];//if we tried to increase the speed to allUniqueSpeed[i], we should use the cost at allUniqueSpeed[i] for every subtree
-					//+ allUniqueSpeed[i] - speed;//plus the cost of increasing the speed of the street leading to y. it doesn't matter if allUniqueSpeed[i] < subtree speed, it will be filtered in line 39
+                //if we tried to increase the speed to allUniqueSpeed[i], we should use the cost at allUniqueSpeed[i] for every subtree
+			    costAtSpeed[i] += costAtSpeedOfSubTree[i];
 		}
 	if (costAtSpeed.empty()) costAtSpeed.resize(allUniqueSpeed.size());
 	//compare cost at each speed and cost of putting sign, to find the best cost
 	int bestCost = signCost;
 	for (int i = 0; i < allUniqueSpeed.size(); i++) {
 		if (allUniqueSpeed[i] >= maxSpeed) {
-			//cost of increasing the whole subtree rooted from x to allUniqueSpeed[i] should include the cost of increasing speed of entering x, now it's finally complete
-			//if this is a subtree, the cost of the entering tree is needed to be considered, cause we can find a best speed for the subtree, and put sign on its parent
+			//cost of increasing the whole subtree‘s speed rooted from x to allUniqueSpeed[i] should include the cost of increasing speed of entering x, now it's finally complete
             costAtSpeed[i] += (prev ? allUniqueSpeed[i] - parentSpeed : 0);
+            //if this is a subtree, the cost of the entering tree is needed to be considered, cause we can find a best speed for the subtree, and put sign on its parent
 			bestCost = min(bestCost, costAtSpeed[i]);
-			//if putting sign is cheaper at this speed, should make it the better choice for cost at this speed
-			//note that it doesn't consider the influence of the street entering x, so allUniqueSpeed[i] - parentSpeed shouldn't be included
+			//if putting sign is cheaper at this speed, make it the better choice for cost at this speed. the street entering x should be considered too
 			costAtSpeed[i] = min(costAtSpeed[i], signCost + (prev ? allUniqueSpeed[i] - parentSpeed : 0) );
 		} else
 			//decreasing speed is not allowed, so putting sign is the only choice
