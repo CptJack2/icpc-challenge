@@ -1,5 +1,6 @@
 #ICPC World Final 2020完全题解
 最近刚好赋闲在家，花了一个月的时间刷完了WF2020的题目，今年的题目质量也很高，不少题涉及到了计算几何和数论的知识，做起来挺有趣的。
+我的代码可以在这个链接https://github.com/CptJack2/icpc-challenge/tree/master/2020  找到，都有详细的注释，方便阅读。
 在这个链接https://icpc.global/worldfinals/problems/2020+ACM-ICPC+World+Finals/icpc2020data.zip
 可以找到20年的题目测试数据，以及裁判的代码。解答视频也可以在Youtube上找到。
 接下来正式开始我的题解。
