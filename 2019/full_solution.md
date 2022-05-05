@@ -66,7 +66,7 @@ ICPC官网，有问题描述、解析、测试数据下载         https://icpc.
 
 #F Directing Rainfall
 这个单独写过一篇，链接如下。
-https://zhuanlan.zhihu.com/p/465894918
+https://zhuanlan.zhihu.com/p/458367433
 
 #G First of Her Name
 #题目大意
@@ -89,7 +89,7 @@ https://zhuanlan.zhihu.com/p/463659649
 
 #I Karel the Robot
 单独有过一篇题解。
-https://zhuanlan.zhihu.com/p/458367433
+https://zhuanlan.zhihu.com/p/465894918
 
 #J Mininature Golf
 ##题目大意
