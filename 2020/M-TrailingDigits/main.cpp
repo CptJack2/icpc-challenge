@@ -80,17 +80,15 @@ int main(){
 		if(x==-1)continue;
 		//0不能做数字开头
 		if(x==0)x+=b/gcd;
-		while(x<=b) {//x+k*b/gcd都是方程的解
-			if (leA(x, i)) {
-				//让后缀尽量长
-				int cnt=0,tx=x;
-				while (tx && tx % 10 == d)
-					++cnt, tx /= 10;
-				ans=max(ans,i+cnt);
-				iLB= max(i - lenb,0);//再往后算lenb个,能保证长度一定不超过现在的
-			}else
-				break;
-			x+=b/gcd;
+		int tenTolx=pow(10,log10(x)+1);
+		while(leA(x, i) && x<tenTolx) {//x+k*b/gcd都是方程的解
+            //让后缀尽量长
+            int cnt = 0, tx = x;
+            while (tx && tx % 10 == d)
+                ++cnt, tx /= 10;
+            ans = max(ans, i + cnt);
+            iLB = max(i - lenb, 0);//再往后算lenb个,能保证长度一定不超过现在的
+            x+=b/gcd;
 		}
 	}
 	cout<<ans;
