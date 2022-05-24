@@ -11,6 +11,9 @@
 系统可能出错 -> 需要容错(fault tolerance) -> 需要复制数据,存储副本(replication) -> 副本数据不一致(inconsistent)
 
 #redis cluster
+redis cluster简介 https://redis.io/docs/manual/scaling/
+redis cluster详细设计 https://redis.io/docs/reference/cluster-spec/#write-safety
+
 redis cluster如何处理脑裂问题？
 redis对每个master node都有timeout，如果sentinel在timeout过后仍然联系不上master，就会对它的slave进行promote，同时，master如果发现在timeout的时间后仍联系不上majority，就会停止对客户端的写操作进行服务。
 
