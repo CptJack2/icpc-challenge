@@ -64,6 +64,7 @@ rm -rf ~/.kube /etc/kubernetes
 service kubelet stop
 
 #kubeadm命令行
+他妈的用这个命令行,不要用下面--config的那个
 kubeadm init --pod-network-cidr 172.16.0.0/16
 kubectl apply -f https://raw.githubusercontent.com/coreos/flannel/master/Documentation/kube-flannel.yml
 
