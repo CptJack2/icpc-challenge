@@ -9,3 +9,4 @@ docker run -d -v $(pwd)/redis.conf:/etc/redis/redis.conf redis:7.0 redis-server 
 查看新建的redis容器ip
 docker ps -a|grep redis
 docker inspect $id |grep "IPAddress"
+docker inspect --format='{{.NetworkSettings.IPAddress}}' $id
