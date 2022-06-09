@@ -37,6 +37,16 @@ redis-cli -c -h 172.17.0.7
 
 #查看cluster node
 直接在redis-cli里输入命令cluster node
+输出列含义
+Node ID
+ip:port
+flags: master, replica, myself, fail, ...
+if it is a replica, the Node ID of the master
+Time of the last pending PING still waiting for a reply.
+Time of the last PONG received.
+Configuration epoch for this node (see the Cluster specification).
+Status of the link to this node.
+Slots served...
 
 This second port(16379) is used for the cluster bus, which is a node-to-node communication channel using a binary protocol. The cluster bus is used by nodes for failure detection, configuration update, failover authorization, and so forth.
 
@@ -48,6 +58,16 @@ redis-cli --cluster reshard 172.17.0.7:6379 ,然后根据提示操作
 或者使用
 redis-cli --cluster reshard <host>:<port> --cluster-from <node-id> --cluster-to <node-id> --cluster-slots <number of slots> --cluster-yes
 
+#手动failover,强制让一个slave推翻它的master
+redis-cli -c -h <slave-ip>
+cluster failover
+查看cluster
+cluster nodes
+发现slave成了master,原来的master重启了,node id也变了,成了slave
+这个命令的详细文档https://redis.io/commands/cluster-failover/
+有force和takeover选项,真像种植园奴隶起义
+
+#往集群添加节点
 
 
 
