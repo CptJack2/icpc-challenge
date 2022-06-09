@@ -26,6 +26,12 @@ done
 创建redis cluster命令行
 redis-cli --cluster create 172.17.0.7:6379 172.17.0.6:6379 172.17.0.5:6379 172.17.0.4:6379 172.17.0.3:6379 172.17.0.2:6379 --cluster-replicas 1
 
+redis-cli通过集群模式连接,-h跟其中一个集群ip即可
+redis-cli -c -h 172.17.0.7
+
+在任意一台机器上get/set，会先把cli redirect到处理这个key的hash slot的机器，然后再进行操作。这时如果通过redis-cli普通模式连上处理那个slot的ip，也是能获取到数据的。
+如果在cli中select（更改数据库）会报(error) ERR SELECT is not allowed in cluster mode（无论redis-cli启动是否加-c)
+
 
 
 
