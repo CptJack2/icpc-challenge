@@ -26,8 +26,12 @@ for id in $(docker ps -a|grep redis|awk '{print $1}');do
     docker inspect --format='{{.NetworkSettings.IPAddress}}' $id
 done
 
+for i in {1..6};do docker run -d -v $(pwd)/redis.conf:/etc/redis/redis.conf redis:7.0 redis-server /etc/redis/redis.conf;done
+
 #创建redis cluster命令行
 redis-cli --cluster create 172.17.0.7:6379 172.17.0.6:6379 172.17.0.5:6379 172.17.0.4:6379 172.17.0.3:6379 172.17.0.2:6379 --cluster-replicas 1
+
+
 
 #redis-cli通过集群模式连接,-h跟其中一个集群ip即可
 redis-cli -c -h 172.17.0.7
@@ -47,6 +51,9 @@ Time of the last PONG received.
 Configuration epoch for this node (see the Cluster specification).
 Status of the link to this node.
 Slots served...
+
+或者
+redis-cli -c -h 172.17.0.3 cluster nodes
 
 This second port(16379) is used for the cluster bus, which is a node-to-node communication channel using a binary protocol. The cluster bus is used by nodes for failure detection, configuration update, failover authorization, and so forth.
 
@@ -68,10 +75,19 @@ cluster nodes
 有force和takeover选项,真像种植园奴隶起义
 
 #往集群添加节点
+作为master
+redis-cli --cluster add-node 172.17.0.8:6379 172.17.0.3:6379
+作为slave
+redis-cli --cluster add-node 127.0.0.1:7006 127.0.0.1:7000 --cluster-slave --cluster-master-id 3c3a0c74aae0b56170ccb03a76b60cfe7dc1912e
 
+#删除
+redis-cli --cluster del-node 172.17.0.3:6379 2f8dc4905078898d194323b9faa824061a90bdf9
 
-
-
+#从slave中读数据
+redis-cli -c -h <slave-ip>
+readonly 表明操作只读
+get <key> 读取数据
+readwrite 取消只读
 
 
 
