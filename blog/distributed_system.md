@@ -29,3 +29,6 @@ chunk server持有块信息由master启动时向各chunk server查询
 
 ×为什么不保存文件版本号而是块版本号？
 gfs论文中，consistent指内容一致（和其他分布式指的一致不一样），defined指内容和内容的顺序都一致（因为有append追加操作，并发append顺序不一定一致）
+
+#raftdis
+论文 https://www.usenix.org/system/files/conference/atc14/atc14-paper-ongaro.pdf
