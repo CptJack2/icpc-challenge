@@ -90,6 +90,17 @@ for id in $(docker ps -a|grep redis|awk '{print $1}');do
     redis-cli -c -h $ip cluster forget <node id>
 done
 
+这里redis cluster的开发就不太好了,各节点持有的集群元数据不一致,在一个节点上恢复了集群状态,在gossip的时候又被打乱了.
+
+#node加入cluster原理
+https://redis.io/commands/cluster-meet/
+```
+So in order for a given node to accept another one into the list of nodes composing a Redis Cluster, there are only two ways:
+
+1.The system administrator sends a CLUSTER MEET command to force a node to meet another one.
+2.An already known node sends a list of nodes in the gossip section that we are not aware of. If the receiving node trusts the sending node as a known node, it will process the gossip section and send a handshake to the nodes that are still not known.
+```
+
 #从slave中读数据
 redis-cli -c -h <slave-ip>
 readonly 表明操作只读
@@ -108,9 +119,12 @@ cluster nodes查看挂掉的node
 
 cluster forget <node-id>删除node
 
+需要对每个节点都进行forget node，否则node配置会通过gossip再加回来
 for id in $(docker ps -a|grep redis|awk '{print $1}');do
     ip=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' $id)
+    echo $ip
     ./redis-cli -c -h $ip cluster forget 1302b48cc038cfa954d7ee3acb77d53880099bd6
+    echo
 done
 
 注意:需要在每个master里面执行,不然后面这些forget的信息又会回来;这时候如果登录上slave,会发现删掉的node信息还在
