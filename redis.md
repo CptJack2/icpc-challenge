@@ -23,6 +23,7 @@ appendonly yes
 ```
 
 for id in $(docker ps -a|grep redis|awk '{print $1}');do
+    echo $id
     docker inspect --format='{{.NetworkSettings.IPAddress}}' $id
 done
 
@@ -82,6 +83,12 @@ redis-cli --cluster add-node 127.0.0.1:7006 127.0.0.1:7000 --cluster-slave --clu
 
 #删除
 redis-cli --cluster del-node 172.17.0.3:6379 2f8dc4905078898d194323b9faa824061a90bdf9
+只适用于要删除的node没有挂
+如果待删除node挂了，需要每个node执行forget
+for id in $(docker ps -a|grep redis|awk '{print $1}');do
+    ip=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' $id)
+    redis-cli -c -h $ip cluster forget <node id>
+done
 
 #从slave中读数据
 redis-cli -c -h <slave-ip>
@@ -89,10 +96,41 @@ readonly 表明操作只读
 get <key> 读取数据
 readwrite 取消只读
 
+#直接干掉一个slave
+cluster nodes命令，很久没有发现slave掉线
+
+#直接干掉一个master
+
+#cluster因为master挂了,没有slave顶上,进入fail状态
+cluster info查看集群状态
+处理方式https://blog.51cto.com/u_15239532/2835959
+cluster nodes查看挂掉的node
+
+cluster forget <node-id>删除node
+
+for id in $(docker ps -a|grep redis|awk '{print $1}');do
+    ip=$(docker inspect --format='{{.NetworkSettings.IPAddress}}' $id)
+    ./redis-cli -c -h $ip cluster forget 1302b48cc038cfa954d7ee3acb77d53880099bd6
+done
+
+注意:需要在每个master里面执行,不然后面这些forget的信息又会回来;这时候如果登录上slave,会发现删掉的node信息还在
+https://redis.io/docs/reference/cluster-spec/#cluster-node-attributes
+
+cluster addslotsrange <lower bound> <upper bound>添加回slots  
 
 
+cluster addslotsrange 10923 16383
+
+#cluster topology
+https://redis.io/docs/reference/cluster-spec/#cluster-topology
+redis cluster中每个节点都会通过cluster bus的端口于其他任何一个节点相连
+集群信息交换 https://redis.io/docs/reference/cluster-spec/#heartbeat-and-gossip-messages
+
+#failover机制, slave如何晋升master
 
 
+#redis-cli --cluster <cmd>
+https://redis.io/commands/cluster-nodes/
 
 
 
