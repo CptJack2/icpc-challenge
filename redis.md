@@ -12,19 +12,27 @@ redis首先将整个数据空间进行分块，每个数据块由一部分的节
 
 ##redis cluster的一致性保证
 对于一致性，redis的设计取舍是选择AP的，即放弃强一致性，优先支持可用性。（根据分布式系统的CAP理论，一致性、可用性、分区容错性不能同时具备；由于分布式系统必须有分区容错，所以都是在一致性和可用性间做取舍）redis的定位是高性能缓存，并不是像etcd这样强一致的KV存储，所以作出这种设计也是可以理解的。
-当一个master宕机后，由于cluster中的每个节点都是两两相连的，并且持续通过心跳监视，一段时间后master宕机就会被发现，这时候master下属的slave会发起选举，当赢得选举后，这个slave会成为它的前master负责分区的新master，继续承担master的责任（这个选举过程跟raft的leader election几乎是一模一样的，只是多了一些工程化的调整）。当然如果宕机的是slave，那就无所谓了，挂了就挂了，从新加一台机器复制master的数据即可；如果master下没有slave，那就比较麻烦，这个分区就不可用了，而这会导致整个集群都不可用（是的，连正常的分区的数据都读不了），所以还是推荐每个分区至少一个slave。
+当一个master宕机后，由于cluster中的每个节点都是两两相连的，并且持续通过心跳监视，一段时间后master宕机就会被发现，这时候master下属的slave会发起选举，当赢得选举后，这个slave会成为它的前master负责分区的新master，继续承担master的责任（这个选举过程跟raft的leader election几乎是一模一样的，只是多了一些工程化的调整）。当然如果宕机的是slave，那就无所谓了，挂了就挂了，重新加一台机器复制master的数据即可；如果master下没有slave，那就比较麻烦，这个分区就不可用了，而这会导致整个集群都不可用（是的，连正常的分区的数据都读不了），所以还是推荐每个分区至少一个slave。
 可以看到，采用了这种设计后，数据不能保证强一致性，发生数据丢失主要是以下情况：数据写入到master，但还没同步到slave，master就挂了；或者master跟集群的majority失联了，在它还没意识到自己成了minority之前接受了客户的写入，这部分写入也会丢（在它意识到自己成了minority后它会停止接受写请求），因为如果majority提升了它的slave，新的master明显是没有这些数据的。
 
 由于选举机制和去中心化的设计，redis cluster中的所有节点都是通过cluster bus（TCP 16379）两两相连的，这种设计注定了cluster没有办法无限地水平扩张下去（因为连接数量是O(N!)的），整个集群支持的节点数大约是数千个，对于目前的分布式应用也是足够的，因为数千个节点上的内存可以达到百TB级了。
 
 #网络分区和脑裂对redis cluster的影响
+脑裂一直是分布式系统中比较棘手的一个问题，意思是当集群中发生了网络分区的情况下（一个集群中的两部分网络不能连通，被分割成了分区），一个分区中有旧的master，新分区中另外晋升了master，两个分区都接受了数据写入，当网络分区修复后，集群中就有了两个master，并且它们的数据不一致，真麻烦。
+redis为了应对这个问题，设计了node-timeout这个配置参数。前面提到redis中每两个节点都是互连的，并且会互发心跳，当超过node-timeout没有收到对方的心跳是，节点就会认为对方挂了；当slave认为它的master挂了之后，会向其他节点发起自己选举为master的投票，当收到了majority的赞成票（超过半数）后，就成为了新的master（这部分其实和raft也是一样的，可以看到，经典之所以成为经典，是因为它简洁且能应对一切情况）；老的master如果没有宕机，当它发现自己在node-timeout的时间后，都没有收到majority的心跳，它就意识到自己已经成了minority，从而停止对外服务。
+可以看到，在这样的机制下，只可能在node-timeout的短暂时间内存在两个master，也就应对了脑裂问题，前面提到可能丢数据的情况也是发生在这一短暂的时间窗口。node-timeout是redis cluster中一个至关重要的参数。
 
 
-学习redis cluster的主要资料，可用看redis的这两篇官方文档
+
+#redis cluster搭建过程
+关于redis cluster的文字介绍大概就是这么多，接下来亲自动手搭建一个redis集群进行实验吧，只有动手才能巩固并更好地理解。
+
+##参考资料
+学习redis cluster的主要资料，主要看redis的这两篇官方文档
 Scaling with Redis Cluster https://redis.io/docs/manual/scaling/
 Redis cluster specification Detailed specification for Redis cluster: https://redis.io/docs/reference/cluster-spec/
 
-#redis cluster搭建过程
+##开始搭建
 
 docker下载redis镜像
 docker pull redis:7.0
