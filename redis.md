@@ -96,7 +96,7 @@ Slots served...
 This second port(16379) is used for the cluster bus, which is a node-to-node communication channel using a binary protocol. The cluster bus is used by nodes for failure detection, configuration update, failover authorization, and so forth.
 ```
 
-##对节点负责的hash slot进行reshard
+##对节点负责的hash slot进行reshard（hash slot移动到另一个master）
 redis-cli --cluster reshard 172.17.0.7:6379 ,然后根据提示操作
 或者使用
 redis-cli --cluster reshard <host>:<port> --cluster-from <node-id> --cluster-to <node-id> --cluster-slots <number of slots> --cluster-yes
@@ -116,7 +116,7 @@ redis-cli --cluster add-node 172.17.0.8:6379 172.17.0.3:6379
 作为slave
 redis-cli --cluster add-node 127.0.0.1:7006 127.0.0.1:7000 --cluster-slave --cluster-master-id 3c3a0c74aae0b56170ccb03a76b60cfe7dc1912e
 
-##删除
+##从集群中删除一个节点
 redis-cli --cluster del-node 172.17.0.3:6379 2f8dc4905078898d194323b9faa824061a90bdf9
 只适用于要删除的node没有挂
 如果待删除node挂了，需要每个node执行forget
@@ -125,7 +125,7 @@ for id in $(docker ps -a|grep redis|awk '{print $1}');do
     redis-cli -c -h $ip cluster forget <node id>
 done
 
-这里redis cluster的开发就不太好了,各节点持有的集群元数据不一致,在一个节点上恢复了集群状态,在gossip的时候又被打乱了.
+note:这里redis cluster的开发就不太好了,各节点持有的集群元数据不一致,在一个节点上恢复了集群状态,在gossip的时候又被打乱了，甚至到了7.0的版本还是没有解决这个问题
 
 ##node加入cluster原理
 https://redis.io/commands/cluster-meet/
@@ -142,10 +142,9 @@ readonly 表明操作只读
 get <key> 读取数据
 readwrite 取消只读
 
-##直接干掉一个slave
-cluster nodes命令，很久没有发现slave掉线
-
-##直接干掉一个master
+##干掉任意一个节点，观察情况
+docker rm -f <container_id>
+可以到别的节点上查看cluster nodes，会发现那个节点状态变为fail了
 
 ##cluster因为master挂了,没有slave顶上,进入fail状态
 cluster info查看集群状态
@@ -162,10 +161,12 @@ for id in $(docker ps -a|grep redis|awk '{print $1}');do
     echo
 done
 
-注意:需要在每个master里面执行,不然后面这些forget的信息又会回来;这时候如果登录上slave,会发现删掉的node信息还在
+note:上面删除节点的部分提过了，需要在每个master里面执行,不然后面这些forget的信息又会回来;这时候如果登录上slave,会发现删掉的node信息还在
 https://redis.io/docs/reference/cluster-spec/##cluster-node-attributes
 
-cluster addslotsrange <lower bound> <upper bound>添加回slots  
+这时候，原来的master负责的slot还没有人负责，需要向集群中添加这些slot
+cluster addslotsrange <lower bound> <upper bound>添加回slots
+同样也需要每个节点都操作，因为这些集群元信息是每个节点各自持有的。
 
 ##cluster topology
 https://redis.io/docs/reference/cluster-spec/##cluster-topology
