@@ -162,26 +162,26 @@ for id in $(docker ps -a|grep redis|awk '{print $1}');do
 done
 
 note:上面删除节点的部分提过了，需要在每个master里面执行,不然后面这些forget的信息又会回来;这时候如果登录上slave,会发现删掉的node信息还在
-https://redis.io/docs/reference/cluster-spec/##cluster-node-attributes
+https://redis.io/docs/reference/cluster-spec/#cluster-node-attributes
 
 这时候，原来的master负责的slot还没有人负责，需要向集群中添加这些slot
 cluster addslotsrange <lower bound> <upper bound>添加回slots
 同样也需要每个节点都操作，因为这些集群元信息是每个节点各自持有的。
 
 ##cluster topology
-https://redis.io/docs/reference/cluster-spec/##cluster-topology
+https://redis.io/docs/reference/cluster-spec/#cluster-topology
 redis cluster中每个节点都会通过cluster bus的端口于其他任何一个节点相连
-集群信息交换 https://redis.io/docs/reference/cluster-spec/##heartbeat-and-gossip-messages
+集群信息交换 https://redis.io/docs/reference/cluster-spec/#heartbeat-and-gossip-messages
 
 ##failover机制, slave如何晋升master
-https://redis.io/docs/reference/cluster-spec/##failure-detection
+https://redis.io/docs/reference/cluster-spec/#failure-detection
 与raft的leader election基本一致,多了一些工程化的参数设置
 
 ##redis-cli --cluster <cmd>
 https://redis.io/commands/cluster-nodes/
 
 ##redis中的epoch
-https://redis.io/docs/reference/cluster-spec/##cluster-current-epoch
+https://redis.io/docs/reference/cluster-spec/#cluster-current-epoch
 其实就是分布式系统里的lamport logical timestamp
 
 
