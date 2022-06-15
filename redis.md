@@ -132,20 +132,21 @@ https://redis.io/docs/reference/cluster-spec/#cluster-node-attributes
 
 cluster addslotsrange <lower bound> <upper bound>添加回slots  
 
-
-cluster addslotsrange 10923 16383
-
 #cluster topology
 https://redis.io/docs/reference/cluster-spec/#cluster-topology
 redis cluster中每个节点都会通过cluster bus的端口于其他任何一个节点相连
 集群信息交换 https://redis.io/docs/reference/cluster-spec/#heartbeat-and-gossip-messages
 
 #failover机制, slave如何晋升master
-
+https://redis.io/docs/reference/cluster-spec/#failure-detection
+与raft的leader election基本一致,多了一些工程化的参数设置
 
 #redis-cli --cluster <cmd>
 https://redis.io/commands/cluster-nodes/
 
+#redis中的epoch
+https://redis.io/docs/reference/cluster-spec/#cluster-current-epoch
+其实就是分布式系统里的lamport logical timestamp
 
 
 
