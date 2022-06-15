@@ -15,7 +15,7 @@ redis首先将整个数据空间进行分块，每个数据块由一部分的节
 当一个master宕机后，由于cluster中的每个节点都是两两相连的，并且持续通过心跳监视，一段时间后master宕机就会被发现，这时候master下属的slave会发起选举，当赢得选举后，这个slave会成为它的前master负责分区的新master，继续承担master的责任（这个选举过程跟raft的leader election几乎是一模一样的，只是多了一些工程化的调整）。当然如果宕机的是slave，那就无所谓了，挂了就挂了，重新加一台机器复制master的数据即可；如果master下没有slave，那就比较麻烦，这个分区就不可用了，而这会导致整个集群都不可用（是的，连正常的分区的数据都读不了），所以还是推荐每个分区至少一个slave。
 可以看到，采用了这种设计后，数据不能保证强一致性，发生数据丢失主要是以下情况：数据写入到master，但还没同步到slave，master就挂了；或者master跟集群的majority失联了，在它还没意识到自己成了minority之前接受了客户的写入，这部分写入也会丢（在它意识到自己成了minority后它会停止接受写请求），因为如果majority提升了它的slave，新的master明显是没有这些数据的。
 
-由于选举机制和去中心化的设计，redis cluster中的所有节点都是通过cluster bus（TCP 16379）两两相连的，这种设计注定了cluster没有办法无限地水平扩张下去（因为连接数量是O(N!)的），整个集群支持的节点数大约是数千个，对于目前的分布式应用也是足够的，因为数千个节点上的内存可以达到百TB级了。
+由于选举机制和去中心化的设计，redis cluster中的所有节点都是通过cluster bus（TCP 16379）两两相连的，这种设计注定了cluster没有办法无限地水平扩张下去（因为连接数量是O(N!)的），整个集群支持的节点数大约是数千个（跟kubernetes是类似的,目前的分布式系统应该都是支持到这个数目范围的nodes），对于目前的分布式应用也是足够的，因为数千个节点上的内存可以达到百TB级了。
 
 #网络分区和脑裂对redis cluster的影响
 脑裂一直是分布式系统中比较棘手的一个问题，意思是当集群中发生了网络分区的情况下（一个集群中的两部分网络不能连通，被分割成了分区），一个分区中有旧的master，新分区中另外晋升了master，两个分区都接受了数据写入，当网络分区修复后，集群中就有了两个master，并且它们的数据不一致，真麻烦。
@@ -33,22 +33,12 @@ Scaling with Redis Cluster https://redis.io/docs/manual/scaling/
 Redis cluster specification Detailed specification for Redis cluster: https://redis.io/docs/reference/cluster-spec/
 
 ##开始搭建
+这里为了方便和更加真实，和官方文档的搭建不太一样，使用单机通过docker部署多个容器的方式，进行集群的搭建。
 
-docker下载redis镜像
+首先通过docker下载redis镜像，采用了7.0的版本
 docker pull redis:7.0
 
-##redis cluster支持的nodes
-数千个,跟kubernetes是类似的,目前的分布式系统应该都是支持到这个数目范围的nodes
-
-##准备好各自的redis.conf,从docker启动redis-server
-docker run -d -v $(pwd)/redis.conf:/etc/redis/redis.conf redis:7.0 redis-server /etc/redis/redis.conf
-
-##查看新建的redis容器ip
-docker ps -a|grep redis
-docker inspect $id |grep "IPAddress"
-docker inspect --format='{{.NetworkSettings.IPAddress}}' $id
-
-##创建redis cluster的redis.conf
+##创建redis cluster使用的redis.conf
 ```
 cluster-enabled yes
 cluster-config-file nodes.conf
@@ -56,26 +46,40 @@ cluster-node-timeout 5000
 appendonly yes
 ```
 
+##用redis.conf从docker启动redis-server
+docker run -d -v $(pwd)/redis.conf:/etc/redis/redis.conf redis:7.0 redis-server /etc/redis/redis.conf
+这里通过文件映射把redis.conf映射到了容器内
+直接批量创建6个实例
+for i in {1..6};do docker run -d -v $(pwd)/redis.conf:/etc/redis/redis.conf redis:7.0 redis-server /etc/redis/redis.conf;done
+
+##查看新建的redis容器ip
+docker ps -a|grep redis
+通过命令行直接获取容器IP
+docker inspect --format='{{.NetworkSettings.IPAddress}}' $id
+方便自己查看
+docker inspect $id |grep "IPAddress"
+也可以直接批量获取容器IP
 for id in $(docker ps -a|grep redis|awk '{print $1}');do
     echo $id
     docker inspect --format='{{.NetworkSettings.IPAddress}}' $id
 done
 
-for i in {1..6};do docker run -d -v $(pwd)/redis.conf:/etc/redis/redis.conf redis:7.0 redis-server /etc/redis/redis.conf;done
-
-##创建redis cluster命令行
+##创建redis cluster
 redis-cli --cluster create 172.17.0.7:6379 172.17.0.6:6379 172.17.0.5:6379 172.17.0.4:6379 172.17.0.3:6379 172.17.0.2:6379 --cluster-replicas 1
+6个实例，3个master，3个slave
 
 
 
-##redis-cli通过集群模式连接,-h跟其中一个集群ip即可
-redis-cli -c -h 172.17.0.7
+##redis-cli通过集群模式连接到cluster，-h跟其中一个容器ip即可
+redis-cli -c -h <container_ip>
 
-在任意一台机器上get/set，会先把cli redirect到处理这个key的hash slot的机器，然后再进行操作。这时如果通过redis-cli普通模式连上处理那个slot的ip，也是能获取到数据的。
+在任意一台机器上get/set，会先把redis-cli重定向到处理这个key的机器，然后再进行操作。这时如果通过redis-cli普通模式连上处理那个slot的ip，也是能获取到数据的。
 如果在cli中select（更改数据库）会报(error) ERR SELECT is not allowed in cluster mode（无论redis-cli启动是否加-c)
 
-##查看cluster node
-直接在redis-cli里输入命令cluster node
+##查看集群中的节点信息
+直接在redis-cli的交互模式里输入命令cluster node
+或者在bash中
+redis-cli --cluster cluster node <container_ip>:<redis_port>
 输出列含义
 Node ID
 ip:port
