@@ -1,5 +1,18 @@
-##redis cluster学习笔记
-redis cluster是redis官方提供的集群
+#redis cluster学习笔记
+最近刚好在学习redis和分布式系统的课程，redis作为一个优秀的缓存系统和KV数据库，官方提供的redis cluster集群方案更是将它的性能推高了一个台阶。这篇笔记主要介绍对我对redis cluster的学习和理解，同时结合一些分布式系统的理论来分析一下cluster方案的设计。
+redis cluster是redis官方提供的集群方案，自3.0版本起可用，目的是解决单机redis性能不能满足大规模应用的问题。redis cluster自带了高可用保证方案，cluster与redis sentinel有较大区别。
+sentinel从2.8版本起开始提供。sentinel只是监控了redis master，并在master失效后提升slave，只是做到了高可用，并没有集群的水平扩展功能。cluster中的节点自带了监控功能，所以sentinel已经没有必要再使用了。
+
+#redis cluster架构简介
+redis首先将整个数据空间进行分块，每个数据块由一部分的节点负责读写，就像西周时代的分封制，将整个国家（全部数据）分封给一个个诸侯（一个master节点和它的slave），由诸侯负责那块地盘的事宜。为了分块的方便，redis创建了hash slot的概念，将整个数据库的hash值对应到16384（2^14）个slot，每个master管理一部分的slot。当需要获取某个key时，先对key进行CRC16求hash，然后对hash mod 16384，即可求到对应的slot，再将客户重定向到负责整个slot的master上，从那里读取或修改数据。
+
+将单机的系统提升到分布式，主要需要解决高可用和一致性的两个问题，来看看redis cluster是如何解决这两个问题的。
+对于高可用，传统的方案都是进行replication（数据复制），redis当然也不可能逃离这个套路，cluster里面的节点有两种身份：master和slave，它们共享同样的数据，master作为主数据，负责数据的写操作，在客户写入后再同步给slave；slave在客户指定只读模式后，也可以从中读出数据，进而提升集群的读性能。
+对于一致性
+
+学习redis cluster的主要资料，可用看redis的这两篇官方文档
+Scaling with Redis Cluster https://redis.io/docs/manual/scaling/
+Redis cluster specification Detailed specification for Redis cluster: https://redis.io/docs/reference/cluster-spec/
 
 #redis cluster搭建过程
 
