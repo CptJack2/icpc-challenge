@@ -5,10 +5,20 @@ sentinel从2.8版本起开始提供。sentinel只是监控了redis master，并�
 
 #redis cluster架构简介
 redis首先将整个数据空间进行分块，每个数据块由一部分的节点负责读写，就像西周时代的分封制，将整个国家（全部数据）分封给一个个诸侯（一个master节点和它的slave），由诸侯负责那块地盘的事宜。为了分块的方便，redis创建了hash slot的概念，将整个数据库的hash值对应到16384（2^14）个slot，每个master管理一部分的slot。当需要获取某个key时，先对key进行CRC16求hash，然后对hash mod 16384，即可求到对应的slot，再将客户重定向到负责整个slot的master上，从那里读取或修改数据。
+由于采用了这种分封制，为了方便和易于实现，在集群模式下，redis只支持一个数据库，即不再支持选择数据库的select命令。
 
 将单机的系统提升到分布式，主要需要解决高可用和一致性的两个问题，来看看redis cluster是如何解决这两个问题的。
-对于高可用，传统的方案都是进行replication（数据复制），redis当然也不可能逃离这个套路，cluster里面的节点有两种身份：master和slave，它们共享同样的数据，master作为主数据，负责数据的写操作，在客户写入后再同步给slave；slave在客户指定只读模式后，也可以从中读出数据，进而提升集群的读性能。
-对于一致性
+对于高可用，传统的方案都是进行replication（数据复制），redis当然也不可能逃离这个套路，cluster里面的节点有两种身份：master和slave，它们共享同样的数据，master作为主数据，负责数据的写操作，在客户写入后再同步给slave；slave在客户指定只读模式后，也可以从中读出数据，进而提升集群的读性能。前面提到redis对数据是实行分封制的，所以一个cluster里面就会有若干个master，每个master又有0-N个slave。
+
+##redis cluster的一致性保证
+对于一致性，redis的设计取舍是选择AP的，即放弃强一致性，优先支持可用性。（根据分布式系统的CAP理论，一致性、可用性、分区容错性不能同时具备；由于分布式系统必须有分区容错，所以都是在一致性和可用性间做取舍）redis的定位是高性能缓存，并不是像etcd这样强一致的KV存储，所以作出这种设计也是可以理解的。
+当一个master宕机后，由于cluster中的每个节点都是两两相连的，并且持续通过心跳监视，一段时间后master宕机就会被发现，这时候master下属的slave会发起选举，当赢得选举后，这个slave会成为它的前master负责分区的新master，继续承担master的责任（这个选举过程跟raft的leader election几乎是一模一样的，只是多了一些工程化的调整）。当然如果宕机的是slave，那就无所谓了，挂了就挂了，从新加一台机器复制master的数据即可；如果master下没有slave，那就比较麻烦，这个分区就不可用了，而这会导致整个集群都不可用（是的，连正常的分区的数据都读不了），所以还是推荐每个分区至少一个slave。
+可以看到，采用了这种设计后，数据不能保证强一致性，发生数据丢失主要是以下情况：数据写入到master，但还没同步到slave，master就挂了；或者master跟集群的majority失联了，在它还没意识到自己成了minority之前接受了客户的写入，这部分写入也会丢（在它意识到自己成了minority后它会停止接受写请求），因为如果majority提升了它的slave，新的master明显是没有这些数据的。
+
+由于选举机制和去中心化的设计，redis cluster中的所有节点都是通过cluster bus（TCP 16379）两两相连的，这种设计注定了cluster没有办法无限地水平扩张下去（因为连接数量是O(N!)的），整个集群支持的节点数大约是数千个，对于目前的分布式应用也是足够的，因为数千个节点上的内存可以达到百TB级了。
+
+#网络分区和脑裂对redis cluster的影响
+
 
 学习redis cluster的主要资料，可用看redis的这两篇官方文档
 Scaling with Redis Cluster https://redis.io/docs/manual/scaling/
