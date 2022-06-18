@@ -184,6 +184,11 @@ https://redis.io/commands/cluster-nodes/
 https://redis.io/docs/reference/cluster-spec/#cluster-current-epoch
 其实就是分布式系统里的lamport logical timestamp
 
+#kubernetes中通过stateful set部署redis cluster
+https://blog.csdn.net/coco3848/article/details/107611924
+
+#redis cluster proxy
+https://github.com/RedisLabs/redis-cluster-proxy
 
 
 
