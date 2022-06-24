@@ -16,16 +16,16 @@ pair<int,vector<int>> dfs(int node, int parent){
 			auto [chBC,chC]=dfs(ch,node);
 			signCost+=chBC;
 			for(int i=0;i<allSpeed.size();i++)
-				costs[i]+=chC[i]+allSpeed[i]-s;
+				costs[i]+=chC[i];
 		}
 	int bestCost=signCost;
 	for(int i=0;i<allSpeed.size();i++)
 		if(allSpeed[i]<maxSpeed)
-			costs[i]=signCost+allSpeed[i]-parS;
+			costs[i]=signCost+(parent!=0?allSpeed[i]-parS:0);
 		else
-			costs[i]+=allSpeed[i]-parS,
+			costs[i]+=(parent!=0?allSpeed[i]-parS:0),
 			bestCost=min(bestCost,costs[i]),
-			costs[i]=min(costs[i],signCost+allSpeed[i]-parS);
+			costs[i]=min(costs[i],signCost+(parent!=0?allSpeed[i]-parS:0));
 	return {bestCost,costs};
 }
 
@@ -41,7 +41,6 @@ int main(){
 		uniqueSpeeds.insert(s);
 	}
 	for(auto s:uniqueSpeeds)allSpeed.push_back(s);
-	graph[1][0]=0;
 	auto [bc,_]=dfs(1,0);
 	cout<<bc;
 	return 0;

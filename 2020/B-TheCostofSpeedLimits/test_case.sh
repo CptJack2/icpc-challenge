@@ -5,6 +5,10 @@ if [[ $1 == "case" ]];then
   ans=$(cat ./data/$2.in |./main)
   if [ "$ans" != "$correct" ];then
     echo "failed"
+    echo correct
+    echo $correct
+    echo answer
+    echo $ans
   else
     echo "succ"
   fi
