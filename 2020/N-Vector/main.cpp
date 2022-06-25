@@ -61,8 +61,8 @@ int main(){
 	}
 
 	vector<vector<double>> base;
-	vector<double> c(x[0]);
-	double radius=r[0];
+	vector<double> sc(x[0]);
+	double sr=r[0];
 	for(int i=1;i<n;i++){
 //		auto px=x[i]-c;
 //		auto pr=r[i]*r[i];
@@ -71,19 +71,22 @@ int main(){
 //			px=px-v*px*v;
 //		pr=sqrt(pr);
 //
-		auto cv=x[i]-c;
+		auto cv= sc-x[i];
 		for(const auto& v:base)cv=cv-v*cv*v;
-		auto cd=length(x[i]-c-cv);
-		auto w=length(cv);
-		auto pr=max(0.0,sqrt(r[i]*r[i]-cd*cd));
+		auto cd=length(sc-x[i] - cv);
+		auto sr2=max(0.0, sqrt(r[i] * r[i] - cd * cd));
+		auto dist=length(cv);
 
-		if(w<eps)continue;
-		base.push_back(cv/w);
-		auto nx=(radius*radius-pr*pr+w*w)/2/w;
-		c=c+nx*base.back();
-		radius=max(0.0,sqrt(radius*radius-nx*nx));
+		if(dist < eps)continue;
+		cv=cv/dist;
+		base.push_back(cv);
+		auto nx= (sr * sr - sr2 * sr2 + dist * dist) /dist/ 2 ;
+		sc= sc - nx * cv;
+		sr=max(0.0, sqrt(sr * sr - nx * nx));
 	}
-
+//	for(int i=0;i<sc.size();i++)
+//		cerr<<sc[i]<<" ";
+//	cerr<<endl<<sr<<endl;
 	vector<double> ret(d);
 	for (int i = 0; i < d; i++) ret[i] = rand()%1000000 + 1000000;
 	for(const auto& v:base){
@@ -91,11 +94,11 @@ int main(){
 	}
 	auto output=[&](const vector<double> & v){
 		for(int i=0;i<v.size();i++)
-			cout<<v[i]<<(i!=0?" ":"");
+			cout<<v[i]<<" ";
 	};
 	if(length(ret)<eps)
-		output(c);
+		output(sc);
 	else
-		output(c-radius/length(ret)*ret);
+		output(sc - sr / length(ret) * ret);
 	return 0;
 }
