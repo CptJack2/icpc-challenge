@@ -61,24 +61,24 @@ int main(){
 	}
 
 	vector<vector<double>> base;
-	vector<double> sc(x[0]);
-	double sr=r[0];
+	vector<double> c(x[0]);
+	double radius=r[0];
 	for(int i=1;i<n;i++){
-		auto cv= x[i] - sc;
+		auto px=x[i]-c;
 		//auto pr=r[i]*r[i];
 		for(const auto& v:base)
 			//pr-=max(0.0,pow(v*px,2)),
-			cv= cv - v * cv * v;
-		auto cd=length(x[i] - sc - cv);
-		auto sr2=max(0.0, sqrt(r[i] * r[i] - cd * cd));
+			px=px-v*px*v;
+		auto cd=length(x[i]-c-px);
+		auto pr=max(0.0,sqrt(r[i]*r[i]-cd*cd));
 
-		auto dist=length(cv);
-		if(dist < eps)continue;
-		cv= cv / dist;
-		base.push_back(cv);
-		auto nx= (sr * sr - sr2 * sr2 + dist * dist) / 2 / dist;
-		sc= sc + nx * cv;
-		sr=max(0.0, sqrt(sr * sr - nx * nx));
+		auto w=length(px);
+		if(w<eps)continue;
+		px=px/w;
+		base.push_back(px);
+		auto nx=(radius*radius-pr*pr+w*w)/2/w;
+		c=c+nx*px;
+		radius=max(0.0,sqrt(radius*radius-nx*nx));
 	}
 //	for(int i=0;i<sc.size();i++)
 //		cerr<<sc[i]<<" ";
@@ -93,8 +93,8 @@ int main(){
 			cout<<v[i]<<(i!=v.size()-1?" ":"");
 	};
 	if(length(ret)<eps)
-		output(sc);
+		output(c);
 	else
-		output(sc - sr / length(ret) * ret);
+		output(c - radius / length(ret) * ret);
 	return 0;
 }
