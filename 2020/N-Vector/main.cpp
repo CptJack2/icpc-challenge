@@ -71,11 +71,11 @@ int main(){
 			px=px-v*px*v;
 		pr=sqrt(pr);
 		auto w=length(px);
-		if(w<eps)continue;
+		if(w<eps)continue;//very critical
 		base.push_back(px/w);
 		auto nx=(radius*radius-pr*pr+w*w)/2/w;
 		c=c+nx*base.back();
-		radius=max(0.0,sqrt(radius*radius-nx*nx));
+		radius= sqrt(radius * radius - nx * nx);
 	}
 //	for(int i=0;i<sc.size();i++)
 //		cerr<<sc[i]<<" ";
