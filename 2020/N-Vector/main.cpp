@@ -64,15 +64,21 @@ int main(){
 	vector<double> c(x[0]);
 	double radius=r[0];
 	for(int i=1;i<n;i++){
-		auto px=x[i]-c;
-		auto pr=r[i]*r[i];
-		for(const auto& v:base)
-			pr-=max(0.0,pow(v*px,2)),
-			px=px-v*px*v;
-		pr=sqrt(pr);
-		if(pr<eps)continue;
-		auto w=length(px);
-		base.push_back(px/w);
+//		auto px=x[i]-c;
+//		auto pr=r[i]*r[i];
+//		for(const auto& v:base)
+//			pr-=max(0.0,pow(v*px,2)),
+//			px=px-v*px*v;
+//		pr=sqrt(pr);
+//
+		auto cv=x[i]-c;
+		for(const auto& v:base)cv=cv-v*cv*v;
+		auto cd=length(x[i]-c-cv);
+		auto w=length(cv);
+		auto pr=max(0.0,sqrt(r[i]*r[i]-cd*cd));
+
+		if(w<eps)continue;
+		base.push_back(cv/w);
 		auto nx=(radius*radius-pr*pr+w*w)/2/w;
 		c=c+nx*base.back();
 		radius=max(0.0,sqrt(radius*radius-nx*nx));
