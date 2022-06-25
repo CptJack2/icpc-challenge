@@ -92,11 +92,11 @@ int main(){
 	}
 	auto output=[&](const vector<double> & v){
 		for(int i=0;i<v.size();i++)
-			cout<<v[i]<<(i!=0?"":" ");
+			cout<<v[i]<<(i!=0?" ":"");
 	};
 	if(length(ret)<eps)
 		output(c);
 	else
-		output(ret);
+		output(c-radius/length(ret)*ret);
 	return 0;
 };
