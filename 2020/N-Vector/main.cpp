@@ -65,19 +65,16 @@ int main(){
 	double radius=r[0];
 	for(int i=1;i<n;i++){
 		auto px=x[i]-c;
-		//auto pr=r[i]*r[i];
+		auto pr=r[i]*r[i];
 		for(const auto& v:base)
-			//pr-=max(0.0,pow(v*px,2)),
+			pr-=max(0.0,pow(v*px,2)),
 			px=px-v*px*v;
-		auto cd=length(x[i]-c-px);
-		auto pr=max(0.0,sqrt(r[i]*r[i]-cd*cd));
-
+		pr=sqrt(pr);
 		auto w=length(px);
 		if(w<eps)continue;
-		px=px/w;
-		base.push_back(px);
+		base.push_back(px/w);
 		auto nx=(radius*radius-pr*pr+w*w)/2/w;
-		c=c+nx*px;
+		c=c+nx*base.back();
 		radius=max(0.0,sqrt(radius*radius-nx*nx));
 	}
 //	for(int i=0;i<sc.size();i++)
@@ -90,7 +87,7 @@ int main(){
 	}
 	auto output=[&](const vector<double> & v){
 		for(int i=0;i<v.size();i++)
-			cout<<v[i]<<(i!=v.size()-1?" ":"");
+			cout<<setprecision(17)<<v[i]<<" ";
 	};
 	if(length(ret)<eps)
 		output(c);
