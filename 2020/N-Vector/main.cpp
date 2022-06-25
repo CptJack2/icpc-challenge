@@ -36,7 +36,7 @@ double triangleH(double la, double lb, double lc){
 }
 
 double operator*(const vector<double>& v1, const vector<double> & v2){
-	double r;
+	double r=0;
 	for(int i=0;i<v1.size();i++){
 		r+=v1[i]*v2[i];
 	}
@@ -73,16 +73,16 @@ int main(){
 	vector<double> c(x[0]);
 	double radius=r[0];
 	for(int i=1;i<n;i++){
-		auto px=x[i];
+		auto px=x[i]-c;
 		auto pr=r[i]*r[i];
 		for(auto v:base)
 			pr-=pow(v*px,2),
 			px=px-v*px*v;
 		pr=sqrt(pr);
-		base.push_back(getBase(px,c));
-		auto w=length(px-c);
-		radius=triangleH(radius,pr,w);
+		auto w=length(px);
+		base.push_back(px/w);
 		c=c+(radius*radius-pr*pr+w*w)/2/w*base.back();
+		radius=triangleH(radius,pr,w);
 	}
 
 	vector<double> ret(d);
