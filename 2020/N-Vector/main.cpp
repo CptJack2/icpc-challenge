@@ -75,10 +75,11 @@ int main(){
 	for(int i=1;i<n;i++){
 		auto px=x[i]-c;
 		auto pr=r[i]*r[i];
-		for(auto v:base)
-			pr-=pow(v*px,2),
+		for(const auto& v:base)
+			pr-=max(0.0,pow(v*px,2)),
 			px=px-v*px*v;
 		pr=sqrt(pr);
+		if(pr<eps)continue;
 		auto w=length(px);
 		base.push_back(px/w);
 		c=c+(radius*radius-pr*pr+w*w)/2/w*base.back();
