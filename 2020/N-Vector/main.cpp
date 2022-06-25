@@ -26,15 +26,6 @@ double length(const vector<double>& v){
 	return sqrt(r);
 }
 
-vector<double> getBase(const vector<double>& v1,const vector<double>& v2){
-	auto t=v1-v2;
-	return t/length(t);
-}
-
-double triangleH(double la, double lb, double lc){
-	return sqrt(4*la*la*lb*lb-pow(la*la+lb*lb-lc*lc,2))/2/lc;
-}
-
 double operator*(const vector<double>& v1, const vector<double> & v2){
 	double r=0;
 	for(int i=0;i<v1.size();i++){
@@ -82,13 +73,14 @@ int main(){
 		if(pr<eps)continue;
 		auto w=length(px);
 		base.push_back(px/w);
-		c=c+(radius*radius-pr*pr+w*w)/2/w*base.back();
-		radius=triangleH(radius,pr,w);
+		auto nx=(radius*radius-pr*pr+w*w)/2/w;
+		c=c+nx*base.back();
+		radius=max(0.0,sqrt(radius*radius-nx*nx));
 	}
 
 	vector<double> ret(d);
 	for (int i = 0; i < d; i++) ret[i] = rand()%1000000 + 1000000;
-	for(auto v:base){
+	for(const auto& v:base){
 		ret=ret-v*ret*v;
 	}
 	auto output=[&](const vector<double> & v){
@@ -100,4 +92,4 @@ int main(){
 	else
 		output(c-radius/length(ret)*ret);
 	return 0;
-};
+}
