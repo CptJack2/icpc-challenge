@@ -69,8 +69,8 @@ int main(){
 		for(const auto& v:base)
 			pr-=max(0.0,pow(v*px,2)),
 			px=px-v*px*v;
-		pr=sqrt(pr);
-		if(pr<eps)continue;
+		pr=max(0.0,sqrt(pr));
+		if(length(px)<eps)continue;
 		auto w=length(px);
 		base.push_back(px/w);
 		auto nx=(radius*radius-pr*pr+w*w)/2/w;
