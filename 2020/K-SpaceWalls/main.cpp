@@ -52,10 +52,13 @@ int main(){
 		D.push_back(fMap[str]);
 	}
 
-	vector<vector<Pnt>> tracks;
-	map<int,int> fCords,dCords;
 	for(int i=0;i<k;i++){
+		vector<vector<Pnt>> tracks;
+		map<int,int> fCords,dCords;
 		Pnt f=F[i],d=D[i];
+		Pnt2 initPos{d*rPos[i],f*rPos[i]};
+		dCords[initPos.x]=-1;
+		fCords[initPos.y]=-1;
 		auto tf=[&](int& pi){pi=pi==0?1:0;};
 		Pnt ignoredAxis= f + d; tf(ignoredAxis.x); tf(ignoredAxis.y); tf(ignoredAxis.z);
 
@@ -85,6 +88,8 @@ int main(){
 			dCords2[id++]=kv.first,
 			kv.second=id;
 
+		initPos.x=dCords[initPos.x];
+		initPos.y=fCords[initPos.y];
 		vector<vector<int>> grid(dCords.size(),vector<int>(fCords.size()));
 		for(auto& r:rects){
 			r.first.x=dCords[r.first.x];
@@ -96,7 +101,14 @@ int main(){
 			grid[r.first.x][r.second.y]--;
 			grid[r.second.x][r.first.y]--;
 		}
+		for(int x=0;x<grid.size();x++)
+			for(int y=0;x<grid[0].size();y++){
+				if(x>0)grid[x][y]+=grid[x-1][y];
+				if(y>0)grid[x][y]+=grid[x][y-1];
+				if(x>0 && y>0)grid[x][y]-=grid[x-1][y-1];
+			}
 
+		vector<Pnt2> segs{initPos};
 
 	}
 
