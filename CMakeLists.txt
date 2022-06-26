@@ -3,4 +3,4 @@ project(untitled)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(N 2020/N-Vector/main.cpp)
+add_executable(K 2020/K-SpaceWalls/main.cpp)
