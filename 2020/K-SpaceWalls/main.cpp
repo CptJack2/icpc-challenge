@@ -62,14 +62,14 @@ int main(){
 		vector<pair<Pnt2,Pnt2>> rects;
 		for(int j=0;j<n;j++){
 			if(blocks[j].first * ignoredAxis > rPos[i] * ignoredAxis || blocks[j].second * ignoredAxis < rPos[i] * ignoredAxis)continue;
-			int ldx=blocks[i].first*f,
-				ldy=blocks[i].first*d,
-				rux=blocks[i].second*f,
-				ruy=blocks[i].second*d;
-			fCords[ldx]=-1;
-			dCords[ldy]=-1;
-			fCords[rux]=-1;
-			dCords[ruy]=-1;
+			int	ldx=blocks[i].first*d,
+				ldy=blocks[i].first*f,
+				rux=blocks[i].second*d,
+				ruy=blocks[i].second*f;
+			dCords[ldx]=-1;
+			fCords[ldy]=-1;
+			dCords[rux]=-1;
+			fCords[ruy]=-1;
 			if(ldx>rux)swap(ldx,rux);
 			if(ldy>ruy)swap(ldy,ruy);
 			rects.emplace_back(Pnt2(ldx,ldy),Pnt2(rux,ruy));
@@ -84,14 +84,19 @@ int main(){
 		for(auto & kv:dCords)
 			dCords2[id++]=kv.first,
 			kv.second=id;
+
+		vector<vector<int>> grid(dCords.size(),vector<int>(fCords.size()));
 		for(auto& r:rects){
-			r.first.x=fCords[r.first.x];
-			r.first.y=dCords[r.first.y];
-			r.second.x=fCords[r.second.x];
-			r.second.y=dCords[r.second.y];
+			r.first.x=dCords[r.first.x];
+			r.first.y=fCords[r.first.y];
+			r.second.x=dCords[r.second.x];
+			r.second.y=fCords[r.second.y];
+			grid[r.first.x][r.first.y]++;
+			grid[r.second.x][r.second.y]++;
+			grid[r.first.x][r.second.y]--;
+			grid[r.second.x][r.first.y]--;
 		}
 
-		vector<vector<int>> grid(fCords.size(),vector<int>(dCords.size()));
 
 	}
 
