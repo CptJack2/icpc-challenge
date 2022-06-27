@@ -14,6 +14,9 @@ struct Pnt2{
 	int x,y;
 	Pnt2(int xx,int yy):x(xx),y(yy){}
 	Pnt2():x(0),y(0){}
+	bool operator!=(const Pnt2& p2){return x==p2.x && y==p2.y;}
+	Pnt2 operator+(const Pnt2& p2){return Pnt2(x+p2.x,y+p2.y);}
+	Pnt2& operator+=(const Pnt2& p2){*this=*this+p2; return *this;}
 };
 
 int main(){
@@ -109,10 +112,39 @@ int main(){
 			}
 
 		vector<Pnt2> segs{initPos};
+		Pnt2 pos=initPos;
+		int dir=0;
+		vector<Pnt2> delta={
+			{1,0},
+			{0,1},
+			{-1,0},
+			{0,-1},
+		};
+		do{
+			pos+=delta[dir];
+			segs.push_back(pos);
+			vector<Pnt2> side={
+				{0,0},
+				{-1,0},
+				{-1,-1},
+				{0,-1},
+			};
+			auto tL=[&]()->bool{
+				auto pt=pos+side[dir];
+				return grid[pt.x][pt.y]!=0;
+			};
+			auto tR=[&]()->bool{
+				auto pt=pos+side[(dir+3)&3];
+				return grid[pt.x][pt.y]==0;
+			};
+			if(tL())
+				dir=(dir+1)&3;
+			else if(tR())
+				dir=(dir+3)&3;
+		}while(pos!=initPos);
+
 
 	}
-
-
 
 	return 0;
 }
