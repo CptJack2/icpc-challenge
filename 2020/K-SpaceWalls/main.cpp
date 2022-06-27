@@ -8,6 +8,7 @@ struct Pnt{
 	Pnt():x(0),y(0),z(0){}
 	Pnt operator+(const Pnt& p2){return Pnt(x+p2.x,y+p2.y,z+p2.z);};
 	int operator*(const Pnt& p2){return x*p2.x+y*p2.y+z*p2.z;}
+	Pnt operator*(int c){return Pnt(c*x,c*y,c*z);}
 };
 
 struct Pnt2{
@@ -18,6 +19,44 @@ struct Pnt2{
 	Pnt2 operator+(const Pnt2& p2){return Pnt2(x+p2.x,y+p2.y);}
 	Pnt2& operator+=(const Pnt2& p2){*this=*this+p2; return *this;}
 };
+
+// Undefined sign for negative inputs
+template<typename T> static constexpr T gcd(T a, T b) { return b ? gcd(b, a % b) : a; }
+template<typename T> static constexpr T wrap_pos(T a, T m) { return a < 0 ? a + m : a; }
+template<typename T> static constexpr T sqr(T a) { return a * a; }
+// m must be positive
+template<typename T> static constexpr T mod(T a, T m) { return wrap_pos(a % m, m); }
+
+template<typename T>
+static constexpr T inverse2(T a, T m) { return a <= 1 ? a : mod((1 - inverse2(m % a, a) * m) / a, m); }
+
+// a must be relatively prime to m, m > 0
+template<typename T>
+static constexpr T inverse(T a, T m) { return inverse2(mod(a, m), m); }
+// Solve x = a (mod s) and x = b (mod t)
+// Returns -1, -1 if no solutions exist
+static pair<long long, long long> crt(long long a, long long s, long long b, long long t){
+	assert(0 <= a);
+	assert(0 <= b);
+	a %= s;
+	b %= t;
+	long long g = gcd(s, t);
+	if (g > 1){
+		if (a % g != b % g)
+			return {-1, -1};
+		long long c, m;
+		tie(c, m) = crt(a / g, s / g, b / g, t / g);
+		assert(m > 0);
+		return {c * g + a % g, m * g};
+	}
+	else
+	{
+		long long p = s * t;
+		__int128 u = inverse(__int128(s), __int128(t)) * s % p;
+		__int128 v = inverse(__int128(t), __int128(s)) * t % p;
+		return make_pair((b * u + a * v) % p, p);
+	}
+}
 
 int main(){
 	int n,k;
@@ -55,6 +94,8 @@ int main(){
 		D.push_back(fMap[str]);
 	}
 
+	vector<vector<Pnt>> paths(k);
+	vector<vector<long long>> times(k);
 	for(int i=0;i<k;i++){
 		vector<vector<Pnt>> tracks;
 		map<int,int> fCords,dCords;
@@ -155,7 +196,87 @@ int main(){
 				dir=(dir+3)&3;
 		}while(pos!=initPos);
 
+		long long time = -1;
+		Pnt prev = {};
+		for (const Pnt2 &p : segs){
+			int x = dCords2[p.x];
+			int y = fCords2[p.y];
+			Pnt q = d * x + f * y;
+			q=q+ignoredAxis*(rPos[i]*ignoredAxis);
+			paths[i].push_back(q);
+			auto distance=[&](const Pnt &a, const Pnt &b){
+				return abs(a.x-b.x)+abs(a.y-b.y)+abs(a.z-b.z);
+			};
+			if (time == -1)
+				time = 0;
+			else
+				time += distance(prev, q);
+			times[i].push_back(time);
+			prev = q;
+		}
 	}
 
+	long long ans = LLONG_MAX;
+	long long hits = 0;
+	//每两条轨迹求交
+	auto direction=[&](const Pnt &a, const Pnt &b){
+		Pnt out;
+		out.x = (a.x == b.x) ? 0 : (a.x < b.x) ? 1 : -1;
+		out.y = (a.y == b.y) ? 0 : (a.y < b.y) ? 1 : -1;
+		out.z = (a.z == b.z) ? 0 : (a.z < b.z) ? 1 : -1;
+		return out;
+	};
+	for (int i = 0; i < k; i++)
+		for (int j = i + 1; j < k; j++){
+			//轨迹中的每一段拎出来互相判断是否碰撞(相交)
+			for (size_t u = 0; u + 1 < paths[i].size(); u++){
+				Pnt ai = paths[i][u];
+				Pnt bi = paths[i][u + 1];
+				Pnt di = direction(ai, bi);
+				//轨迹都是平行于坐标轴的,所以两个坐标只有一维不同
+				bool upi = ai.x + ai.y + ai.z < bi.x + bi.y + bi.z;
+				Pnt li = upi ? ai : bi;
+				Pnt hi = upi ? bi : ai;
+				for (size_t v = 0; v + 1 < paths[j].size(); v++){
+					Pnt aj = paths[j][v];
+					Pnt bj = paths[j][v + 1];
+					Pnt dj;
+					int dotp;
+					if (li.x > aj.x && li.x > bj.x)goto skip;
+					if (hi.x < aj.x && hi.x < bj.x)goto skip;
+					if (li.y > aj.y && li.y > bj.y)goto skip;
+					if (hi.y < aj.y && hi.y < bj.y)goto skip;
+					if (li.z > aj.z && li.z > bj.z)goto skip;
+					if (hi.z < aj.z && hi.z < bj.z)goto skip;
+					dj = direction(aj, bj);
+					dotp = di*dj;//dotp只可能等于0,1,-1
+					if (dotp < 0){//dotp==-1.两段轨迹反方向迎面而来,那么两个机器人运行的轨迹一定是完全重合的,起始点不同,方向相反,一定会碰上.
+						// Parallel and in opposite directions
+						long long separateDistance = aj * di - ai * di;
+						long long t = (separateDistance + times[i][u] + times[j][v]) / 2;
+						if (t >= times[i][u] && t <= times[i][u + 1] && //不断两两遍历轨迹中的两段,根据机器人行进到这里的时间,判断是不是碰撞点.
+							t >= times[j][v] && t <= times[j][v + 1]){
+							hits++;
+							ans = min(ans, t);
+						}
+					} else if (dotp == 0){//两段轨迹有交点,但前进方向是垂直的.
+						long long ti = times[i][u] + aj * di - ai * di;
+						long long tj = times[j][v] + ai * dj - aj * dj;
+						auto solve = crt(ti, times[i].back(), tj, times[j].back());//通过中国剩余定理求出碰撞时间
+						if (solve.second > 0){
+							hits++;
+							ans = min(ans, solve.first);
+						}
+					}
+					//dotp==1的情况,轨迹也是完全一致的.但前进方向相同导致永远不能碰上.
+					skip:;
+				}
+			}
+		}
+	if (ans == LLONG_MAX)
+		cout << "ok\n";
+	else
+		cout << ans / 2 << '\n';
+	
 	return 0;
 }
