@@ -84,12 +84,12 @@ int main(){
 		vector<int> fCords2(fCords.size()), dCords2(dCords.size());
 		int id=0;
 		for(auto & kv:fCords)
-			fCords2[id++]=kv.first,
-			kv.second=id;
+			kv.second=id,
+			fCords2[id++]=kv.first;
 		id=0;
 		for(auto & kv:dCords)
-			dCords2[id++]=kv.first,
-			kv.second=id;
+			kv.second=id,
+			dCords2[id++]=kv.first;
 
 		initPos.x=dCords[initPos.x];
 		initPos.y=fCords[initPos.y];
@@ -105,7 +105,7 @@ int main(){
 			grid[r.second.x][r.first.y]--;
 		}
 		for(int x=0;x<grid.size();x++)
-			for(int y=0;x<grid[0].size();y++){
+			for(int y=0;y<grid[0].size();y++){
 				if(x>0)grid[x][y]+=grid[x-1][y];
 				if(y>0)grid[x][y]+=grid[x][y-1];
 				if(x>0 && y>0)grid[x][y]-=grid[x-1][y-1];
@@ -143,7 +143,9 @@ int main(){
 				dir=(dir+3)&3;
 		}while(pos!=initPos);
 
-
+//		for(auto s:segs)
+//			cout<<s.x<<" "<<s.y<<endl;
+//		int a=1;
 	}
 
 	return 0;
