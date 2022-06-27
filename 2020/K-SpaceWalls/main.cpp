@@ -14,7 +14,7 @@ struct Pnt2{
 	int x,y;
 	Pnt2(int xx,int yy):x(xx),y(yy){}
 	Pnt2():x(0),y(0){}
-	bool operator!=(const Pnt2& p2){return x==p2.x && y==p2.y;}
+	bool operator!=(const Pnt2& p2){return !(x==p2.x && y==p2.y);}
 	Pnt2 operator+(const Pnt2& p2){return Pnt2(x+p2.x,y+p2.y);}
 	Pnt2& operator+=(const Pnt2& p2){*this=*this+p2; return *this;}
 };
@@ -58,6 +58,8 @@ int main(){
 	for(int i=0;i<k;i++){
 		vector<vector<Pnt>> tracks;
 		map<int,int> fCords,dCords;
+		fCords[INT_MIN]=-1; fCords[INT_MAX]=-1;
+		dCords[INT_MIN]=-1; dCords[INT_MAX]=-1;
 		Pnt f=F[i],d=D[i];
 		Pnt2 initPos{d*rPos[i],f*rPos[i]};
 		dCords[initPos.x]=-1;
@@ -68,10 +70,10 @@ int main(){
 		vector<pair<Pnt2,Pnt2>> rects;
 		for(int j=0;j<n;j++){
 			if(blocks[j].first * ignoredAxis > rPos[i] * ignoredAxis || blocks[j].second * ignoredAxis < rPos[i] * ignoredAxis)continue;
-			int	ldx=blocks[i].first*d,
-				ldy=blocks[i].first*f,
-				rux=blocks[i].second*d,
-				ruy=blocks[i].second*f;
+			int	ldx=blocks[j].first*d,
+				ldy=blocks[j].first*f,
+				rux=blocks[j].second*d,
+				ruy=blocks[j].second*f;
 			dCords[ldx]=-1;
 			fCords[ldy]=-1;
 			dCords[rux]=-1;
@@ -122,7 +124,17 @@ int main(){
 		};
 		do{
 			pos+=delta[dir];
-			segs.push_back(pos);
+			auto addSeg=[&](){
+				int s=segs.size();
+				if(s>=2){
+					const auto&a=segs[s-2], &b=segs[s-1];
+					if(a.x==b.x && b.x==pos.x ||
+						a.y==b.y && b.y==pos.y)
+						segs.pop_back();
+				}
+				segs.push_back(pos);
+			};
+			addSeg();
 			vector<Pnt2> side={
 				{0,0},
 				{-1,0},
@@ -143,9 +155,6 @@ int main(){
 				dir=(dir+3)&3;
 		}while(pos!=initPos);
 
-//		for(auto s:segs)
-//			cout<<s.x<<" "<<s.y<<endl;
-//		int a=1;
 	}
 
 	return 0;
