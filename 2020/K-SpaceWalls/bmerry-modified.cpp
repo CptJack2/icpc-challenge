@@ -323,25 +323,25 @@ int main(){
 					}
 					dj = direction(aj, bj);
 					dotp = dot(di, dj);//dotp只可能等于0,1,-1
-					if (dotp < 0){
+					if (dotp < 0){//dotp==-1.两段轨迹反方向迎面而来,那么两个机器人运行的轨迹一定是完全重合的,起始点不同,方向相反,一定会碰上.
 						// Parallel and in opposite directions
 						ll separateDistance = dot(aj, di) - dot(ai, di);
 						ll t = (separateDistance + times[i][u] + times[j][v]) / 2;
-						if (t >= times[i][u] && t <= times[i][u + 1] &&
+						if (t >= times[i][u] && t <= times[i][u + 1] && //不断两两遍历轨迹中的两段,根据机器人行进到这里的时间,判断是不是碰撞点.
 							t >= times[j][v] && t <= times[j][v + 1]){
 							hits++;
 							ans = min(ans, t);
 						}
-					} else if (dotp == 0){
+					} else if (dotp == 0){//两段轨迹有交点,但前进方向是垂直的.
 						ll ti = times[i][u] + dot(aj, di) - dot(ai, di);
 						ll tj = times[j][v] + dot(ai, dj) - dot(aj, dj);
-						auto solve = crt(ti, times[i].back(), tj, times[j].back());
+						auto solve = crt(ti, times[i].back(), tj, times[j].back());//通过中国剩余定理求出碰撞时间
 						if (solve.second > 0){
 							hits++;
 							ans = min(ans, solve.first);
 						}
 					}
-
+					//dotp==1的情况,轨迹也是完全一致的.但前进方向相同导致永远不能碰上.
 					skip:;
 				}
 			}
