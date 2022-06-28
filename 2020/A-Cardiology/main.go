@@ -75,16 +75,3 @@ func main(){
 	fmt.Println(ans+1,stablePos[ans].rc.r+1,stablePos[ans].rc.c+1,
 		stablePos[ans].iterationTimes)
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
