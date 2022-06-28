@@ -1,3 +1,4 @@
+//TODO this is so much fucking slower than the C++ version, perf it to find out what's happening
 package main
 
 import "fmt"
@@ -5,14 +6,13 @@ import "fmt"
 func min(a,b int)int{if a<b {return a} else {return b} }
 
 func main(){
-	var gene,mGene string
+	var gene string
 	fmt.Scan(&gene)
-	buf:=make([]byte,0)
+	mGene:=make([]byte,0,2*len(gene)+1)
 	for _,c:=range gene{
-		buf=append(buf,'#', byte(c))
+		mGene=append(mGene,'#', byte(c))
 	}
-	buf=append(buf,'#')
-	mGene=string(buf)
+	mGene=append(mGene,'#')
 	radius :=make([]int,len(mGene))
 	head:=0; tail:=len(mGene)-1
 	rBorder:=-1; center:=-1
