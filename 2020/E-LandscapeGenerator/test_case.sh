@@ -3,8 +3,10 @@
 if [[ $1 == "case" ]];then
   correct=$(cat ./data/$2.ans)
   ans=$(cat ./data/$2.in |./main)
+  echo "$ans">data/my_ans
   if [ "$ans" != "$correct" ];then
     echo "failed"
+    diff data/$2.ans data/my_ans
   else
     echo "succ"
   fi
