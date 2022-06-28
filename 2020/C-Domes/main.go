@@ -35,12 +35,12 @@ func main(){
 	for i:=0;i<n;i++{
 		var p Pnt
 		fmt.Scanf("%f %f",&p.x,&p.y)
-		domeLocs=append(domeLocs,p)
+		domeLocs[i]=p
 	}
 	for i:=0;i<n;i++{
 		var ii int
 		fmt.Scanf("%d",&ii)
-		permutation=append(permutation,i)
+		permutation[i]=ii
 	}
 
 	polygon:=[]Pnt{{0,0},{0,dy},{dx,dy},{dx,0}}
@@ -49,8 +49,9 @@ func main(){
 		for j:=i+1;j<=n-1;j++{
 			p1:=domeLocs[permutation[i]-1]; p2:=domeLocs[permutation[j]-1]
 			polygon2=make([]Pnt,0)
-			for k:=0;k<len(polygon2);k++{
-				p3:=polygon[k]; p4:=polygon[k+1]; if k==len(polygon)-1{p4=polygon[0]}
+			for k:=0;k<len(polygon);k++{
+				p3:=polygon[k];
+				var p4 Pnt; if k==len(polygon)-1{p4=polygon[0]}else{p4=polygon[k+1]}
 				cp3:=CrossProduction(p2.minus(&p1),p3.minus(&p1)); cp4:=CrossProduction(p2.minus(&p1),p4.minus(&p1))
 				if cp3<=0{polygon2=append(polygon2,p3)}
 				if cp3>0&& cp4<0 || cp3<0 && cp4>0{
@@ -71,7 +72,7 @@ func main(){
 	var area float64=0;
 	for i,po:=range polygon{
 		j:=i+1
-		if i+1==len(polygon)-1{j=0}
+		if i==len(polygon)-1{j=0}
 		cp:=CrossProduction(po,polygon[j])
 		area+=cp
 	}
