@@ -18,6 +18,10 @@ fi
 
 input=$(ls ./data/*.in)
 count=0
+
+startTime=`date +%Y%m%d-%H:%M:%S`
+startTime_s=`date +%s``date "+%N"`
+
 for inf in $input;do
 #  if(( $count >= 2 ));then exit; fi
   echo $inf
@@ -39,3 +43,10 @@ for inf in $input;do
   fi
   count=$(( $count + 1 ))
 done
+
+endTime=`date +%Y%m%d-%H:%M:%S`
+endTime_s=`date +%s``date "+%N"`
+
+sumTime=$[ ($endTime_s - $startTime_s)/1000000 ]
+
+echo "$startTime ---> $endTime" "Total:$sumTime micro seconds"
