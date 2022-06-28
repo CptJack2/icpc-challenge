@@ -10,14 +10,14 @@ pair<int,vector<int>> dfs(int node, int parent){
 	int signCost=graph[node].size()>1?c*graph[node].size():0;
 	vector<int> costs(allSpeed.size(),0);
 	int maxSpeed=0, parS=graph[node][parent];
-	for(auto [ch,s]:graph[node])maxSpeed=max(maxSpeed,s);
-	for(auto [ch,s]:graph[node])
-		if(ch!=parent){
-			auto [chBC,chC]=dfs(ch,node);
-			signCost+=chBC;
-			for(int i=0;i<allSpeed.size();i++)
-				costs[i]+=chC[i];
-		}
+	for(auto [ch,s]:graph[node]){
+	    maxSpeed=max(maxSpeed,s);
+		if(ch==parent)continue;
+        auto [chBC,chC]=dfs(ch,node);
+        signCost+=chBC;
+        for(int i=0;i<allSpeed.size();i++)
+            costs[i]+=chC[i];
+    }
 	int bestCost=signCost;
 	for(int i=0;i<allSpeed.size();i++)
 		if(allSpeed[i]<maxSpeed)
