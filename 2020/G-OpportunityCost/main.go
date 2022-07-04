@@ -26,9 +26,6 @@ func main(){
 			partialSum[i][j]=sum
 		}
 	}
-	//fmt.Println(maximums)
-	//fmt.Println(partialSum)
-	//return
 	for i:=0;i<n;i++{
 		cost:=int64(0)
 		for j:=0;j<8;j++{cost=max(cost,maximums[j]-partialSum[i][j])}
