@@ -22,6 +22,8 @@ count=0
 startTime=`date +%Y%m%d-%H:%M:%S`
 startTime_s=`date +%s``date "+%N"`
 
+prev=$startTime_s
+
 for inf in $input;do
 #  if(( $count >= 2 ));then exit; fi
   echo $inf
@@ -42,6 +44,14 @@ for inf in $input;do
     echo "succ"
   fi
   count=$(( $count + 1 ))
+
+  endTime=`date +%Y%m%d-%H:%M:%S`
+  endTime_s=`date +%s``date "+%N"`
+
+  sumTime=$[ ($endTime_s - $prev)/1000000 ]
+  prev=$endTime_s
+
+  echo "$sumTime micro seconds"
 done
 
 endTime=`date +%Y%m%d-%H:%M:%S`
