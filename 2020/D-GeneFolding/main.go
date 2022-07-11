@@ -67,7 +67,7 @@ func main(){
 			}
 		}
 		ans := (tail - head) / 2
-// 		if ii==0{fmt.Println(ans) }
+		if ii==-1{fmt.Println(ans) }
 		if ii%5==0{fmt.Printf("%d round done\n",ii)}
 	}
 }
