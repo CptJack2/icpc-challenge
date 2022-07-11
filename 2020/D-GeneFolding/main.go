@@ -49,6 +49,15 @@ func getRadius(mGene []byte,radius[]int,head,tail *int){
 	}
 }
 
+func getAns(mGene[]byte,radius[]int,head,tail int,ans*int){
+    for i := len(mGene) - 1; i >= head; i -= 2 {
+        if radius[i]-1 >= tail-i {
+            tail -= min(i-head, tail-i)
+        }
+    }
+    *ans = (tail - head) / 2
+}
+
 func main(){
 	fmt.Scan(&gene)
 
@@ -61,13 +70,11 @@ func main(){
 		tail := len(mGene) - 1
 		getRadius(mGene,radius,&head,&tail)
 
-		for i := len(mGene) - 1; i >= head; i -= 2 {
-			if radius[i]-1 >= tail-i {
-				tail -= min(i-head, tail-i)
-			}
-		}
-		ans := (tail - head) / 2
-		if ii==-1{fmt.Println(ans) }
+
+		ans := 0
+		getAns(mGene,radius,head,tail,&ans)
+
+		fmt.Println(ans)
 		if ii%5==0{fmt.Printf("%d round done\n",ii)}
 	}
 }
