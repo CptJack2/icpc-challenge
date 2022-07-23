@@ -17,3 +17,8 @@ https://blog.csdn.net/wys74230859/article/details/121844191
 #Mutex原理
 https://blog.csdn.net/baolingye/article/details/111357407#:~:text=%E6%AF%8F%E4%B8%AAMutex%E9%83%BD,tarving%E3%80%82
 结合go的源码sync/mutex.go看,里面有大量注释。
+
+#select行为
+如果没有default，会阻塞直到其中一个子句能运行；如果有default且所有子句都不能执行，就会执行default里面的内容。
+如果有多个子句都被触发，则随机选择一个执行，其他的不执行。
+https://www.runoob.com/go/go-select-statement.html
