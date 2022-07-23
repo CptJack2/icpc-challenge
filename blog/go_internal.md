@@ -8,7 +8,12 @@ https://geektutu.com/post/hpg-string-concat.html
 https://cloud.tencent.com/developer/article/1422392
 
 #Channel原理
-底层实现是一个环形队列，用mutex控制并发，并且有写者和读者的协程队列。
+底层实现是一个环形队列，用mutex控制并发，并且有当前阻塞的写者和读者的协程队列。
 https://blog.csdn.net/wys74230859/article/details/121844191
 
+#channel阻塞
+当缓冲区满或者无缓冲区时，写/读会一直阻塞到有读/写者把消息读出。
+
 #Mutex原理
+https://blog.csdn.net/baolingye/article/details/111357407#:~:text=%E6%AF%8F%E4%B8%AAMutex%E9%83%BD,tarving%E3%80%82
+结合go的源码sync/mutex.go看,里面有大量注释。
