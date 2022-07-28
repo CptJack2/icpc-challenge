@@ -22,3 +22,10 @@ https://blog.csdn.net/baolingye/article/details/111357407#:~:text=%E6%AF%8F%E4%B
 如果没有default，会阻塞直到其中一个子句能运行；如果有default且所有子句都不能执行，就会执行default里面的内容。
 如果有多个子句都被触发，则随机选择一个执行，其他的不执行。
 https://www.runoob.com/go/go-select-statement.html
+
+#wait group
+http://t.zoukankan.com/failymao-p-15496782.html
+结合sync/waitgroup.go看
+
+#cond为什么要带一个for loop
+You need to check the condition again once you get out of conditional wait. If you don’t then you run the risk of some other thread changing condition in the time signal came and you got out of condition wait. This is true for all condition waits in all languages including pthreads in c. Checking and waiting for condition with a “if” is a bug.

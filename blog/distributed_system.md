@@ -2,6 +2,12 @@
 ![a](dont_know.gif)
 在互联网公司担任了两年的后端开发工作，虽然日常工作中做的都是分布式系统相关的开发工作，但发现自己对分布式系统的理解还是不够深入、系统，所以在研究redis代码的情况下，结合MIT 6.824分布式系统的课程，对分布式系统做一次深入的学习。
 
+#MESI协议
+缓存一致性协议MESI https://www.bilibili.com/video/BV1fK4y1E7NC?vd_source=4f8706e4f5f43018115c2b18cecd8b65
+
+#c++ Memory order
+C++11 新加的 memory_order 到底是个啥球？大厦的基石，没有这个，多线程想都不敢想！ https://www.bilibili.com/video/BV1Bz4y1Q7E1?vd_source=4f8706e4f5f43018115c2b18cecd8b65
+
 #为什么需要分布式系统
 单机性能有限，使用更快更好的计算机的成本，远大于使用多台性能一般的计算机提供服务的成本
 
@@ -27,7 +33,6 @@ GFS Paper http://nil.csail.mit.edu/6.824/2017/papers/gfs.pdf
 master保存文件目录结构、文件由哪些块组成、chunk server持有块信息
 chunk server持有块信息由master启动时向各chunk server查询 
 
-×为什么不保存文件版本号而是块版本号？
 gfs论文中，consistent指内容一致（和其他分布式指的一致不一样），defined指内容和内容的顺序都一致（因为有append追加操作，并发append顺序不一定一致）
 
 #raftdis
