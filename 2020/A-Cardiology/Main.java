@@ -19,7 +19,8 @@ public class Main {
 			int iterationTimes;
 			ansStru(){rc=new pll(0,0);}
 		}
-		ArrayList<ansStru> stablePos=new ArrayList<>(Collections.nCopies((int)c, new ansStru()));
+		ArrayList<ansStru> stablePos=new ArrayList<>((int)c);
+		for(int i=0;i<c;++i){stablePos.add(new ansStru());}
 		for(long p=0;p<c;++p){
 			pll start=new pll(0,0), end=new pll(r-1,c-1);
 			int iterationTime=0;
@@ -46,7 +47,7 @@ public class Main {
 					break;
 				++iterationTime;
 			}
-			stablePos.get((int) p).rc=(start==end?new pll(start):new pll(-1,-1));
+			stablePos.get((int) p).rc=(start.equals(end)?new pll(start):new pll(-1,-1));
 			stablePos.get((int)p).iterationTimes=iterationTime;
 		}
 		int ans=0;
