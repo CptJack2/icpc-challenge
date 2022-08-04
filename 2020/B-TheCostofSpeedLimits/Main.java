@@ -14,12 +14,6 @@ public class Main {
         int signCost=graph.get(node).size()>1?c*graph.get(node).size():0;
         ArrayList<Integer> costs=new ArrayList<>(Collections.nCopies(allSpeed.size(),0));
         int maxSpeed=0,parS=node!=1?graph.get(node).get(parent):0;
-//        try {
-//            maxSpeed = 0;
-//            parS =
-//        }catch(Exception e){
-//            System.out.println(e.getMessage());
-//        }
         for(Map.Entry<Integer, Integer> e:graph.get(node).entrySet()){
             int ch=e.getKey(), s=e.getValue();
             maxSpeed=Math.max(maxSpeed,s);
@@ -58,14 +52,11 @@ public class Main {
             u=sc.nextInt();
             v=sc.nextInt();
             s=sc.nextInt();
-//            if(graph.get(u)==null)graph.set(u,new HashMap<>());
             graph.get(u).put(v,s);
-//            if(graph.get(u)==null)graph.set(u,new HashMap<>());
             graph.get(v).put(u,s);
             uniqueSpeeds.add(s);
         }
         allSpeed.addAll(uniqueSpeeds);
-        //graph.get(1).put(0,0);
         ret r=dfs(1,0);
         System.out.println(r.i);
     }
