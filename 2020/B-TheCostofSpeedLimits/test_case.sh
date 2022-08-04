@@ -30,7 +30,7 @@ for inf in $input;do
   extension="${filename##*.}"
   ans_filename="${filename%.*}"".ans"
   ans=$(cat $inf |./main)
-  #ans=$(cat $inf | java -Xss8m Main.java) #bigger stack size
+  #ans=$(cat $inf | java -Xss8m Main.java) #bigger stack size to avoid overflow
   echo "$ans" > ./data/my_ans
   correct=$(cat ./data/$ans_filename)
   if [ "$ans" != "$correct" ];then
