@@ -15,8 +15,10 @@ C语言可以算是现代高级编程语言的爷爷，目前各种常用的主�
 
 #acm练习
 
-#cmake
+#cmake和make
 cmake已经成为c++工程项目文件的事实标准了，上面提到的vscode和clion，都是默认使用cmake作为项目文件。学习一下一些简单的cmake语法是很有必要的，学到能看懂cmakelists，能通过查文档去编写cmakelists的程度就可以了。
+
+#代码管理系统，git和svn
 
 #工程项目练习，redis
 ##编译，跑起来
