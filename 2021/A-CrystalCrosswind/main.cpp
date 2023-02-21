@@ -19,6 +19,8 @@ inline bool inRange(int x, int y){
     return x>=1 && x<=dx && y>=1 && y<=dy;
 }
 
+//ulimit -s 查看默认栈空间大小
+//ulimit -s 102400 栈空间临时改为100MB
 void dfsReplace(int x, int y){
     if(inRange(x,y) && graph[x][y]=='?')
         return ;
