@@ -51,7 +51,29 @@ void dfsSolution(){
 
 void bfsSolution(){
     queue<pair<int,int>> bfsQue;
-
+    for(int x=-dx; x<=2*dx; ++x)
+        for(int y=-dy; y<=2*dy; ++y) {
+            if(inRange(x,y)&&graph[x][y]=='?')
+                continue;
+            for (int i = 0; i < k; ++i) {
+                int x2 = inRange(x, y) && graph[x][y] == '#' ? x - winds[i].first : x + winds[i].first,
+                    y2 = inRange(x, y) && graph[x][y] == '#' ? y - winds[i].second : y + winds[i].second;
+                if (inRange(x2, y2) && graph[x2][y2] == '?')
+                    graph[x2][y2] = inRange(x, y) ? graph[x][y] : '.',
+                    bfsQue.push(make_pair(x2, y2));
+            }
+        }
+    while(!bfsQue.empty()){
+        auto [x,y]=bfsQue.front();
+        bfsQue.pop();
+        for (int i = 0; i < k; ++i) {
+            int x2 = inRange(x, y) && graph[x][y] == '#' ? x - winds[i].first : x + winds[i].first,
+                y2 = inRange(x, y) && graph[x][y] == '#' ? y - winds[i].second : y + winds[i].second;
+            if (inRange(x2, y2) && graph[x2][y2] == '?')
+                graph[x2][y2] = graph[x][y],
+                bfsQue.push(make_pair(x2, y2));
+        }
+    }
 }
 
 int main(){
@@ -70,7 +92,7 @@ int main(){
                 graph[x2][y2]='.';
         }
     }
-    dfsSolution();
+    bfsSolution();
     //输出结果，待定的'?'置为'.'是最小结构，置为'#'是最大结构
     for(int j=1;j<=dy;++j){
         for(int i=1;i<=dx;++i)
