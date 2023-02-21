@@ -41,6 +41,19 @@ void dfsReplace(int x, int y){
     }
 }
 
+void dfsSolution(){
+    //因为−dx ≤ wx ≤ dx，−dy ≤ wy ≤ dy，所以x可能的距离为0-dx到dx+dx
+    for(int x=-dx; x<=2*dx; ++x)
+        for(int y=-dy; y<=2*dy; ++y){
+            dfsReplace(x,y);
+        }
+}
+
+void bfsSolution(){
+    queue<pair<int,int>> bfsQue;
+
+}
+
 int main(){
     cin>>dx>> dy>> k;
     graph.resize(dx+1, vector<char>(dy+1, '?'));
@@ -57,10 +70,7 @@ int main(){
                 graph[x2][y2]='.';
         }
     }
-    for(int x=-dx; x<=2*dx; ++x)
-        for(int y=-dy; y<=2*dy; ++y){
-            dfsReplace(x,y);
-        }
+    dfsSolution();
     //输出结果，待定的'?'置为'.'是最小结构，置为'#'是最大结构
     for(int j=1;j<=dy;++j){
         for(int i=1;i<=dx;++i)
