@@ -6,6 +6,15 @@ int dx, dy, k;
 vector<vector<char>> graph;
 vector<pair<int,int>> winds;
 
+void printGraph() {
+    for(int j=1;j<=dy;++j){
+        for(int i=1;i<=dx;++i)
+            cout<<graph[i][j];
+        cout<<endl;
+    }
+    cout<<endl;
+}
+
 inline bool inRange(int x, int y){
     return x>=1 && x<=dx && y>=1 && y<=dy;
 }
@@ -22,9 +31,10 @@ void dfsReplace(int x, int y){
             x2=x+winds[i].first,
             y2=y+winds[i].second;
         if(inRange(x2,y2)&&graph[x2][y2]=='?')
-            graph[x2][y2]=graph[x][y],
             //'#'的上风位如果是'?'那这个位置一定是'#'，否则这个'#'会被认定为boundary并且这个'?'会被置为'.'，与当前状态矛盾
-            // '.'的下风位若为‘?'那此处必然为’.‘，假如这个点是'#'，那它一定是boundary，不可能没被发现
+            //'.'的下风位若为‘?'那此处必然为’.‘，假如这个点是'#'，那它一定是boundary，不可能没被发现
+            //从图外指进来的'?'只能是'.'，不能保留为'?'，'?'是用于最终输出的时候确定最大最小结构的
+            graph[x2][y2]=inRange(x,y) ? graph[x][y] : '.',
             dfsReplace(x2,y2);
     }
 }
@@ -52,12 +62,13 @@ int main(){
     //输出结果，待定的'?'置为'.'是最小结构，置为'#'是最大结构
     for(int j=1;j<=dy;++j){
         for(int i=1;i<=dx;++i)
-            cout<<(graph[i][j]=='?'?graph[i][j]:'.');
+            cout<<(graph[i][j]!='?'?graph[i][j]:'.');
         cout<<endl;
     }
+    cout<<endl;
     for(int j=1;j<=dy;++j){
         for(int i=1;i<=dx;++i)
-            cout<<(graph[i][j]=='?'?graph[i][j]:'#');
+            cout<<(graph[i][j]!='?'?graph[i][j]:'#');
         cout<<endl;
     }
 }
