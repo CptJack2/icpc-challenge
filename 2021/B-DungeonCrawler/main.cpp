@@ -7,7 +7,7 @@ using namespace std;
 int main() {
     int N, Q, U, V, W, S, K, T;
     while (cin >> N >> Q) {
-        vector<vector<pair<int,int>>> c(N);
+        vector<vector<pair<int,int>>> c(N);//dest length
         int64_t tot = 0;
         for (int i = 0; i < N-1; i++) {
             cin >> U >> V >> W;
@@ -18,7 +18,7 @@ int main() {
         }
 
         vector<int> depth(N);
-        vector<vector<pair<int64_t,int>>> longest(N);
+        vector<vector<pair<int64_t,int>>> longest(N);//length dest 从每个相邻节点离开的最长路径
         function<int64_t(int,int,int)> doLongest = [&](int x, int prev, int dp) {
             depth[x] = dp;
             int64_t ret = 0;
