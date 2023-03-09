@@ -42,8 +42,8 @@ int main() {
         };
         doParLongest(0, -1, 0);
 
-        vector<vector<int>> skipNd(N);  // skip-paths going up the tree of length 2^n
-        vector<vector<int>> skipPrev(N);  // first node on the skip-path going down
+        vector<vector<int>> skipNd(N);  // skip-paths going up the tree of length 2^n 从这个点一直往根走，距离为2^n次方的点
+        vector<vector<int>> skipPrev(N);  // first node on the skip-path going down //往根走的路径上的点？
         vector<vector<int64_t>> skipSUp(N);  // max path-to-endpoint, starting at bottom, maybe entering interior subtree
         vector<vector<int64_t>> skipSDn(N);  // same, but starting at top instead
         vector<vector<int64_t>> skipKUp(N);  // skipSUp, but costs along the skip path are subtracted, not added
