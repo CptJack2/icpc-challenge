@@ -7,18 +7,17 @@ using namespace std;
 int main() {
     int N, Q, U, V, W, S, K, T;
     while (cin >> N >> Q) {
-        vector<vector<pair<int,int>>> c(N);
+        vector<vector<pair<int,int>>> c(N+1);
         int64_t tot = 0;
-        for (int i = 0; i < N-1; i++) {
+        for (int i = 0; i < N; i++) {
             cin >> U >> V >> W;
-            U--; V--;
             c[U].push_back({V, W});
             c[V].push_back({U, W});
             tot += W;
         }
 
-        vector<int> depth(N);
-        vector<vector<pair<int64_t,int>>> longest(N);
+        vector<int> depth(N+1);
+        vector<vector<pair<int64_t,int>>> longest(N+1);
         function<int64_t(int,int,int)> doLongest = [&](int x, int prev, int dp) {
             depth[x] = dp;
             int64_t ret = 0;
@@ -28,7 +27,7 @@ int main() {
             }
             return ret;
         };
-        doLongest(0, -1, 0);
+        doLongest(1, -1, 0);
         function<int64_t(int,int,int)> getLongest = [&](int x, int ex1, int ex2) -> int64_t {
             for (auto [l, y] : longest[x]) {
                 if (y != ex1 && y != ex2) return l;
@@ -40,15 +39,15 @@ int main() {
             sort(longest[x].begin(), longest[x].end(), greater<pair<int64_t,int>>());
             for (auto [y, d] : c[x]) if (y != prev) doParLongest(y, x, d + getLongest(x, y, -1));
         };
-        doParLongest(0, -1, 0);
+        doParLongest(1, -1, 0);
 
-        vector<vector<int>> skipNd(N);  // skip-paths going up the tree of length 2^n
-        vector<vector<int>> skipPrev(N);  // first node on the skip-path going down
-        vector<vector<int64_t>> skipSUp(N);  // max path-to-endpoint, starting at bottom, maybe entering interior subtree
-        vector<vector<int64_t>> skipSDn(N);  // same, but starting at top instead
-        vector<vector<int64_t>> skipKUp(N);  // skipSUp, but costs along the skip path are subtracted, not added
-        vector<vector<int64_t>> skipKDn(N);  // same, but starting at top instead
-        vector<vector<int64_t>> skipDist(N);  // total length of skip
+        vector<vector<int>> skipNd(N+1);  // skip-paths going up the tree of length 2^n
+        vector<vector<int>> skipPrev(N+1);  // first node on the skip-path going down
+        vector<vector<int64_t>> skipSUp(N+1);  // max path-to-endpoint, starting at bottom, maybe entering interior subtree
+        vector<vector<int64_t>> skipSDn(N+1);  // same, but starting at top instead
+        vector<vector<int64_t>> skipKUp(N+1);  // skipSUp, but costs along the skip path are subtracted, not added
+        vector<vector<int64_t>> skipKDn(N+1);  // same, but starting at top instead
+        vector<vector<int64_t>> skipDist(N+1);  // total length of skip
         function<void(int,int,int64_t)> doSkip = [&](int x, int prev, int64_t d) {
             skipNd[x].push_back(prev);
             skipPrev[x].push_back(x);
@@ -70,7 +69,7 @@ int main() {
             }
             for (int i = 0; i < c[x].size(); i++) if (c[x][i].first != prev) doSkip(c[x][i].first, x, c[x][i].second);
         };
-        for (int i = 0; i < c[0].size(); i++) doSkip(c[0][i].first, 0, c[0][i].second);
+        for (int i = 0; i < c[1].size(); i++) doSkip(c[1][i].first, 0, c[1][i].second);
 
         auto anc = [&](int x, int y) {
             vector<pair<int,int>> ret;
@@ -100,7 +99,6 @@ int main() {
 
         for (int q = 0; q < Q; q++) {
             cin >> S >> K >> T;
-            S--; K--; T--;
 
             auto sk = anc(S, K), st = anc(S, T), ks = anc(K, S), kt = anc(K, T);
             auto path1 = (depth[sk.back().first] > depth[st.back().first] ? sk : st);
