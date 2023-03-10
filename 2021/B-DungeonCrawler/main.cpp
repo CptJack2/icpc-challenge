@@ -57,10 +57,10 @@ int main() {
             skipSDn[x].push_back(d);
             skipKUp[x].push_back(0);
             skipKDn[x].push_back(0);
-            for (int b = 1; (depth[x]&((1<<b)-1)) == 0; b++) {
-                int y = skipNd[x][b-1];
-                skipNd[x].push_back(skipNd[y][b-1]);
-                skipPrev[x].push_back(skipPrev[y][b-1]);
+            for (int b = 1; (depth[x]&((1<<b)-1)) == 0; b++) {//(1<<b)-1 = b个1
+                int y = skipNd[x][b-1];//往根走的第2^(b-1)号前继
+                skipNd[x].push_back(skipNd[y][b-1]);//我的2^n号前继的2^n号前继，是我的2^（n+1）号前继
+                skipPrev[x].push_back(skipPrev[y][b-1]);//skipNd的下一个点
                 skipDist[x].push_back(skipDist[x][b-1] + skipDist[y][b-1]);
                 int64_t ymx = getLongest(y, skipPrev[x][b-1], skipNd[y][0]);
                 skipSUp[x].push_back(max(skipSUp[x][b-1],  skipDist[x][b-1] + max(ymx, skipSUp[y][b-1])));
