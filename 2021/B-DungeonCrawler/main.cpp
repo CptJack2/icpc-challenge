@@ -57,7 +57,19 @@ int main() {
             skipSDn[x].push_back(d);
             skipKUp[x].push_back(0);
             skipKDn[x].push_back(0);
-            for (int b = 1; (depth[x]&((1<<b)-1)) == 0; b++) {//(1<<b)-1 = b个1
+            int al=0, de=depth[x];
+            while((de&1)==0){
+                ++al;
+                de>>=1;
+            }
+            skipNd[x].resize(al);
+            skipPrev[x].resize(al);
+            skipDist[x].resize(al);
+            skipSUp[x].resize(al);
+            skipSDn[x].resize(al);
+            skipKUp[x].resize(al);
+            skipKDn[x].resize(al);
+            for (int b = 1; b<al; b++) {//(1<<b)-1 = b个1
                 int y = skipNd[x][b-1];//往根走的第2^(b-1)号前继
                 skipNd[x].push_back(skipNd[y][b-1]);//我的2^n号前继的2^n号前继，是我的2^（n+1）号前继
                 skipPrev[x].push_back(skipPrev[y][b-1]);//往根的方向，skipNd的前继点
