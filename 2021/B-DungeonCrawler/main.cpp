@@ -2,6 +2,7 @@
 #include <functional>
 #include <iostream>
 #include <vector>
+#include<cassert>
 using namespace std;
 
 int main() {
@@ -50,18 +51,12 @@ int main() {
         vector<vector<int64_t>> skipKDn(N);  // same, but starting at top instead
         vector<vector<int64_t>> skipDist(N);  // total length of skip
         function<void(int,int,int64_t)> doSkip = [&](int x, int prev, int64_t d) {
-            skipNd[x].push_back(prev);
-            skipPrev[x].push_back(x);
-            skipDist[x].push_back(d);
-            skipSUp[x].push_back(d);
-            skipSDn[x].push_back(d);
-            skipKUp[x].push_back(0);
-            skipKDn[x].push_back(0);
-            int al=0, de=depth[x];
-            while((de&1)==0){
+            int al=1, dep=depth[x];
+            while((dep & 1) == 0){
                 ++al;
-                de>>=1;
+                dep>>=1;
             }
+
             skipNd[x].resize(al);
             skipPrev[x].resize(al);
             skipDist[x].resize(al);
@@ -69,16 +64,25 @@ int main() {
             skipSDn[x].resize(al);
             skipKUp[x].resize(al);
             skipKDn[x].resize(al);
+
+            skipNd[x][0]=prev;
+            skipPrev[x][0]=x;
+            skipDist[x][0]=d;
+            skipSUp[x][0]=d;
+            skipSDn[x][0]=d;
+            skipKUp[x][0]=0;
+            skipKDn[x][0]=0;
+
             for (int b = 1; b<al; b++) {//(1<<b)-1 = b个1
                 int y = skipNd[x][b-1];//往根走的第2^(b-1)号前继
-                skipNd[x].push_back(skipNd[y][b-1]);//我的2^n号前继的2^n号前继，是我的2^（n+1）号前继
-                skipPrev[x].push_back(skipPrev[y][b-1]);//往根的方向，skipNd的前继点
-                skipDist[x].push_back(skipDist[x][b-1] + skipDist[y][b-1]);
+                skipNd[x][b]=skipNd[y][b-1];//我的2^n号前继的2^n号前继，是我的2^（n+1）号前继
+                skipPrev[x][b]=skipPrev[y][b-1];//往根的方向，skipNd的前继点
+                skipDist[x][b]=skipDist[x][b-1] + skipDist[y][b-1];
                 int64_t ymx = getLongest(y, skipPrev[x][b-1], skipNd[y][0]);
-                skipSUp[x].push_back(max(skipSUp[x][b-1],  skipDist[x][b-1] + max(ymx, skipSUp[y][b-1])));
-                skipSDn[x].push_back(max(skipSDn[y][b-1],  skipDist[y][b-1] + max(ymx, skipSDn[x][b-1])));
-                skipKUp[x].push_back(max(skipKUp[x][b-1], -skipDist[x][b-1] + max(ymx, skipKUp[y][b-1])));
-                skipKDn[x].push_back(max(skipKDn[y][b-1], -skipDist[y][b-1] + max(ymx, skipKDn[x][b-1])));
+                skipSUp[x][b]=max(skipSUp[x][b-1],  skipDist[x][b-1] + max(ymx, skipSUp[y][b-1]));
+                skipSDn[x][b]=max(skipSDn[y][b-1],  skipDist[y][b-1] + max(ymx, skipSDn[x][b-1]));
+                skipKUp[x][b]=max(skipKUp[x][b-1], -skipDist[x][b-1] + max(ymx, skipKUp[y][b-1]));
+                skipKDn[x][b]=max(skipKDn[y][b-1], -skipDist[y][b-1] + max(ymx, skipKDn[x][b-1]));
             }
             for (int i = 0; i < c[x].size(); i++) if (c[x][i].first != prev) doSkip(c[x][i].first, x, c[x][i].second);
         };
