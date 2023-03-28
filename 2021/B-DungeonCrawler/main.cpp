@@ -77,7 +77,7 @@ int main() {
                 int y = skipNd[x][b-1];//往根走的第2^(b-1)号前继
                 skipNd[x][b]=skipNd[y][b-1];//我的2^n号前继的2^n号前继，是我的2^（n+1）号前继
                 skipPrev[x][b]=skipPrev[y][b-1];//往根的方向，skipNd的前继点
-                skipDist[x][b]=skipDist[x][b-1] + skipDist[y][b-1];
+                skipDist[x][b]=skipDist[x][b-1] + skipDist[y][b-1];//到x的2^b号前继的距离，先从x移动2^(b-1)步到y，再从y移动2^(b-1)步
                 int64_t ymx = getLongest(y, skipPrev[x][b-1], skipNd[y][0]);
                 skipSUp[x][b]=max(skipSUp[x][b-1],  skipDist[x][b-1] + max(ymx, skipSUp[y][b-1]));
                 skipSDn[x][b]=max(skipSDn[y][b-1],  skipDist[y][b-1] + max(ymx, skipSDn[x][b-1]));
