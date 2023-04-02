@@ -18,8 +18,8 @@ int main() {
             tot += W;
         }
 
-        vector<int> depth(N);
-        vector<vector<pair<int64_t,int>>> longest(N);//length dest 从每个相邻节点离开的最长路径
+        vector<int> depth(N);//每个节点在树中的高度，0号根节点高度为0
+        vector<vector<pair<int64_t,int>>> longest(N);//length dest longest[x]={ {y1,d1}, {y2,d2}, ...}, 从x经yi节点能达到的最长路径
         function<int64_t(int,int,int)> doLongest = [&](int x, int prev, int dp) {
             depth[x] = dp;
             int64_t ret = 0;
@@ -30,55 +30,61 @@ int main() {
             return ret;
         };
         doLongest(0, -1, 0);
-        function<int64_t(int,int,int)> getLongest = [&](int x, int ex1, int ex2) -> int64_t {
+        function<int64_t(int,int,int)> getLongest = [&](int x, int ex1, int ex2) -> int64_t { //选出在x节点，经过除ex1和ex2以外的节点，能达到的最长路径
             for (auto [l, y] : longest[x]) {
                 if (y != ex1 && y != ex2) return l;
             }
             return 0;
         };
-        function<void(int,int,int64_t)> doParLongest = [&](int x, int prev, int64_t parLongest) {
-            for (auto& [l, _] : longest[x]) if (l == -1) l = parLongest;
-            sort(longest[x].begin(), longest[x].end(), greater<pair<int64_t,int>>());
-            for (auto [y, d] : c[x]) if (y != prev) doParLongest(y, x, d + getLongest(x, y, -1));
+        function<void(int,int,int64_t)> doParLongest = [&](int x, int prev, int64_t parLongest) {//前面getLongest对于经过父节点离开的最长路径留空为-1,现在把这个最长路径补齐
+            int a=1;
+            for (auto& [l, _] : longest[x])
+                if (l == -1)
+                    l = parLongest;
+            sort(longest[x].begin(), longest[x].end(), greater<pair<int64_t,int>>());//距离从大到小排序
+            for (auto [y, d] : c[x]) if (y != prev)
+                doParLongest(y, x, d + getLongest(x, y, -1));
         };
         doParLongest(0, -1, 0);
 
-        vector<vector<int>> skipNd(N);  // skip-paths going up the tree of length 2^n 从这个点一直往根走，距离为2^n次方的点
-        vector<vector<int>> skipPrev(N);  // first node on the skip-path going down //往根走的路径上的点？
+        vector<vector<int>> skipNd(N);  // skip-paths going up the tree of length 2^n 从这个点一直往根走，距离为2^n次方的点，也就是skipNd[x][b]为x的第2^b号父节点
+        vector<vector<int>> skipPrev(N);  // first node on the skip-path going down //从这个点一直往根走，距离为2^n-1次方的点。skipNd[x][b]是skipPrev[x][b]的父节点
         vector<vector<int64_t>> skipSUp(N);  // max path-to-endpoint, starting at bottom, maybe entering interior subtree
         vector<vector<int64_t>> skipSDn(N);  // same, but starting at top instead
         vector<vector<int64_t>> skipKUp(N);  // skipSUp, but costs along the skip path are subtracted, not added
         vector<vector<int64_t>> skipKDn(N);  // same, but starting at top instead
-        vector<vector<int64_t>> skipDist(N);  // total length of skip
+        vector<vector<int64_t>> skipDist(N);  // total length of skip //到2^n号父节点的距离
         function<void(int,int,int64_t)> doSkip = [&](int x, int prev, int64_t d) {
             int al=1, dep=depth[x];
             while((dep & 1) == 0){
                 ++al;
                 dep>>=1;
             }
+            {
+                skipNd[x].resize(al);
+                skipPrev[x].resize(al);
+                skipDist[x].resize(al);
+                skipSUp[x].resize(al);
+                skipSDn[x].resize(al);
+                skipKUp[x].resize(al);
+                skipKDn[x].resize(al);
 
-            skipNd[x].resize(al);
-            skipPrev[x].resize(al);
-            skipDist[x].resize(al);
-            skipSUp[x].resize(al);
-            skipSDn[x].resize(al);
-            skipKUp[x].resize(al);
-            skipKDn[x].resize(al);
-
-            skipNd[x][0]=prev;
-            skipPrev[x][0]=x;
-            skipDist[x][0]=d;
-            skipSUp[x][0]=d;
-            skipSDn[x][0]=d;
-            skipKUp[x][0]=0;
-            skipKDn[x][0]=0;
-
+                skipNd[x][0] = prev;
+                skipPrev[x][0] = x;
+                skipDist[x][0] = d;
+                skipSUp[x][0] = d;
+                skipSDn[x][0] = d;
+                skipKUp[x][0] = 0;
+                skipKDn[x][0] = 0;
+            }
             for (int b = 1; b<al; b++) {//(1<<b)-1 = b个1
-                int y = skipNd[x][b-1];//往根走的第2^(b-1)号前继
-                skipNd[x][b]=skipNd[y][b-1];//我的2^n号前继的2^n号前继，是我的2^（n+1）号前继
-                skipPrev[x][b]=skipPrev[y][b-1];//往根的方向，skipNd的前继点
-                skipDist[x][b]=skipDist[x][b-1] + skipDist[y][b-1];//到x的2^b号前继的距离，先从x移动2^(b-1)步到y，再从y移动2^(b-1)步
-                int64_t ymx = getLongest(y, skipPrev[x][b-1], skipNd[y][0]);
+                int y = skipNd[x][b-1];//x的第2^(b-1)号父节点
+                skipNd[x][b]=skipNd[y][b-1];//x的2^(b-1)号父节点的2^(b-1)号父节点，是x的2^b号父节点
+                skipPrev[x][b]=skipPrev[y][b-1];//skipNd[x][b]的父节点也是同上计算方法
+                skipDist[x][b]=skipDist[x][b-1] + skipDist[y][b-1];//到x的2^b号父节点的距离，先从x移动到2^(b-1)父节点（y），再从y移动到它的2^(b-1)父节点
+//                if(skipPrev[x][b-1]!=skipNd[y][0])
+//                    fprintf(stderr,"y:%d skipPrev[x][b-1]:%d skipNd[y][0]:%d\n",y,skipPrev[x][b-1], skipNd[y][0]);
+                int64_t ymx = getLongest(y, skipPrev[x][b-1], skipNd[y][0]);//不算和x距离为2^(b-1)的点（y的一个子节点）和y的父节点
                 skipSUp[x][b]=max(skipSUp[x][b-1],  skipDist[x][b-1] + max(ymx, skipSUp[y][b-1]));
                 skipSDn[x][b]=max(skipSDn[y][b-1],  skipDist[y][b-1] + max(ymx, skipSDn[x][b-1]));
                 skipKUp[x][b]=max(skipKUp[x][b-1], -skipDist[x][b-1] + max(ymx, skipKUp[y][b-1]));
