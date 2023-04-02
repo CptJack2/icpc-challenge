@@ -19,7 +19,7 @@ int main() {
         }
 
         vector<int> depth(N);//每个节点在树中的高度，0号根节点高度为0
-        vector<vector<pair<int64_t,int>>> longest(N);//length dest longest[x]={ {y1,d1}, {y2,d2}, ...}, 从x经yi节点能达到的最长路径
+        vector<vector<pair<int64_t,int>>> longest(N);//length dest longest[x]={ {y1,d1}, {y2,d2}, ...}, 从x经yi节点能达到的最长路径（终点一定是一个叶子节点）
         function<int64_t(int,int,int)> doLongest = [&](int x, int prev, int dp) {
             depth[x] = dp;
             int64_t ret = 0;
@@ -84,7 +84,13 @@ int main() {
                 skipDist[x][b]=skipDist[x][b-1] + skipDist[y][b-1];//到x的2^b号父节点的距离，先从x移动到2^(b-1)父节点（y），再从y移动到它的2^(b-1)父节点
 //                if(skipPrev[x][b-1]!=skipNd[y][0])
 //                    fprintf(stderr,"y:%d skipPrev[x][b-1]:%d skipNd[y][0]:%d\n",y,skipPrev[x][b-1], skipNd[y][0]);
-                int64_t ymx = getLongest(y, skipPrev[x][b-1], skipNd[y][0]);//不算和x距离为2^(b-1)的点（y的一个子节点）和y的父节点
+                int64_t ymx = getLongest(y, skipPrev[x][b-1], skipNd[y][0]);//不算和x距离为2^(b-1)-1的点（y的一个子节点）和y的父节点
+                /*设x的2^b号父节点skipNd[x][b]为z，skipPrev[x][b-1]为a，skipNd[y][0]为b
+                 * 可知b为y的父节点，y为a的父节点，且从x出发到y必会经过a
+                 * 可以证明：skipSUp[x][b]是从x出发，在以z为根节点的子树中，最长的一条路径
+                 *skipSUp[x][b-1]是从x出发，在以y为根节点的子树中，最长的一条路径
+                 * skipDist[x][b-1]是x到y的距离，
+                 * ymx是从y出发，不经过a和b的，能到达的最长的路径*/
                 skipSUp[x][b]=max(skipSUp[x][b-1],  skipDist[x][b-1] + max(ymx, skipSUp[y][b-1]));
                 skipSDn[x][b]=max(skipSDn[y][b-1],  skipDist[y][b-1] + max(ymx, skipSDn[x][b-1]));
                 skipKUp[x][b]=max(skipKUp[x][b-1], -skipDist[x][b-1] + max(ymx, skipKUp[y][b-1]));
