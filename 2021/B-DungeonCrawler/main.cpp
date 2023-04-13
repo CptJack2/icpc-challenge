@@ -100,7 +100,7 @@ int main() {
         };
         for (int i = 0; i < c[0].size(); i++) doSkip(c[0][i].first, 0, c[0][i].second);
 
-        auto anc = [&](int x, int y) {
+        auto anc = [&](int x, int y) { //ancestor, 找从x出发到y，经过的x的祖先
             vector<pair<int,int>> ret;
             while (depth[y] > depth[x]) {
                 for (int b = skipNd[y].size()-1; b >= 0; b--) if (depth[y]-(1<<b) >= depth[x]) {
@@ -115,7 +115,7 @@ int main() {
                         break;
                     }
             }
-            while (x != y) {
+            while (x != y) { // 找公共祖先
                 for (int b = skipNd[x].size()-1; b >= 0; b--) if (b == 0 || skipNd[x][b] != skipNd[y][b]) {
                         ret.push_back({x, b});
                         x = skipNd[x][b]; y = skipNd[y][b];
@@ -132,13 +132,15 @@ int main() {
 
             auto sk = anc(S, K), st = anc(S, T), ks = anc(K, S), kt = anc(K, T);
             auto path1 = (depth[sk.back().first] > depth[st.back().first] ? sk : st);
-            auto path2 = anc(path1.back().first, K);
-            auto path4 = (depth[ks.back().first] > depth[kt.back().first] ? ks : kt);
+            auto path2 = anc(path1.back().first, K);//anc(S,K) - anc(S,T)
+            auto path4 = (depth[ks.back().first] > depth[kt.back().first] ? ks : kt);//anc(K,S) - anc(K,T)
             auto path3 = anc(path4.back().first, S);
+            // 如果path1/path4是sk/ks,back==T意味着T是S和K的公共祖先,则不可能先经过K然后才到T; 如果path1/path4是st/kt,back==T意味着T是S/K的祖先,且层高比SK的公共祖先高,则从S出发必然先要经过T才能到K
             if (path1.back().first == T || path4.back().first == T) { cout << "impossible" << endl; continue; }
 
             int x = S, prev = -1;
             int64_t base = 0, ret = 0;
+            //先到达anc(S,K)和anc(S,T)的层高较大者
             for (int i = 0; i+1 < path1.size(); i++) {  // path1 rises from S, not overlapping path T->K
                 auto [y, b] = path1[i];
                 ret = max(ret, base + getLongest(x, prev, skipNd[y][0]));
