@@ -141,21 +141,22 @@ int main() {
             int x = S, prev = -1;
             int64_t base = 0, ret = 0;
             //先到达anc(S,K)和anc(S,T)的层高较大者
+            //path2 path3必定有一个为空另一个非空
             for (int i = 0; i+1 < path1.size(); i++) {  // path1 rises from S, not overlapping path T->K
-                auto [y, b] = path1[i];
-                ret = max(ret, base + getLongest(x, prev, skipNd[y][0]));
-                ret = max(ret, base + skipSUp[y][b]);
-                base += skipDist[y][b];
-                prev = skipPrev[y][b];
-                x = skipNd[y][b];
+                auto [_, b] = path1[i];
+                ret = max(ret, base + getLongest(x, prev, skipNd[x][0]));
+                ret = max(ret, base + skipSUp[x][b]);
+                base += skipDist[x][b];
+                prev = skipPrev[x][b];
+                x = skipNd[x][b];
             }
             for (int i = 0; i+1 < path2.size(); i++) {  // path2 rises from path1, overlapping path T->K
-                auto [y, b] = path2[i];
-                ret = max(ret, base + getLongest(x, prev, skipNd[y][0]));
-                ret = max(ret, base + skipKUp[y][b]);
-                base -= skipDist[y][b];
-                prev = skipPrev[y][b];
-                x = skipNd[y][b];
+                auto [_, b] = path2[i];
+                ret = max(ret, base + getLongest(x, prev, skipNd[x][0]));
+                ret = max(ret, base + skipKUp[x][b]);
+                base -= skipDist[x][b];
+                prev = skipPrev[x][b];
+                x = skipNd[x][b];
             }
             for (int i = path3.size()-2; i >= 0; i--) {  // path3 descends from path2, not overlapping path T->K
                 auto [y, b] = path3[i];
