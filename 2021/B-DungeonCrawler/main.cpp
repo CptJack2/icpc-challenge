@@ -8,20 +8,16 @@ using namespace std;
 
 int main() {
     int N, Q, U, V, W, S, K, T;
-//    cin >> N >> Q;
+    cin >> N >> Q;
     vector<vector<pair<int, int>>> c(N);//dest length
     int64_t tot = 0;
-//    for (int i = 0; i < N - 1; i++) {
-//        cin >> U >> V >> W;
-//        U--;V--;
-//        c[U].push_back({V, W});
-//        c[V].push_back({U, W});
-//        tot += W;
-//    }
-    N=3;Q=1;
-    c[0]={{1,1},{2,1}};
-    c[1]={{0,1}};
-    c[2]={{0,1}};
+    for (int i = 0; i < N - 1; i++) {
+        cin >> U >> V >> W;
+        U--;V--;
+        c[U].push_back({V, W});
+        c[V].push_back({U, W});
+        tot += W;
+    }
 
     vector<int> depth(N);//每个节点在树中的高度，0号根节点高度为0
     vector<vector<pair<int64_t, int>>> longest(N);//length dest longest[x]={ {y1,d1}, {y2,d2}, ...}, 从x经yi节点能达到的最长路径（终点一定是一个叶子节点）
@@ -138,9 +134,9 @@ int main() {
     };
 
     for (int q = 0; q < Q; q++) {
-//        cin >> S >> K >> T;
-//        S--; K--; T--;
-        S=1;K=0;T=2;
+        cin >> S >> K >> T;
+        S--; K--; T--;
+
         auto sk = anc(S, K), st = anc(S, T), ks = anc(K, S), kt = anc(K, T);
         auto path1 = (depth[sk.back().first] > depth[st.back().first] ? sk : st);
         auto path2 = anc(path1.back().first, K);//anc(S,K) - anc(S,T)
