@@ -75,7 +75,7 @@ int main() {
             skipNd[x][0] = prev;
             skipPrev[x][0] = x;
             skipDist[x][0] = d;
-//            skipSUp[x][0] = d; + ymx;
+            skipSUp[x][0] = d;// + ymx;//这里的初始化都可以直接不用
             skipSDn[x][0] = d;
             skipKUp[x][0] = 0;
             skipKDn[x][0] = 0;
