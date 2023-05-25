@@ -1,0 +1,246 @@
+#it配置好内外网机器
+
+#OA 提单申请代码权限，http://a100/svn/spve/trunk
+
+#在/home/libai下有.zshrc_17x，用其替换自己~/.zshrc，里面是对应机器需要的环境变量
+
+#qt creator查看代码
+make多线程会出现奇怪的找不到头文件的bug？（因为它是编译时将所有头文件都copy到spve/build/include的。。。）项目里要设置-j1
+常用快捷键 https://blog.csdn.net/weixin_43297891/article/details/115904855 https://blog.csdn.net/sinat_31608641/article/details/123311348
+
+qtc不能调试
+工具-》选项-》kits-》构建套件-》Debuger-》从lldb改成gdb
+
+#gdb使用参数
+https://blog.csdn.net/KingOfMyHeart/article/details/116243173
+
+gdb --args program -a -b -c
+
+gdb program
+set args -a -b -c
+show args
+
+gdb program
+r -a -b -c
+
+#代码格式化
+在qtcreator里面弄，网盘/新员工入职/软件开发/qt creator beautify指南
+/Data2/tools/astyle/bin/astyle --options=/home/chenxl/astyle.conf file_name
+
+#src工程构建
+需要向IT申请/Data2/share/build_home的权限
+然后可以直接make
+
+#test工程构建
+在qtcreator里构建
+需要设置LD_LIBRARY_PATH=spve路径/PVEBin/3rdParty/glibc:$LD_LIBRARY_PATH（这里是动态链接，build也可能不需要，但run肯定要的，否则库版本不对）
+设置PERL5LIB=spve路径/PVEBin/3rdParty/perl5.10.1
+
+#vs code 远程开发
+先在VDI的EDA共享/常用软件/VSCode常用插件/vscode插件安装remote-ssh插件
+由于开发网不能联网，直接在vdi通过vscode ssh过去会无法安装code-server，cp /Data2/tools/vscode-server/vs.tar.gz ~, tar xzvf
+这里面是一个完整的code-server，解压后可以直接在vscode连接178
+
+vscode常用快捷键
+https://blog.csdn.net/weixin_46655235/article/details/121788623
+https://www.cnblogs.com/yb-ken/p/16199556.html
+
+鼠标控制字体 https://blog.csdn.net/u013250861/article/details/124895199
+
+vscode 同时编辑多处，多个光标 快捷键 http://t.zoukankan.com/ianlab-p-12679490.html
+
+设置vscode命令行其缓冲区中保留的最大行数 https://blog.csdn.net/wzp20092009/article/details/118327205
+
+#svn
+##总需要密码
+直接在~/.bashrc中 alias svnp="svn --password 'abcde'"s
+或者 http://192.168.1.100/wiki/doku.php?id=svn:svn-password跟着弄
+##回退到revision    
+svn up -r 123
+##清空本地修改
+在代码根目录svn revert -R .
+##update遇到冲突
+在vscode内一个个解决，然后Mark resovled，然后选择working！（其他的选项会丢代码）
+
+#展示rev修改文件
+svn log --verbose -r 42
+
+#svn: local commits https://stackoverflow.com/questions/1081058/svn-local-commits
+svn是真的废。。。都不能像git一样有一个本地修改的log
+
+svn查看revision变更 https://stackoverflow.com/questions/21720865/how-to-view-changes-made-to-files-on-a-certain-revision-in-subversion
+svn diff -c <revision> path/to/repo
+svn log -v -r <revision>
+svn diff -r <revA>:<revB> path/to/repo
+
+svn info
+
+#记录patch
+svn diff > a.patch
+#还原patch  
+patch -p0 < a.patch
+
+#svn-commit.tmp
+svn ci -F svn-commit.tmp
+
+#检查联机存储库的最新版本
+svn info -r 'HEAD'
+
+#git
+从commit以来的变更git show --name-only cmit_id..
+#stash
+git stash
+git stash pop /
+
+#工程结构
+主要有3个大的工程，src、test、smitGOP
+##src是物理验证引擎核心代码
+下面分pkg是各个功能模块，app下是PVE的host和client，各工程详细看网盘/项目开发/需求分析RDD
+##test是每个模块的单元测试，框架是google test
+
+
+#Su关键数据结构
+Su.h/cpp内是基础组件，各种max、min模板，宏，int极大极小值
+##SnapGrid
+SnapGrid 将SuPoint代表的笛卡尔坐标栅格化（grid），在一个栅格内的点都用同一个栅格坐标表示，anchor是原点，stepx/y是每一个栅格的横纵大小
+togrid 笛卡尔坐标 → 栅格坐标
+togridless 栅格坐标 → 笛卡尔坐标
+##SuList
+一个单向链表，尾节点又指向了头节点，形成循环
+
+SuPoint 二维笛卡尔坐标系下的一个点
+SuBox 坐标系下的一个框，（x1,y1）- (x2,y2)
+|--SuObj
+|   |--
+|--SuBen
+
+#calibre
+环境脚本/Data2/tools/ENV/.zshrc
+在173上运行calibredrv
+
+.gds 电路版图
+.run 版图规则定义脚本语言
+
+#黑话大全
+GA geographic access su库干的事 
+pve physical verification engine
+dp distributed processing
+
+#工程验证
+valgrind 在test项目中指定要跑的测试用例，qtcreator→顶部菜单Analyze→Valgrind内存分析
+valgrind --leak-check=full spve/bin/Core PVETest --gtest_filter=SuTrapzTest.sizedown
+Cppcheck qtcreator→顶部菜单 帮助→关于插件→给cppcheck打勾
+
+
+#平面几何
+2维平面，两个向量叉积A×B，符号>0,A在B左边；=0共线；<0，A在B右边
+
+#查看内存对齐
+g++ -Wpadded / -fdump-lang-class
+使用pahole
+
+#clion code insight重置
+Tools | CMake | Reset Cache and Reload Project and File | Invalidate Caches / Restart ...
+
+
+
+#周会腾讯会议
+866 4848 6489
+密码：2022
+
+#OA账户
+xlchen
+qwe123!@#
+
+#make展示详细命令
+make SHELL='sh -x' debug
+
+#calibre里对版图or
+calibre -drc ./drc_or.runset -hier -turbo #边重叠的没合并
+
+cd bin/Core
+./smitGOP --f1 input.gds --op OR --out /output.gds
+
+#跑dp
+cd PVEBin/bin
+准备configfile.txt
+./PVEHost -runset ../../test/test_data/oovf/test_drc.run -drc   
+
+#top
+按进程的CPU使用率排序
+运行top命令后，键入大写P。
+按进程的内存使用率排序
+运行top命令后，键入大写M
+
+#条件断点太慢
+代码里面直接
+if( breakCondition)
+    asm("int $0x3")
+
+#.gitignore文件不生效
+git rm -r --cached .
+git add .
+
+#ssh免密
+ssh-copy-id user@ip
+然后可以直接ssh user@ip 
+
+#lsf
+ssh 172.18.12.251
+
+#linux看硬件配置
+https://www.cnblogs.com/happyflyingpig/p/16063919.html
+
+查看服务器物理核数
+cat /proc/cpuinfo| grep "cpu cores"| uniq
+
+查看cup型号
+cat /proc/cpuinfo | grep name | cut -f2 -d: | uniq
+
+#t28nm只跑某个规则
+DRC SELECT CHECK rule
+
+#178上编译，在173debug源文件路径错误
+https://www.jetbrains.com/help/clion/configuring-debugger-options.html#gdbinit-lldbinit
+https://sourceware.org/gdb/onlinedocs/gdb/Source-Path.html
+用clion bundle的gdb
+在~/.config/gdb/gdbinit内设置允许project specific .gdbinit
+project根目录放一个.gdbinit, 内写 set substitute-path /home/chenxl/code/spve /home/chenxl/code/spve_173
+
+#g++反汇编
+g++ -g -std=c++17 -c main.cpp -o main.o
+objdump -j .text -ld -C -S main.o > main.o.txt
+
+#bash查看function定义
+type func_name
+
+#查看core dump
+ulimit -c 查看是否开启core dump，0为不开启
+ulimit -c unlimited 设置开启，ctrl+\（SIGQUIT）
+中止 sleep 10，查看有无生成core
+gdb program core 来查看 core 文件
+
+#calibre运行.run
+calibre -drc -hier -turbo 8 aaa.run
+
+
+#valgrind性能测试
+两个term，一个跑PVEHost，一个跑PVEClient
+设置configfile.txt的debugTaskID
+PVEHost先起，rm -rf cacheDB/ && ./PVEHost -drc -t -m 5 -runset a.runset
+PVEClient终端设置环境变量
+看PVEHost的启动port，为PVEClient设置环境变量，valgrind启动PVEClient， export SMIT_PORT=12372; valgrind --tool=callgrind ./PVEClient_exe
+如果时间太长，在第三个term运行callgrind_control -d，当前文件夹就会更新callgrind.out
+
+#gdb打断点不被其他thread抢
+set scheduler-locking step
+https://ftp.gnu.org/old-gnu/Manuals/gdb-5.1.1/html_node/gdb_39.html
+
+set scheduler-locking mode
+Set the scheduler locking mode. If it is off, then there is no locking and any thread may run at any time. If on, then only the current thread may run when the inferior is resumed. The step mode optimizes for single-stepping. It stops other threads from "seizing the prompt" by preempting the current thread while you are stepping. Other threads will only rarely (or never) get a chance to run when you step. They are more likely to run when you `next' over a function call, and they are completely free to run when you use commands like `continue', `until', or `finish'. However, unless another thread hits a breakpoint during its timeslice, they will never steal the GDB prompt away from the thread that you are debugging.
+show scheduler-locking
+Display the current scheduler locking mode. 
+
+#gdb 程序环境变量
+show env envvar
+set env envvar = abcd
