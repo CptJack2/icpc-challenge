@@ -34,18 +34,19 @@ void dfs2ComputeParentLongestPath(int node, int parent, int parentLongest){
             dfs2ComputeParentLongestPath(u,node,w+ getLongest(node, u, -1));
 }
 void computeLongestPathForEachNode(){
-    dfs1ComputeChildLongestAndDepth(0,-1,0);
-    dfs2ComputeParentLongestPath(0, -1, 0);
+    dfs1ComputeChildLongestAndDepth(1,-1,0);
+    dfs2ComputeParentLongestPath(1, -1, 0);
 }
 vector<vector<int>> ancestors, ancestorSuccessor;
 vector<vector<unsigned long long>> ancDist;
 vector<vector<unsigned long long>> upNotOverlap, upOverlap, downNotOverlap, downOverlap;
-void dfs3(int node, int parent, int w){
+void dfsDP(int node, int parent, int w){
     auto dep=depth[node];
     int lv=1;
-    while((dep<<=1&1)==0)
-        ++lv;
-    ancestors[node].resize(lv); ancestorSuccessor[node].resize(lv);
+    while((dep&1)==0)
+        ++lv,
+        dep>>=1;
+    ancestors[node].resize(lv); ancestorSuccessor[node].resize(lv); ancDist[node].resize(lv);
     upNotOverlap[node].resize(lv); upOverlap[node].resize(lv);
     downNotOverlap[node].resize(lv); downOverlap[node].resize(lv);
 
@@ -67,20 +68,20 @@ void dfs3(int node, int parent, int w){
     }
     for(auto [u,w]:graph[node])
         if(u!=parent)
-            dfs3(u,node,w);
+            dfsDP(u,node,w);
 }
 void dynamicProgrammingPathData(){
     ancestors.resize(n+1); ancestorSuccessor.resize(n+1); ancDist.resize(n+1);
     upNotOverlap.resize(n+1); upOverlap.resize(n+1);
     downNotOverlap.resize(n+1); downOverlap.resize(n+1);
-    for(auto [u,w]:graph[0])
-        dfs3(u,0,w);
+    for(auto [u,w]:graph[1])
+        dfsDP(u,1,w);
 }
 vector<pair<int,int>> findCommonAncestors(int n1, int n2){
     auto d1=depth[n1], d2=depth[n2];
     vector<pair<int,int>> ret;
     while(d2>d1){
-        for(auto i=ancestors[n2].size()-1;i>=0;--i)
+        for(int i=ancestors[n2].size()-1;i>=0;--i)
             if(d2-(1<<i)>=d1) {
                 d2 -= 1 << i;
                 n2 = ancestors[n2][i];
@@ -88,7 +89,7 @@ vector<pair<int,int>> findCommonAncestors(int n1, int n2){
             }
     }
     while(d1>d2){
-        for(auto i=ancestors[n1].size()-1;i>=0;--i)
+        for(int i=ancestors[n1].size()-1;i>=0;--i)
             if(d1-(1<<i)>=d2) {
                 d1 -= 1 << i;
                 ret.push_back({n1,i});
@@ -96,11 +97,9 @@ vector<pair<int,int>> findCommonAncestors(int n1, int n2){
                 break;
             }
     }
-    while(d1!=d2){
-        for(auto i=ancestors[n1].size()-1;i>=0;--i)
-            if(d1-(1<<i)>=d2) {
-                d1 -= 1 << i;
-                d2-=1<<i;
+    while(n1!=n2){
+        for(int i=ancestors[n1].size()-1;i>=0;--i)
+            if(i==0 || ancestors[n1][i]!=ancestors[n2][i]) {
                 ret.push_back({n1,i});
                 n1 = ancestors[n1][i];
                 n2 = ancestors[n2][i];
@@ -123,6 +122,7 @@ int main(){
         totalLength+=w;
     }
     computeLongestPathForEachNode();
+    dynamicProgrammingPathData();
     for(int i=0;i<q;++i){
         int s,k,t;
         cin>>s>>k>>t;
