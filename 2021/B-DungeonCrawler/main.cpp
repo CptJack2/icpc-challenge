@@ -106,6 +106,7 @@ vector<pair<int,int>> findCommonAncestors(int n1, int n2){
                 break;
             }
     }
+    ret.push_back({n1,-1});
     return ret;
 }
 unsigned long long totalLength=0;
@@ -138,7 +139,7 @@ int main(){
         }
         unsigned long long base=0, ret=0;
         int succ=-1,node=s;
-        for(int j=0;j<path1.size()-2;++j){
+        for(int j=0;j<int(path1.size())-2;++j){
             node=path1[j].first;
             auto exp=path1[j].second;
             ret=max(ret, base+ getLongest(node,ancestors[node][0],succ));
@@ -146,7 +147,7 @@ int main(){
             base+=ancDist[node][exp];
             succ=ancestorSuccessor[node][exp];
         }
-        for(int j=0;j<path2.size()-2;++j){
+        for(int j=0;j<int(path2.size())-2;++j){
             node=path2[j].first;
             auto exp=path2[j].second;
             ret=max(ret, base+ getLongest(node,ancestors[node][0],succ));
