@@ -19,21 +19,23 @@ fi
 
 input=$(ls ./data/*.in)
 count=0
-g++ -g -std=c++17 -omain main.cpp
-g++ -g -std=c++17 -omain2 main2.cpp
 for inf in $input;do
-  if(( $count >= 1 ));then exit; fi
+#  if(( $count >= 2 ));then exit; fi
   echo $inf
   filename=$(basename -- "$inf")
   #if [ "$filename" == "01.in" ];then continue ;fi
   extension="${filename##*.}"
   ans_filename="${filename%.*}"".ans"
-  echo answer
-  cat $inf |./main
-  echo
-#  echo "$ans" > ./data/my_ans
-  echo correct
-  cat $inf |./main2
-  echo
+  ans=$(cat $inf |./main)
+  echo "$ans" > ./data/my_ans
+  correct=$(cat ./data/$ans_filename)
+  if [ "$ans" != "$correct" ];then
+    echo "failed"
+#    echo "correct " $correct
+#    echo "ans " $ans
+    exit
+  else
+    echo "succ"
+  fi
   count=$(( $count + 1 ))
 done
