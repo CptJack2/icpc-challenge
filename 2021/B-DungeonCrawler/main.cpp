@@ -24,7 +24,7 @@ long long dfs1ComputeChildLongestAndDepth(int node, int parent, int depthNode){/
         }
     return ret;
 }
-void dfs2ComputeParentLongestPath(int node, int parent, int parentLongest){
+void dfs2ComputeParentLongestPath(int node, int parent, long long parentLongest){
     for(auto& [_,w]:longestPaths[node])
         if(w==-1)
             w=parentLongest;
