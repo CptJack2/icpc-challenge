@@ -140,28 +140,27 @@ int main(){
         long long base=0, ret=0;
         int succ=-1,node=s;
         for(int j=0;j<int(path1.size())-1;++j){
-            node=path1[j].first;
             auto exp=path1[j].second;
             ret=max(ret, base+ getLongest(node,ancestors[node][0],succ));
             ret=max(ret, base+ upNotOverlap[node][exp]);
             base+=ancDist[node][exp];
             succ=ancestorSuccessor[node][exp];
+            node=path1[j+1].first;
         }
         for(int j=0;j<int(path2.size())-1;++j){
-            node=path2[j].first;
             auto exp=path2[j].second;
             ret=max(ret, base+ getLongest(node,ancestors[node][0],succ));
             ret=max(ret, base+ upOverlap[node][exp]);
             base-=ancDist[node][exp];
             succ=ancestorSuccessor[node][exp];
+            node=path2[j+1].first;
         }
-        node=path2.back().first;
         for(int j=path3.size()-2;j>=0;--j){
             auto nextNode=path3[j].first, exp=path3[j].second;
             ret=max(ret, base+ getLongest(node,ancestorSuccessor[nextNode][exp],succ));
             ret=max(ret, base+ downNotOverlap[nextNode][exp]);
             base+=ancDist[nextNode][exp];
-            succ=ancestorSuccessor[nextNode][0];
+            succ=ancestors[nextNode][0];
             node=nextNode;
         }
         for(int j=path4.size()-2;j>=0;--j){
@@ -169,7 +168,7 @@ int main(){
             ret=max(ret, base+ getLongest(node,ancestorSuccessor[nextNode][exp],succ));
             ret=max(ret, base+ downOverlap[nextNode][exp]);
             base-=ancDist[nextNode][exp];
-            succ=ancestorSuccessor[nextNode][0];
+            succ=ancestors[nextNode][0];
             node=nextNode;
         }
         ret=max(ret, base+ getLongest(node, succ, -1));
