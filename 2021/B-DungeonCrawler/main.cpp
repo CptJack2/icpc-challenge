@@ -3,20 +3,20 @@ using namespace std;
 
 int n,q;
 vector<vector<pair<int,int>>> graph;//邻接点 边长度
-vector<vector<pair<int,unsigned long long>>> longestPaths;//离开节点，最长路径长度。节点数上限2000，边长度上限10^9，最长路径上限2x10^12，需要用超过int的整型
+vector<vector<pair<int,long long>>> longestPaths;//离开节点，最长路径长度。节点数上限2000，边长度上限10^9，最长路径上限2x10^12，需要用超过int的整型
 vector<int> depth;//根高度为0
-unsigned long long getLongest(int node, int exclusion1, int exclusion2){
+long long getLongest(int node, int exclusion1, int exclusion2){
     for(auto [u,w]:longestPaths[node])
         if(u!=exclusion1 && u!=exclusion2)
             return w;
     return 0;
 }
-unsigned long long dfs1ComputeChildLongestAndDepth(int node, int parent, int depthNode){//返回从node能到达的最长路径长度
+long long dfs1ComputeChildLongestAndDepth(int node, int parent, int depthNode){//返回从node能到达的最长路径长度
     depth[node]=depthNode;
-    unsigned long long ret=0;
+    long long ret=0;
     for(auto [u,w]:graph[node])
         if(u!=parent) {
-            unsigned long long longestPathCh=w + dfs1ComputeChildLongestAndDepth(u, node, depthNode + 1);
+            long long longestPathCh=w + dfs1ComputeChildLongestAndDepth(u, node, depthNode + 1);
             longestPaths[node].push_back({u,longestPathCh});
             ret = max(ret, longestPathCh);
         }else{
@@ -38,8 +38,8 @@ void computeLongestPathForEachNode(){
     dfs2ComputeParentLongestPath(1, -1, 0);
 }
 vector<vector<int>> ancestors, ancestorSuccessor;
-vector<vector<unsigned long long>> ancDist;
-vector<vector<unsigned long long>> upNotOverlap, upOverlap, downNotOverlap, downOverlap;
+vector<vector<long long>> ancDist;
+vector<vector<long long>> upNotOverlap, upOverlap, downNotOverlap, downOverlap;
 void dfsDP(int node, int parent, int w){
     auto dep=depth[node];
     int lv=1;
@@ -50,7 +50,7 @@ void dfsDP(int node, int parent, int w){
     upNotOverlap[node].resize(lv); upOverlap[node].resize(lv);
     downNotOverlap[node].resize(lv); downOverlap[node].resize(lv);
 
-    ancestors[node][0]=parent; ancestorSuccessor[node][0]=node; ancDist[node][0]=node;
+    ancestors[node][0]=parent; ancestorSuccessor[node][0]=node; ancDist[node][0]=w;
     upNotOverlap[node][0]=w; downNotOverlap[node][0]=w;
     upOverlap[node][0]=0; downOverlap[node][0]=0;
     for(int i=1;i<lv;++i){
@@ -109,13 +109,13 @@ vector<pair<int,int>> findCommonAncestors(int n1, int n2){
     ret.push_back({n1,-1});
     return ret;
 }
-unsigned long long totalLength=0;
+long long totalLength=0;
 int main(){
     cin>>n>>q;
     graph.resize(n+1);
     longestPaths.resize(n+1);
     depth.resize(n+1);
-    for(int i=0;i<n;++i){
+    for(int i=0;i<n-1;++i){
         int u,v,w;
         cin>>u>>v>>w;
         graph[u].push_back({v,w});
@@ -137,9 +137,9 @@ int main(){
             cout<<"impossible"<<endl;
             continue;
         }
-        unsigned long long base=0, ret=0;
+        long long base=0, ret=0;
         int succ=-1,node=s;
-        for(int j=0;j<int(path1.size())-2;++j){
+        for(int j=0;j<int(path1.size())-1;++j){
             node=path1[j].first;
             auto exp=path1[j].second;
             ret=max(ret, base+ getLongest(node,ancestors[node][0],succ));
@@ -147,7 +147,7 @@ int main(){
             base+=ancDist[node][exp];
             succ=ancestorSuccessor[node][exp];
         }
-        for(int j=0;j<int(path2.size())-2;++j){
+        for(int j=0;j<int(path2.size())-1;++j){
             node=path2[j].first;
             auto exp=path2[j].second;
             ret=max(ret, base+ getLongest(node,ancestors[node][0],succ));
@@ -159,7 +159,7 @@ int main(){
         for(int j=path3.size()-2;j>=0;--j){
             auto nextNode=path3[j].first, exp=path3[j].second;
             ret=max(ret, base+ getLongest(node,ancestorSuccessor[nextNode][exp],succ));
-            ret=max(ret, base+ downOverlap[node][exp]);
+            ret=max(ret, base+ downNotOverlap[nextNode][exp]);
             base+=ancDist[nextNode][exp];
             succ=ancestorSuccessor[nextNode][0];
             node=nextNode;
@@ -167,12 +167,13 @@ int main(){
         for(int j=path4.size()-2;j>=0;--j){
             auto nextNode=path4[j].first, exp=path4[j].second;
             ret=max(ret, base+ getLongest(node,ancestorSuccessor[nextNode][exp],succ));
-            ret=max(ret, base+ downNotOverlap[node][exp]);
+            ret=max(ret, base+ downOverlap[nextNode][exp]);
             base-=ancDist[nextNode][exp];
             succ=ancestorSuccessor[nextNode][0];
             node=nextNode;
         }
         ret=max(ret, base+ getLongest(node, succ, -1));
+//        cout<<"ret "<<ret<<endl;
         cout<<2*totalLength-ret<<endl;
     }
 }
