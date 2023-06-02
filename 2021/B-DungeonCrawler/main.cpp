@@ -92,7 +92,7 @@ vector<pair<int,int>> findCommonAncestors(int n1, int n2){
         for(int i=ancestors[n1].size()-1;i>=0;--i)
             if(d1-(1<<i)>=d2) {
                 d1 -= 1 << i;
-                ret.push_back({n1,i});
+                ret.emplace_back(n1,i);
                 n1 = ancestors[n1][i];
                 break;
             }
@@ -100,13 +100,13 @@ vector<pair<int,int>> findCommonAncestors(int n1, int n2){
     while(n1!=n2){
         for(int i=ancestors[n1].size()-1;i>=0;--i)
             if(i==0 || ancestors[n1][i]!=ancestors[n2][i]) {
-                ret.push_back({n1,i});
+                ret.emplace_back(n1,i);
                 n1 = ancestors[n1][i];
                 n2 = ancestors[n2][i];
                 break;
             }
     }
-    ret.push_back({n1,-1});
+    ret.emplace_back(n1,-1);
     return ret;
 }
 long long totalLength=0;
