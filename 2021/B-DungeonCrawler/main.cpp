@@ -5,12 +5,14 @@ int n,q;
 vector<vector<pair<int,int>>> graph;//邻接点 边长度
 vector<vector<pair<int,long long>>> longestPaths;//离开节点，最长路径长度。节点数上限2000，边长度上限10^9，最长路径上限2x10^12，需要用超过int的整型
 vector<int> depth;//根高度为0
+//找出指定点能达到的最长路径，可以排除两个邻接
 long long getLongest(int node, int exclusion1, int exclusion2){
     for(auto [u,w]:longestPaths[node])
         if(u!=exclusion1 && u!=exclusion2)
             return w;
     return 0;
 }
+//第一遍dfs计算各节点高度，和经过子节点能到达的最大路径长度
 long long dfs1ComputeChildLongestAndDepth(int node, int parent, int depthNode){//返回从node能到达的最长路径长度
     depth[node]=depthNode;
     long long ret=0;
@@ -24,6 +26,7 @@ long long dfs1ComputeChildLongestAndDepth(int node, int parent, int depthNode){/
         }
     return ret;
 }
+//第二遍dfs计算每个节点经过父节点能到达的最大路径长度
 void dfs2ComputeParentLongestPath(int node, int parent, long long parentLongest){
     for(auto& [_,w]:longestPaths[node])
         if(w==-1)
@@ -37,12 +40,13 @@ void computeLongestPathForEachNode(){
     dfs1ComputeChildLongestAndDepth(1,-1,0);
     dfs2ComputeParentLongestPath(1, -1, 0);
 }
-vector<vector<int>> ancestors, ancestorSuccessor;
-vector<vector<long long>> ancDist;
-vector<vector<long long>> upNotOverlap, upOverlap, downNotOverlap, downOverlap;
+vector<vector<int>> ancestors, ancestorSuccessor;//每个节点的二进制祖先，和到达这个二进制祖先经过的子节点。
+vector<vector<long long>> ancDist;//每个节点到达对应二进制祖先的距离
+vector<vector<long long>> upNotOverlap, upOverlap, downNotOverlap, downOverlap;//动态规划求出 向上/向下 重叠/不重叠 的最长路径
 void dfsDP(int node, int parent, int w){
     auto dep=depth[node];
     int lv=1;
+    //通过节点高度的二进制表达求出要计算的跳转的祖先数
     while((dep&1)==0)
         ++lv,
         dep>>=1;
@@ -53,6 +57,7 @@ void dfsDP(int node, int parent, int w){
     ancestors[node][0]=parent; ancestorSuccessor[node][0]=node; ancDist[node][0]=w;
     upNotOverlap[node][0]=w; downNotOverlap[node][0]=w;
     upOverlap[node][0]=0; downOverlap[node][0]=0;
+
     for(int i=1;i<lv;++i){
         auto anc=ancestors[node][i-1];
         auto ancLongest=getLongest(anc, ancestorSuccessor[node][i-1], ancestors[anc][0]);
@@ -60,7 +65,7 @@ void dfsDP(int node, int parent, int w){
         ancestors[node][i]=ancestors[anc][i-1];
         ancestorSuccessor[node][i]=ancestorSuccessor[anc][i-1];
         ancDist[node][i]=ancDist[node][i-1]+ancDist[anc][i-1];
-
+        //动态规划求解4种最长路径
         upNotOverlap[node][i]=max(upNotOverlap[node][i-1], ancDist[node][i-1] + max(upNotOverlap[anc][i-1], ancLongest));
         downNotOverlap[node][i]=max(downNotOverlap[anc][i-1], ancDist[anc][i-1] + max(downNotOverlap[node][i-1], ancLongest));
         upOverlap[node][i]=max(upOverlap[node][i-1], -ancDist[node][i-1] + max(upOverlap[anc][i-1], ancLongest));
@@ -70,6 +75,7 @@ void dfsDP(int node, int parent, int w){
         if(u!=parent)
             dfsDP(u,node,w);
 }
+//第二轮dfs计算DP缓存
 void dynamicProgrammingPathData(){
     ancestors.resize(n+1); ancestorSuccessor.resize(n+1); ancDist.resize(n+1);
     upNotOverlap.resize(n+1); upOverlap.resize(n+1);
