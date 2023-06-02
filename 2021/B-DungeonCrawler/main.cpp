@@ -137,42 +137,41 @@ int main(){
             cout<<"impossible"<<endl;
             continue;
         }
-        long long base=0, ret=0;
-        int succ=-1,node=s;
-        for(int j=0;j<int(path1.size())-1;++j){
+        long long base=0, maxPath=0;
+        int succ=-1, node=s;
+        for(int j=0;j<path1.size()-1;++j){
             auto exp=path1[j].second;
-            ret=max(ret, base+ getLongest(node,ancestors[node][0],succ));
-            ret=max(ret, base+ upNotOverlap[node][exp]);
+            maxPath=max(maxPath, base + getLongest(node, ancestors[node][0], succ));
+            maxPath=max(maxPath, base + upNotOverlap[node][exp]);
             base+=ancDist[node][exp];
             succ=ancestorSuccessor[node][exp];
             node=path1[j+1].first;
         }
-        for(int j=0;j<int(path2.size())-1;++j){
+        for(int j=0;j<path2.size()-1;++j){
             auto exp=path2[j].second;
-            ret=max(ret, base+ getLongest(node,ancestors[node][0],succ));
-            ret=max(ret, base+ upOverlap[node][exp]);
+            maxPath=max(maxPath, base + getLongest(node, ancestors[node][0], succ));
+            maxPath=max(maxPath, base + upOverlap[node][exp]);
             base-=ancDist[node][exp];
             succ=ancestorSuccessor[node][exp];
             node=path2[j+1].first;
         }
         for(int j=path3.size()-2;j>=0;--j){
-            auto nextNode=path3[j].first, exp=path3[j].second;
-            ret=max(ret, base+ getLongest(node,ancestorSuccessor[nextNode][exp],succ));
-            ret=max(ret, base+ downNotOverlap[nextNode][exp]);
+            auto [nextNode, exp]=path3[j];
+            maxPath=max(maxPath, base + getLongest(node, ancestorSuccessor[nextNode][exp], succ));
+            maxPath=max(maxPath, base + downNotOverlap[nextNode][exp]);
             base+=ancDist[nextNode][exp];
             succ=ancestors[nextNode][0];
             node=nextNode;
         }
         for(int j=path4.size()-2;j>=0;--j){
-            auto nextNode=path4[j].first, exp=path4[j].second;
-            ret=max(ret, base+ getLongest(node,ancestorSuccessor[nextNode][exp],succ));
-            ret=max(ret, base+ downOverlap[nextNode][exp]);
+            auto [nextNode, exp]=path4[j];
+            maxPath=max(maxPath, base + getLongest(node, ancestorSuccessor[nextNode][exp], succ));
+            maxPath=max(maxPath, base + downOverlap[nextNode][exp]);
             base-=ancDist[nextNode][exp];
             succ=ancestors[nextNode][0];
             node=nextNode;
         }
-        ret=max(ret, base+ getLongest(node, succ, -1));
-//        cout<<"ret "<<ret<<endl;
-        cout<<2*totalLength-ret<<endl;
+        maxPath=max(maxPath, base + getLongest(node, succ, -1));
+        cout <<2*totalLength - maxPath << endl;
     }
 }
