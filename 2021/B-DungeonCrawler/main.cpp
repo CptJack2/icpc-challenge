@@ -136,8 +136,8 @@ int main(){
         auto psk=findCommonAncestors(s,k), pst= findCommonAncestors(s,t), pks= findCommonAncestors(k,s), pkt= findCommonAncestors(k,t);
         auto path1=depth[psk.back().first] > depth[pst.back().first]?psk:pst;//从S到SK和ST的交点J或者SK最高的共同祖先
         auto path2= findCommonAncestors(path1.back().first, k);//从J到SK最高的共同祖先，可能为空
-        auto path4= depth[pks.back().first] > depth[pkt.back().first]?pks:pkt;//从SK最高的共同祖先到J，可能为空，path2和path3必定有一个为空，另一个非空
-        auto path3= findCommonAncestors(path4.back().first,s);//从J到K点
+        auto path4= depth[pks.back().first] > depth[pkt.back().first]?pks:pkt;//从J或SK最高的共同祖先到K点
+        auto path3= findCommonAncestors(path4.back().first,s);//从SK最高的共同祖先到J，可能为空，path2和path3必定有一个为空，另一个非空
         //如果T就是J点，那么必然要先经过T才能到S，输出impossible
         if(path1.back().first==t || path4.back().first==t){
             cout<<"impossible"<<endl;
@@ -145,6 +145,7 @@ int main(){
         }
         long long base=0, maxPath=0;
         int succ=-1, node=s;
+        //遍历SK路径上的每一点，选出加权调整后最长的路径
         for(int j=0;j<path1.size()-1;++j){
             auto exp=path1[j].second;
             maxPath=max(maxPath, base + getLongest(node, ancestors[node][0], succ));
