@@ -34,3 +34,14 @@ slurm会把物理机划分若干个核和内存给到任务，而kube的硬件�
 #kube有什么存储和网络选项
 
 #kube安全性和访问控制机制
+Kubernetes拥有多种安全性和访问控制机制，以保护集群的安全和确保只有授权的用户或实体能够访问和操作集群资源。以下是一些常见的Kubernetes安全性和访问控制机制：
+身份认证（Authentication）：Kubernetes支持多种身份认证机制，包括基于令牌、用户名/密码、X.509证书和OpenID Connect等。这些机制用于验证用户或实体的身份。
+授权（Authorization）：Kubernetes使用基于角色的访问控制（Role-Based Access Control，RBAC）来定义和管理对集群资源的访问权限。RBAC允许管理员定义角色、角色绑定和授权规则，以控制用户或实体对资源的访问权限。
+令牌管理：Kubernetes使用令牌（Token）来验证用户或实体的身份，并授予访问权限。管理员可以创建和管理令牌，控制令牌的有效期和权限范围。
+安全上下文（Security Context）：Kubernetes允许在Pod和容器级别定义安全上下文，包括访问控制、资源限制、特权设置、SELinux策略等。这些安全上下文可以确保容器在运行时具有适当的安全性。
+网络策略（Network Policies）：Kubernetes的网络策略允许管理员定义细粒度的网络访问控制规则，以限制Pod之间的网络通信。通过定义网络策略，可以实现基于IP地址、端口和协议的流量控制。
+机密管理（Secrets Management）：Kubernetes提供了机密对象（Secrets）来安全地存储和管理敏感信息，如密码、证书和API密钥等。机密对象可以被Pod和容器使用，并且以加密方式在集群中传输和存储。
+审计日志（Audit Logging）：Kubernetes支持审计日志记录，可以记录用户和实体对集群资源的操作和访问记录。审计日志可以用于安全审计、故障排查和合规性要求。
+这些安全性和访问控制机制可以帮助管理员保护Kubernetes集群的安全，确保只有授权的用户或实体能够访问和操作集群资源，并提供了一系列工具和功能来管理和维护集群的安全性。
+
+#kubernetes的ingress是什么
