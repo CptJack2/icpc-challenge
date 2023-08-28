@@ -3,4 +3,4 @@ project(untitled)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(exe B-DungeonCrawler/main.cpp)
+add_executable(exe B-DungeonCrawler/main.cpp D-GuardiansOfTheGallery/main.cpp)
