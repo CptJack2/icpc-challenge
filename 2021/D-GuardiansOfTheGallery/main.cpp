@@ -63,7 +63,7 @@ int main() {
             long double rd = RayIntersect(a, b, p[j], p[(j + 1) % N], &sides);//由于ab是单位向量,rd就是a到交点的距离
             if (rd < 0) continue;//两线段不相交
             inter.push_back({rd, sides});
-        }//👏
+        }
         sort(inter.begin(), inter.end());
         long double maxd = 0.0;
         //防止多个顶点刚好卡住视野的情况
@@ -96,6 +96,7 @@ int main() {
             long double ln = (b - a).Len();
             int ni = 0;
             if (ln < EPS) goto pass;
+            //判断ij是否被poly完全包含
             //如果j在poly顶点i关联的两条poly边上,可能是邻接顶点或者其它特殊点
             if (i < N && PointOnLine(p[i], p[(i + 1) % N], p[j])) goto pass;
             if (i < N && PointOnLine(p[i], p[(i + N - 1) % N], p[j])) goto pass;
@@ -105,8 +106,8 @@ int main() {
                 long double rd = RayIntersect(a, b, p[k], p[(k + 1) % N]);
                 if (rd > EPS && rd < ln - EPS) goto fail;
             }
-            //判断一下ij的中点是不是在poly内部。通过ij中点划斜线看穿过poly为奇数偶数次
-            a = (p[i] + p[j]) / 2;
+            //判断一下ij的中点(或者ij上任意一点）是不是在poly内部，来保证ij全段都在poly内部。通过ij中点划斜线看穿过poly为奇数偶数次
+            a = p[i]*2/3 + p[j]/ 3;
             b = a + Point(cos(10), sin(10));
             for (int k = 0; k < N; k++) {
                 long double rd = RayIntersect(a, b, p[k], p[(k + 1) % N]);
