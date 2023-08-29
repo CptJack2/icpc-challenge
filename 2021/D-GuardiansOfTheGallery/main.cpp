@@ -61,7 +61,7 @@ int main() {
         for (int j = 0; j < N; j++) {
             int sides = 0;
             long double rd = RayIntersect(a, b, p[j], p[(j + 1) % N], &sides);//由于ab是单位向量,rd就是a到交点的距离
-            if (rd < 0) continue;//两线段不相交
+            if (rd < 0) continue;//两线段不相交或者交点方向相反
             inter.push_back({rd, sides});
         }
         sort(inter.begin(), inter.end());
@@ -72,6 +72,7 @@ int main() {
             sides |= inter[j].second;
         }
         p.push_back((b - a) * maxd + a);//sculpture到交点的距离,
+        //计算顶点j到sculpture发出穿过顶点i的射线的距离,以及交点
         for (int j = 0; j <= N; j++) {
             //与ab垂直的两个方向的向量
             long double rd = RayIntersect(a, b, p[j], p[j] + Point(b.y - a.y, a.x - b.x) * 1.1e3);
