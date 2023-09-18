@@ -29,3 +29,19 @@ http://t.zoukankan.com/failymao-p-15496782.html
 
 #cond为什么要带一个for loop
 You need to check the condition again once you get out of conditional wait. If you don’t then you run the risk of some other thread changing condition in the time signal came and you got out of condition wait. This is true for all condition waits in all languages including pthreads in c. Checking and waiting for condition with a “if” is a bug.
+
+# 空 struct{} 的用途
+用map模拟一个set，那么就要把值置为struct{}，struct{}本身不占任何空间，可以避免任何多余的内存分配。
+type Set map[string]struct{}
+set := make(Set)
+
+#2 个 interface 可以比较吗 ？
+Go 语言中，interface 的内部实现包含了 2 个字段，类型 T 和 值 V，interface 可以使用 == 或 != 比较。2 个 interface 相等有以下 2 种情况
+
+两个 interface 均等于 nil（此时 V 和 T 都处于 unset 状态）
+类型 T 相同，且对应的值 V 相等。
+
+
+
+
+
