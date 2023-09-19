@@ -8,9 +8,9 @@ int K, M;
 
 vector<int> col;
 double hands = 0.0, matched = 0.0;
+vector<int> v;
 
 void rec(int i, int x) {
-    vector<int> v(K);
     if (i < K) {
         for (v[i] = x; v[i] < M; v[i]++) rec(i + 1, v[i]);
         return;
@@ -37,6 +37,7 @@ int main() {
     cin >> K >> M;
 //    K=4;M=1;
     col.resize(M);
+    v.resize(K);
     for (int i = 0; i < M; i++) cin >> col[i];
 //    col=vector<int>{28};
 
