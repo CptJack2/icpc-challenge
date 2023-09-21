@@ -8,13 +8,13 @@ int K, M;
 
 vector<int> markedNum;//M个col和各自的牌数量
 double hands = 0.0, matched = 0.0;
-long long totalCombinations = 0, totalArrangements = 0;
+double totalCombinations = 0, totalArrangements = 0;
 vector<int> cardType;//控制分为K个牌分别属于M个类别中的哪一类
 
 void calaculateProbability(){
     static int hitCount=0;
     ++hitCount;
-    long long h = 1.0, m = 0.0;
+    double h = 1.0, m = 0.0;//long long会溢出
     vector<double> fact(K);
     vector<long long>numerator (K);
     vector<int>denominator(K);
@@ -33,7 +33,7 @@ void calaculateProbability(){
     }
     for(auto v:denominator)h/=v;
     if (h == 0) return;
-//    long long t=1;
+//    double t=1;
     for (int ii = 0; ii < K; ii++)
         if (ii == K - 1 || cardType[ii] != cardType[ii + 1]) {
             m += h *denominator[ii]/numerator[ii];//C 52 4
