@@ -32,11 +32,15 @@ void calaculateProbability(){
 }
 
 void generateCardType(){
-    for (int i = 0; i < K; ++i) {
-        for (cardType[i] = 0; cardType[i] < M; cardType[i]++) {
-            if(i>=1 && cardType[i]<cardType[i-1])continue;
-            calaculateProbability();
-        }
+    calaculateProbability();
+    while(1){
+        int i=K-1;
+        for(;i>=0;--i)
+            if(cardType[i]<M-1)break;
+        if(i<0)break;
+        ++cardType[i];
+        for(int j=i;j<K;++j)cardType[j]=cardType[i];
+        calaculateProbability();
     }
 }
 void rec(int i, int x) {
@@ -72,12 +76,12 @@ int main() {
 //    K=3;M=4;col=vector<int>{5,12,1,2};
 
     cin >> K >> M;
-    for (int i = 0; i < M; i++) cin >> markedNum[i];
-
     markedNum.resize(M);
     cardType.resize(K, 0);
+    for (int i = 0; i < M; i++) cin >> markedNum[i];
 
-    rec(0, 0);
-//    generateCardType();
+
+//    rec(0, 0);
+    generateCardType();
     printf("%.12lf\n", matched / hands);
 }
