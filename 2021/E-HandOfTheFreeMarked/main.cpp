@@ -12,6 +12,8 @@ long long totalCombinations = 0, totalArrangements = 0;
 vector<int> cardType;//控制分为K个牌分别属于M个类别中的哪一类
 
 void calaculateProbability(){
+    static int hitCount=0;
+    ++hitCount;
     long long h = 1.0, m = 0.0;
     vector<double> fact(K);
     vector<long long>numerator (K);
@@ -20,7 +22,7 @@ void calaculateProbability(){
     for (int ii = 0, last = -1, n = 1; ii < K; ii++) {
         if (cardType[ii] == last) n++;
         else {
-            for(int j=1;j<=n;j++)h/=j;
+//            for(int j=1;j<=n;j++)h/=j;
             n = 1;
         }
         last = cardType[ii];
@@ -29,12 +31,16 @@ void calaculateProbability(){
 //        fact[ii] = double(markedNum[cardType[ii]] - (n - 1)) / n;
         h *= numerator[ii];
     }
+    for(auto v:denominator)h/=v;
     if (h == 0) return;
+//    long long t=1;
     for (int ii = 0; ii < K; ii++)
         if (ii == K - 1 || cardType[ii] != cardType[ii + 1]) {
-            m += h / numerator[ii]*denominator[ii];//C 52 4
+            m += h *denominator[ii]/numerator[ii];//C 52 4
+//            t*=numerator[ii];
         }
     for (int ii = 1; ii <= K - 1; ii++) m *= ii;//A 52 4
+//    m/=t;
     totalCombinations += h;
     totalArrangements += min(h, m);
 }
