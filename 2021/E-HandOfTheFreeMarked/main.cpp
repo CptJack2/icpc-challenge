@@ -12,35 +12,42 @@ long long totalCombinations = 0, totalArrangements = 0;
 vector<int> cardType;//控制分为K个牌分别属于M个类别中的哪一类
 
 void calaculateProbability(){
-    double h = 1.0, m = 0.0;
+    long long h = 1.0, m = 0.0;
     vector<double> fact(K);
+    vector<long long>numerator (K);
+    vector<int>denominator(K);
     //求从Mi中取K个的组合数
     for (int ii = 0, last = -1, n = 1; ii < K; ii++) {
-        if (cardType[ii] == last) n++; else n = 1;
+        if (cardType[ii] == last) n++;
+        else {
+            for(int j=1;j<=n;j++)h/=j;
+            n = 1;
+        }
         last = cardType[ii];
-        fact[ii] = double(markedNum[cardType[ii]] - (n - 1)) / n;
-        h *= fact[ii];
+        denominator[ii]=n;
+        numerator[ii]=markedNum[cardType[ii]] - (n - 1);
+//        fact[ii] = double(markedNum[cardType[ii]] - (n - 1)) / n;
+        h *= numerator[ii];
     }
-    if (h == 0.0) return;
+    if (h == 0) return;
     for (int ii = 0; ii < K; ii++)
         if (ii == K - 1 || cardType[ii] != cardType[ii + 1]) {
-            m += h / fact[ii];//C 52 4
+            m += h / numerator[ii]*denominator[ii];//C 52 4
         }
     for (int ii = 1; ii <= K - 1; ii++) m *= ii;//A 52 4
-    hands += h;
-    matched += min(h, m);
+    totalCombinations += h;
+    totalArrangements += min(h, m);
 }
 
 void generateCardType(){
-    calaculateProbability();
     while(1){
+        calaculateProbability();
         int i=K-1;
         for(;i>=0;--i)
             if(cardType[i]<M-1)break;
         if(i<0)break;
         ++cardType[i];
         for(int j=i;j<K;++j)cardType[j]=cardType[i];
-        calaculateProbability();
     }
 }
 void rec(int i, int x) {
@@ -83,5 +90,5 @@ int main() {
 
 //    rec(0, 0);
     generateCardType();
-    printf("%.12lf\n", matched / hands);
+    printf("%.12lf\n", (double)totalArrangements / totalCombinations);
 }
