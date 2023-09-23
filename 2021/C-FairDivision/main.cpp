@@ -28,7 +28,7 @@ int main() {
 
     done:
     cout << p << ' ' << q << endl;
-    return;
+    return 0;
     fail:
     cout << "impossible" << endl;
 }
