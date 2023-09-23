@@ -15,7 +15,7 @@ int main() {
         pw.push_back(pow(q, N));
         for (p = 1; p < q; p++) {
             double d = pw[q] - pw[q - p];
-            if (d > 1.1 * M * q) {// mq/d > mp/d, 如果要每个海盗都能拿到整数, 需要mp/d>=1， 当mq/d <1 ，已经没可能有整数解
+            if (d > 1.03 * M * q) {// mq/d > mp/d, 如果要每个海盗都能拿到整数, 需要mp/d>=1， 当mq/d <1 ，已经没可能有整数解
                 if (p == 1) goto fail;
                 continue;
             }
