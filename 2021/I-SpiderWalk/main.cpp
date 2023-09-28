@@ -9,14 +9,14 @@ int main() {
     int N, M, S, D, T;
     cin >> N >> M >> S;
     S--;
-    vector<pair<int, int>> b;
+    vector<pair<int, int>> b;//bridges
     for (int i = 0; i < M; i++) {
         cin >> D >> T;
         b.push_back({-D, T - 1});
     }
-    sort(b.begin(), b.end());
+    sort(b.begin(), b.end());//距离从大到小排序
 
-    map<int, int> m;
+    map<int, int> m;//strand index to ?
     m[S] = 1;
     m[(S + N / 2) % N] = 0;
     m[(S + (N + 1) / 2) % N] = -1;
@@ -35,8 +35,14 @@ int main() {
         auto[pit, it, nit] = getAll(x);
         int xd = it->second, pd = pit->second, nd = nit->second;
         if (xd == d) return;
-        if (d == pd) m.erase(x); else m[x] = d;
-        if (nd == d) m.erase((x + 1) % N); else m[(x + 1) % N] = nd;
+        if (d == pd)
+            m.erase(x);
+        else
+            m[x] = d;
+        if (nd == d)
+            m.erase((x + 1) % N);
+        else
+            m[(x + 1) % N] = nd;
     };
     auto swp = [&](int x) {
         auto[pit, it, nit] = getAll(x);
