@@ -24,7 +24,7 @@ int main() {
             ::cin >> color;
             mxC=max(mxC, color);
             if (!color) continue;//0是wildcard
-            motifColorOrWild[cp - 1 - x].set(rp - 1 - y);//转置，并且上下左右对称反转
+            motifColorOrWild[cp - 1 - x].set(rp - 1 - y);//转置，并且上下左右对称反转. 转置是因为要通过当前列的判断结果，回溯到前面的起始位置的fail结果。
             motifColorLayers[color][cp - 1 - x].set(rp - 1 - y);
         }
     //motif颜色反转
@@ -49,8 +49,6 @@ int main() {
                         matchResult[color][px] = (motifColorOrWild[px] & motifColorLayers[color][px]) << y - (rp - 1);
                     }
                 }
-                //x - (PX - 1) + px = 0 x+px =PX-1=1 x=0,px=1 || x=1,px=0
-                //所有gg[QC][px]的0位为0
                 fail[x - (cp - 1) + px] |= matchResult[color][px];
             }
         }
