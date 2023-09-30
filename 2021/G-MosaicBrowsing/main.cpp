@@ -44,7 +44,7 @@ int main() {
                 if (colorMet[color][px] != y) {//这里每次比对motif的px列
                     colorMet[color][px] = y;
                     if (y < rp) {//g[px] & cg[QC][px] 有色且色不对,&出来那个位置才是1, motif的px列,每一格是否match当前这个QC
-                        matchResult[color][px] = (motifColorOrWild[px] & motifColorLayers[color][px]) >> (rp - 1) - y;
+                        matchResult[color][px] = (motifColorOrWild[px] & motifColorLayers[color][px]) >> (rp - 1) - y;//左右移,去匹配mosiac对应位置
                     } else {
                         matchResult[color][px] = (motifColorOrWild[px] & motifColorLayers[color][px]) << y - (rp - 1);
                     }
