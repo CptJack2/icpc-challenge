@@ -16,10 +16,10 @@ int main() {
     }
     sort(b.begin(), b.end());//距离从大到小排序
 
-    map<int, int> m;//strand index to ?
-    m[S] = 1;
-    m[(S + N / 2) % N] = 0;
-    m[(S + (N + 1) / 2) % N] = -1;
+    map<int, int> m;//strand index to 压缩斜率
+    m[S] = 1;//strand s逆时针往前斜率是1递增
+    m[(S + N / 2) % N] = 0;//s逆时针转够半圈，最后如果是两个，数值一样，斜率是0
+    m[(S + (N + 1) / 2) % N] = -1;//s顺时针转半圈，那一根开始递减，斜率是-1
     auto pred = [&](map<int, int>::iterator it) { return --(it == m.begin() ? m.end() : it); };
     auto succ = [&](map<int, int>::iterator it) {
         ++it;
