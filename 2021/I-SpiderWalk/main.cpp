@@ -55,16 +55,14 @@ int main() {
         if (pd == 2) {
             pd--;
             xd++;
+        }else if (pd == -2) {
+            pd++;
+            set((pit->first + (N - 1)) % N, pred(pit)->second - 1);
         }
         if (nd == -2) {
             nd++;
             xd--;
-        }
-        if (pd == -2) {
-            pd++;
-            set((pit->first + (N - 1)) % N, pred(pit)->second - 1);
-        }
-        if (nd == 2) {
+        }else if (nd == 2) {
             nd--;
             set(succ(nit)->first, succ(nit)->second + 1);
         }
