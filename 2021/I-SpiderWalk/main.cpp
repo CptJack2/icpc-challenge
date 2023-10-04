@@ -16,6 +16,7 @@ int main() {
     }
     sort(b.begin(), b.end());//距离从大到小排序
 
+    //邻近的两个strand答案只会相差±1或者0
     map<int, int> m;//strand index to 压缩斜率
     m[S] = 1;//strand s逆时针往前斜率是1递增
     m[(S + N / 2) % N] = 0;//s逆时针转够半圈，最后如果是两个，数值一样，斜率是0
@@ -25,7 +26,7 @@ int main() {
         ++it;
         return (it == m.end() ? m.begin() : it);
     };
-    auto getAll = [&](int x) {
+    auto getAll = [&](int x) {//当前和前后两个位置，逆时针进入的斜率
         auto it = pred(m.upper_bound(x)), pit = it, nit = succ(it);
         if (pit->first == x) pit = pred(pit);
         if (nit->first != (x + 1) % N) nit = it;
@@ -74,8 +75,8 @@ int main() {
 
     int s = S;
     for (auto[_, t] : b) {
-        swp(t);
         if (s == t) s = (s + 1) % N; else if (s == (t + 1) % N) s = t;
+        swp(t);
     }
 
     vector<int> ret(N);
