@@ -52,18 +52,18 @@ int main() {
         xd = -xd;
         pd -= xd;
         nd -= xd;
-        if (pd == 2) {
-            pd--;
-            xd++;
-        }else if (pd == -2) {
-            pd++;
+        if (pit->second == 1 && it->second==1) {
+            pd=1;
+            xd=0;
+        }else if (pit->second == -1 && it->second==-1) {
+            pd=-1;
             set((pit->first + (N - 1)) % N, pred(pit)->second - 1);
         }
-        if (nd == -2) {
-            nd++;
-            xd--;
-        }else if (nd == 2) {
-            nd--;
+        if (nit->second == -1 && it->second==-1) {
+            nd=-1;
+            xd=0;
+        }else if (nit->second == 1 && it->second==1) {
+            nd=1;
             set(succ(nit)->first, succ(nit)->second + 1);
         }
         set((x + N - 1) % N, pd);
