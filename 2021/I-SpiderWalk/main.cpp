@@ -69,11 +69,14 @@ int main() {
         int xd = it->second, pd = pit->second, nd = nit->second;
         if (it->second == 0)//桥连接的两个strand桥数一样，无需做任何操作
             return;
-        else if(it->second==1){//原来路径从n到x, 有了桥后, n的路程可以-1
-            if(pit->second==1){//原来路径从x到p
+        else if(it->second==1){//原来路径从n建桥到x, 有了桥后, n的路程可以-1
+            if(pit->second==1){//原来路径要建桥从x到p,在新桥前建桥从x到p， x路程不变
                 xd=0;//n直接可以从新桥到x,n路程-1,x不变,所以xd变0
-            }else{//(-1)原来从p到x,x是s,加桥后x变为n;(0)原路径从x到p(因为n到x)
-                //assert(pit->second!=-1 || x==os);
+            }else{//(-1)原来从p到x，加桥后x要加一桥从n绕回，路程+1，p不变 ;(0)原路径从x到p(因为n到x)
+                //原来要用到前面添加的桥
+                //                assert(pit->second!=-1 || x==os);
+                if(pit->second==-1)
+                    asm("int $0x3");
                 xd=-it->second;//(-1) s从x变n, xd从1变-1 ; (0)x要在新桥前建桥抵消,路程+1, n-1, x+1 ,xd从1变-1
                 ++pd;//(-1) s从x变n, pd -1变0; (0) x路程+1, pd 0变1
             }
