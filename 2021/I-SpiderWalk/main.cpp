@@ -10,22 +10,23 @@ using namespace std;
 //3 2 1 2 1 0 1 2 3 4 4
 
 // 逆时针逆拐
-//stringstream cin(R"(
-//11 1 6
-//20 3
-//10 4
-//)");
-//4 3 2 1 1 0 1 2 3 4 5
-
 stringstream cin(R"(
 11 1 6
-20 11
+20 3
+10 4
 )");
+//4 3 2 1 1 0 1 2 3 4 5
+
+//stringstream cin(R"(
+//11 1 6
+//20 11
+//)");
 
 int main() {
-    int N, M, S, D, T;
+    int N, M, S, D, T, s, os;
     ::cin >> N >> M >> S;
     S--;
+    s=S; os=s;
     vector<pair<int, int>> b;//bridges
     for (int i = 0; i < M; i++) {
         ::cin >> D >> T;
@@ -66,35 +67,33 @@ int main() {
         auto[pit, it, nit] = getAll(x);
         //当前、前、后位置，逆时针离开的斜率
         int xd = it->second, pd = pit->second, nd = nit->second;
-        if (it->second == 0)
+        if (it->second == 0)//桥连接的两个strand桥数一样，无需做任何操作
             return;
-        else if(it->second==1){
-            if(pit->second==1){
-                pd=1;
-                xd=0;
-            }else{
-                xd=-it->second;
-                pd+=it->second;
+        else if(it->second==1){//原来路径从n到x, 有了桥后, n的路程可以-1
+            if(pit->second==1){//原来路径从x到p
+                xd=0;//n直接可以从新桥到x,n路程-1,x不变,所以xd变0
+            }else{//(-1)原来从p到x,x是s,加桥后x变为n;(0)原路径从x到p(因为n到x)
+                assert(pit->second!=-1 || x==os);
+                xd=-it->second;//(-1) s从x变n, xd从1变-1 ; (0)x要在新桥前建桥抵消,路程+1, n-1, x+1 ,xd从1变-1
+                pd+=it->second;//
             }
             if(nit->second==1){
-                nd=1;
                 set(succ(nit)->first, succ(nit)->second + 1);
             }else{
                 nd+=it->second;
             }
-        }else if(it->second==-1){
-            if(pit->second==-1){
-                pd=-1;
-                set((pit->first + (N - 1)) % N, pred(pit)->second - 1);
-            }else{
-                pd+=it->second;
+        }else if(it->second==-1){//原来路径从x到n, 有了桥后, x的路程可以-1
+            if(pit->second==-1){//原来路径从p到x, 并且有若干个都经过p往x走
+                set((pit->first + (N - 1)) % N, pred(pit)->second - 1);//逆时针找到这一段的头部,这一整段的桥数都可以-1
+            }else{//原来路径从x到p,x到n距离都一样(+1)或者p和x已有桥相连(0). 加入桥后x路程-1: (1)x路程变得和p一样, pd从1变0; (0)p应在新桥前建桥往x. pd从0变-1. 所以pd -1
+                --pd;
             }
-            if(nit->second==-1){
-                nd=-1;
-                xd=0;
-            }else{
-                xd=-it->second;
-                nd+=it->second;
+            if(nit->second==-1){//原来的路径是从x到n,n到n的下一个
+                xd=0;//n到nn的桥改为在新桥前面建,继续走老路,路程不变; x可以沿此桥到n, 路程-1
+            }else{//原来路径从nn到n(1, n是当前的s, 加桥后x变成新的s)或者n到nn(x到n)有桥相连(0),
+                assert(nit->second!=1 || os==(x+1)%N);
+                xd=-it->second;//x路程-1,(1)n路程从0变1,x从1变0; (0)n在新桥前要建桥抵消这个桥,路程+1; (0) 所以xd从-1变1
+                ++nd;//(1)nn不变,直连到n所以nd从-1变为0; (0)n路程增加了,nn不变,所以nd从0变1
             }
         }
         set((x + N - 1) % N, pd);//上一个位置新”离开“斜率，即x位置进入斜率
@@ -102,8 +101,8 @@ int main() {
         set((x + 1) % N, nd);//下一个位置新离开斜率
     };
 
-    int s = S;
     for (auto[_, t] : b) {
+        os=s;
         if (s == t) s = (s + 1) % N; else if (s == (t + 1) % N) s = t;
         swp(t);
     }
