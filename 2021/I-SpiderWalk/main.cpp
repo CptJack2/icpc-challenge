@@ -10,11 +10,11 @@ using namespace std;
 //3 2 1 2 1 0 1 2 3 4 4
 
 // 逆时针逆拐
-stringstream cin(R"(
-11 1 6
-20 3
-10 4
-)");
+//stringstream cin(R"(
+//11 1 6
+//20 3
+//10 4
+//)");
 //4 3 2 1 1 0 1 2 3 4 5
 
 //stringstream cin(R"(
@@ -73,14 +73,14 @@ int main() {
             if(pit->second==1){//原来路径从x到p
                 xd=0;//n直接可以从新桥到x,n路程-1,x不变,所以xd变0
             }else{//(-1)原来从p到x,x是s,加桥后x变为n;(0)原路径从x到p(因为n到x)
-                assert(pit->second!=-1 || x==os);
+                //assert(pit->second!=-1 || x==os);
                 xd=-it->second;//(-1) s从x变n, xd从1变-1 ; (0)x要在新桥前建桥抵消,路程+1, n-1, x+1 ,xd从1变-1
-                pd+=it->second;//
+                ++pd;//(-1) s从x变n, pd -1变0; (0) x路程+1, pd 0变1
             }
-            if(nit->second==1){
-                set(succ(nit)->first, succ(nit)->second + 1);
-            }else{
-                nd+=it->second;
+            if(nit->second==1){//原路径从nn到n
+                set(succ(nit)->first, succ(nit)->second + 1);//nn后面一段都可以-1
+            }else{//(-1) 原路径从n经nn和n经x路程一样, 多了桥后n路程-1变成和nn一样; (0) 原来从nn和n路程相同, 有桥后n比nn少1
+                ++nd;
             }
         }else if(it->second==-1){//原来路径从x到n, 有了桥后, x的路程可以-1
             if(pit->second==-1){//原来路径从p到x, 并且有若干个都经过p往x走
@@ -91,7 +91,7 @@ int main() {
             if(nit->second==-1){//原来的路径是从x到n,n到n的下一个
                 xd=0;//n到nn的桥改为在新桥前面建,继续走老路,路程不变; x可以沿此桥到n, 路程-1
             }else{//原来路径从nn到n(1, n是当前的s, 加桥后x变成新的s)或者n到nn(x到n)有桥相连(0),
-                assert(nit->second!=1 || os==(x+1)%N);
+//                assert(nit->second!=1 || os==(x+1)%N);
                 xd=-it->second;//x路程-1,(1)n路程从0变1,x从1变0; (0)n在新桥前要建桥抵消这个桥,路程+1; (0) 所以xd从-1变1
                 ++nd;//(1)nn不变,直连到n所以nd从-1变为0; (0)n路程增加了,nn不变,所以nd从0变1
             }
