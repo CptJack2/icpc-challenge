@@ -66,42 +66,31 @@ int main() {
     auto swp = [&](int x) {//在x位置插入一条当前d最小的桥
         auto[pit, it, nit] = getAll(x);
         //当前、前、后位置，逆时针离开的斜率
+        if (it->second == 0) return;//桥连接的两个strand桥数一样，无需做任何操作
         int xd = it->second, pd = pit->second, nd = nit->second;
-        if (it->second == 0)//桥连接的两个strand桥数一样，无需做任何操作
-            return;
-        else if(it->second==1){//原来路径从n建桥到x, 有了桥后, n的路程可以-1
-            if(pit->second==1){//原来路径要建桥从x到p,在新桥前建桥从x到p， x路程不变
-                xd=0;//n直接可以从新桥到x,n路程-1,x不变,所以xd变0
-            }else{//(-1)原来从p到x，加桥后x要加一桥从n绕回，路程+1，p不变 ;(0)原路径从x到p(因为n到x)
-                //原来要用到前面添加的桥
-                //                assert(pit->second!=-1 || x==os);
-                if(pit->second==-1)
-                    asm("int $0x3");
-                xd=-it->second;//(-1) s从x变n, xd从1变-1 ; (0)x要在新桥前建桥抵消,路程+1, n-1, x+1 ,xd从1变-1
-                ++pd;//(-1) s从x变n, pd -1变0; (0) x路程+1, pd 0变1
-            }
-            if(nit->second==1){//原路径从nn到n
-                set(succ(nit)->first, succ(nit)->second + 1);//nn后面一段都可以-1
-            }else{//(-1) 原路径从n经nn和n经x路程一样, 多了桥后n路程-1变成和nn一样; (0) 原来从nn和n路程相同, 有桥后n比nn少1
-                ++nd;
-            }
-        }else if(it->second==-1){//原来路径从x到n, 有了桥后, x的路程可以-1
-            if(pit->second==-1){//原来路径从p到x, 并且有若干个都经过p往x走
-                set((pit->first + (N - 1)) % N, pred(pit)->second - 1);//逆时针找到这一段的头部,这一整段的桥数都可以-1
-            }else{//原来路径从x到p,x到n距离都一样(+1)或者p和x已有桥相连(0). 加入桥后x路程-1: (1)x路程变得和p一样, pd从1变0; (0)p应在新桥前建桥往x. pd从0变-1. 所以pd -1
-                --pd;
-            }
-            if(nit->second==-1){//原来的路径是从x到n,n到n的下一个
-                xd=0;//n到nn的桥改为在新桥前面建,继续走老路,路程不变; x可以沿此桥到n, 路程-1
-            }else{//原来路径从nn到n(1, n是当前的s, 加桥后x变成新的s)或者n到nn(x到n)有桥相连(0),
-//                assert(nit->second!=1 || os==(x+1)%N);
-                xd=-it->second;//x路程-1,(1)n路程从0变1,x从1变0; (0)n在新桥前要建桥抵消这个桥,路程+1; (0) 所以xd从-1变1
-                --nd;//(1)nn不变,直连到n所以nd从-1变为0; (0)n路程增加了,nn不变,所以nd从0变1
-            }
+        //一般情况,新修桥后,x和n位置互换,路程互换。对应的差数要修改,其他strand不受影响
+        pd += xd;
+        nd += xd;
+        xd = -xd;
+        //特殊情况1:原来路径从n建桥到x,从x建桥到p,有了桥后, n的路程可以-1,x到p的桥建在新桥前，路程不变
+        if (pit->second == 1 && it->second==1) {
+            xd=0;//n的路程-1,x不变,xd由1变为0
+        }else
+        //特殊情况2:原来路径从x建桥到n,从p建桥到x,有了新桥,从x往后斜率为-1的区间（包括p）的这一段都可以-1
+        if (pit->second == -1 && it->second==-1) {
+            set((pit->first + (N - 1)) % N, pred(pit)->second - 1);
         }
-        set((x + N - 1) % N, pd);//上一个位置新”离开“斜率，即x位置进入斜率
-        set(x, xd);//当前位置新离开斜率
-        set((x + 1) % N, nd);//下一个位置新离开斜率
+        //特殊情况3:原来路径从x建桥到n,从n建桥到nn,有了新桥,x路程-1； n到nn的桥建在新桥前，路程不变
+        if (nit->second == -1 && it->second==-1) {
+            xd=0;
+        }else
+        //特殊情况4:原来路径从nn建桥到n,从n建桥到x,nn往后斜率为1的区间(包括n)都可以-1
+        if (nit->second == 1 && it->second==1) {
+            set(succ(nit)->first, succ(nit)->second + 1);
+        }
+        set((x + N - 1) % N, pd);
+        set(x, xd);
+        set((x + 1) % N, nd);
     };
 
     for (auto[_, t] : b) {
