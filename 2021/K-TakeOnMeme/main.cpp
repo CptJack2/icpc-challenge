@@ -14,12 +14,12 @@ struct Point {
     Point operator-() const { return {-x, -y}; }
     Point& operator+=(const Point& p) { x += p.x; y += p.y; return *this; }
     Point operator-(const Point& p) const { return {x-p.x, y-p.y}; }
-    Point operator+(const Point& p) const { return {x+p.x, y+p.y}; }
     bool operator<(const Point& p) const { return x*cmpx + y*cmpy < p.x*cmpx + p.y*cmpy; }
     bool operator==(const Point& p) const { return x == p.x && y == p.y; }
     Point ortho() const { return {-y, x}; }
     int64_t lensqr() const { return x*x+y*y; }
 };
+Point add(const Point& p,const Point& p2) { return {p2.x+p.x, p2.y+p.y}; }
 
 vector<vector<int>> ch;
 vector<Point> p;
@@ -28,15 +28,15 @@ int64_t ret = 0;
 pair<Point, Point> doit(int x) {
     if (ch[x].size() == 0) return {p[x], p[x]};
     auto[mntot, mxtot] = doit(ch[x][0]);
-    Point mndiff = mxtot + mntot, mxdiff = mndiff;
+    Point mndiff = add(mxtot, mntot), mxdiff = mndiff;
     for (int i = 1; i < ch[x].size(); i++) {
         auto[mn, mx] = doit(ch[x][i]);
         mntot += mn;
         mxtot += mx;
-        mndiff = min(mndiff, mx + mn);
-        mxdiff = max(mxdiff, mx + mn);
+        mndiff = min(mndiff, add(mx , mn));
+        mxdiff = max(mxdiff, add(mx , mn));
     }
-    return {-mxtot + mndiff, -mntot + mxdiff};
+    return {add(-mxtot , mndiff), add(-mntot , mxdiff)};
 }
 
 pair<Point, Point> tryAngle(Point dir) {
@@ -58,10 +58,11 @@ void traceHull(Point a, Point b) {
 }
 
 //stringstream cin(R"(
-//3
-//2 2 3
-//0 0 1
-//0 0 2
+//4
+//3 2 3 4
+//0 10 1
+//0 3 6
+//0 2 7
 //)");
 
 int main() {
