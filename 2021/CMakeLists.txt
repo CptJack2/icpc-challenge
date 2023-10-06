@@ -3,4 +3,4 @@ project(untitled)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(exe I-SpiderWalk/main.cpp)
+add_executable(exe K-TakeOnMeme/main.cpp)
