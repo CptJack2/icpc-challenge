@@ -7,7 +7,8 @@ using namespace std;
 //    ::cin.tie(NULL);
 //}
 
-int64_t cmpx = 1, cmpy = 0;
+int64_t cmpx = 1, cmpy = 0;//一个随机向量
+
 struct Point {
     int64_t x, y;
     Point operator-() const { return {-x, -y}; }
@@ -41,19 +42,6 @@ pair<Point, Point> doit(int x) {
 pair<Point, Point> tryAngle(Point dir) {
     cmpx = dir.x;
     cmpy = dir.y;
-    function<pair<Point, Point>(int)> doit = [&](int x) -> pair<Point, Point> {
-        if (ch[x].size() == 0) return {p[x], p[x]};
-        auto[mntot, mxtot] = doit(ch[x][0]);
-        Point mndiff = mxtot + mntot, mxdiff = mndiff;
-        for (int i = 1; i < ch[x].size(); i++) {
-            auto[mn, mx] = doit(ch[x][i]);
-            mntot += mn;
-            mxtot += mx;
-            mndiff = min(mndiff, mx + mn);
-            mxdiff = max(mxdiff, mx + mn);
-        }
-        return {-mxtot + mndiff, -mntot + mxdiff};
-    };
     auto[mn, mx] = doit(1);
     ret = max(ret, mx.lensqr());
     ret = max(ret, mn.lensqr());
@@ -69,13 +57,12 @@ void traceHull(Point a, Point b) {
     }
 }
 
-stringstream cin(R"(
-4
-3 2 3 4
-0 10 1
-0 3 6
-0 2 7
-)");
+//stringstream cin(R"(
+//3
+//2 2 3
+//0 0 1
+//0 0 2
+//)");
 
 int main() {
 //    Init();
