@@ -23,7 +23,7 @@ Point add(const Point& p,const Point& p2) { return {p2.x+p.x, p2.y+p.y}; }
 Point neg(const Point& p) { return {-p.x, -p.y}; }
 int64_t cross(const Point& p, const Point& p2) {return p.x*p2.y-p.y*p2.x;}
 Point cmp{1,0};
-bool Point::operator<(const Point& p) const { return cross(pminus(p,*this),cmp)<0; }
+bool Point::operator<(const Point& p) const { return cross(pminus(p,*this),cmp)>0; }
 
 vector<vector<int>> ch;
 vector<Point> p;
@@ -46,7 +46,7 @@ pair<Point, Point> doit(int x) {
 pair<Point, Point> tryAngle(Point dir) {
 //    cmpx = dir.x;
 //    cmpy = dir.y;
-    cmp=dir;
+    cmp=dir.ortho();
     auto[mn, mx] = doit(1);
     ret = max(ret, mx.lensqr());
     ret = max(ret, mn.lensqr());
@@ -55,7 +55,7 @@ pair<Point, Point> tryAngle(Point dir) {
 
 void traceHull(Point a, Point b) {
     if (a == b) return;
-    auto[_, c] = tryAngle(pminus(b, a));
+    auto[_, c] = tryAngle(pminus(b, a).ortho());
     if (a < c) {
         traceHull(a, c);
         traceHull(c, b);
