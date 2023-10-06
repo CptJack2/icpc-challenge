@@ -12,14 +12,18 @@ int64_t cmpx = 1, cmpy = 0;//一个随机向量
 struct Point {
     int64_t x, y;
     Point& operator+=(const Point& p) { x += p.x; y += p.y; return *this; }
-    bool operator<(const Point& p) const { return x*cmpx + y*cmpy < p.x*cmpx + p.y*cmpy; }
+//    bool operator<(const Point& p) const { return x*cmpx + y*cmpy < p.x*cmpx + p.y*cmpy; }
+    bool operator<(const Point& p) const; //{ cross(pminus(p,*this),cmp)>0; }
     bool operator==(const Point& p) const { return x == p.x && y == p.y; }
     Point ortho() const { return {-y, x}; }
     int64_t lensqr() const { return x*x+y*y; }
 };
+Point pminus(const Point& p,const Point& p2) { return {p.x-p2.x, p.y-p2.y}; }
 Point add(const Point& p,const Point& p2) { return {p2.x+p.x, p2.y+p.y}; }
 Point neg(const Point& p) { return {-p.x, -p.y}; }
-Point pminus(const Point& p,const Point& p2) { return {p.x-p2.x, p.y-p2.y}; }
+int64_t cross(const Point& p, const Point& p2) {return p.x*p2.y-p.y*p2.x;}
+Point cmp{1,0};
+bool Point::operator<(const Point& p) const { return cross(pminus(p,*this),cmp)>0; }
 
 vector<vector<int>> ch;
 vector<Point> p;
@@ -40,8 +44,9 @@ pair<Point, Point> doit(int x) {
 }
 
 pair<Point, Point> tryAngle(Point dir) {
-    cmpx = dir.x;
-    cmpy = dir.y;
+//    cmpx = dir.x;
+//    cmpy = dir.y;
+    cmp=dir.ortho();
     auto[mn, mx] = doit(1);
     ret = max(ret, mx.lensqr());
     ret = max(ret, mn.lensqr());
@@ -58,11 +63,11 @@ void traceHull(Point a, Point b) {
 }
 
 //stringstream cin(R"(
-//4
+//3
 //3 2 3 4
-//0 10 1
-//0 3 6
-//0 2 7
+//0 0 1
+//0 0 2
+//0 1 0
 //)");
 
 int main() {
