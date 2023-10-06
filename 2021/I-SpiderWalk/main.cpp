@@ -74,18 +74,22 @@ int main() {
         xd = -xd;
         //特殊情况1:原来路径从n建桥到x,从x建桥到p,有了桥后, n的路程可以-1,x到p的桥建在新桥前，路程不变
         if (pit->second == 1 && it->second==1) {
+            pd=1;
             xd=0;//n的路程-1,x不变,xd由1变为0
         }else
         //特殊情况2:原来路径从x建桥到n,从p建桥到x,有了新桥,从x往后斜率为-1的区间（包括p）的这一段都可以-1
         if (pit->second == -1 && it->second==-1) {
+            pd=-1;
             set((pit->first + (N - 1)) % N, pred(pit)->second - 1);
         }
         //特殊情况3:原来路径从x建桥到n,从n建桥到nn,有了新桥,x路程-1； n到nn的桥建在新桥前，路程不变
         if (nit->second == -1 && it->second==-1) {
+            nd=-1;
             xd=0;
         }else
         //特殊情况4:原来路径从nn建桥到n,从n建桥到x,nn往后斜率为1的区间(包括n)都可以-1
         if (nit->second == 1 && it->second==1) {
+            nd=1;
             set(succ(nit)->first, succ(nit)->second + 1);
         }
         set((x + N - 1) % N, pd);
