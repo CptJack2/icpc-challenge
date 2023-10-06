@@ -63,52 +63,62 @@ int main() {
         else
             m[(x + 1) % N] = nd;
     };
+    auto printComp=[&](){
+        vector<int> ret(N);
+        for (int i = 0, cur = 0, d = 0; i < N; i++) {
+            ret[s] = cur;
+            if (m.count(s)) d = m[s];
+            cur += d;
+            s = (s + 1) % N;
+        }
+        for (auto x : ret) cout << x << endl;
+    };
     auto swp = [&](int x) {//在x位置插入一条当前d最小的桥
         auto[pit, it, nit] = getAll(x);
         //当前、前、后位置，逆时针离开的斜率
         if (it->second == 0) return;//桥连接的两个strand桥数一样，无需做任何操作
         int xd = it->second, pd = pit->second, nd = nit->second;
         //一般情况,新修桥后,x和n位置互换,路程互换。对应的差数要修改,其他strand不受影响
-        pd += xd;
-        nd += xd;
-        xd = -xd;
+//        pd += xd;
+//        nd += xd;
+//        xd = -xd;
         //特殊情况1:原来路径从n建桥到x,从x建桥到p,有了桥后, n的路程可以-1,x到p的桥建在新桥前，路程不变
         if (pit->second == 1 && it->second==1) {
-            pd=1;
+//            pd=1;//pd保持原样
             xd=0;//n的路程-1,x不变,xd由1变为0
         }else
         //特殊情况2:原来路径从x建桥到n,从p建桥到x,有了新桥,从x往后斜率为-1的区间（包括p）的这一段都可以-1
         if (pit->second == -1 && it->second==-1) {
-            pd=-1;
+//            pd=-1;
             set((pit->first + (N - 1)) % N, pred(pit)->second - 1);
+        }else{//一般情况,新修桥后,x和n位置互换,路程互换。
+            pd+=it->second;
         }
         //特殊情况3:原来路径从x建桥到n,从n建桥到nn,有了新桥,x路程-1； n到nn的桥建在新桥前，路程不变
         if (nit->second == -1 && it->second==-1) {
-            nd=-1;
+//            nd=-1;
             xd=0;
         }else
         //特殊情况4:原来路径从nn建桥到n,从n建桥到x,nn往后斜率为1的区间(包括n)都可以-1
         if (nit->second == 1 && it->second==1) {
-            nd=1;
+//            nd=1;
             set(succ(nit)->first, succ(nit)->second + 1);
+        }else{//一般情况,新修桥后,x和n位置互换,路程互换。
+            nd+=it->second;
         }
+        xd=-xd;//一般情况,新修桥后,x和n位置互换,路程互换。xd被改为0的特殊情况不影响
         set((x + N - 1) % N, pd);
         set(x, xd);
         set((x + 1) % N, nd);
     };
 
+//    printComp();
     for (auto[_, t] : b) {
         os=s;
         if (s == t) s = (s + 1) % N; else if (s == (t + 1) % N) s = t;
         swp(t);
+//        printComp();
     }
 
-    vector<int> ret(N);
-    for (int i = 0, cur = 0, d = 0; i < N; i++) {
-        ret[s] = cur;
-        if (m.count(s)) d = m[s];
-        cur += d;
-        s = (s + 1) % N;
-    }
-    for (auto x : ret) cout << x << endl;
+    printComp();
 }
