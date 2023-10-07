@@ -52,10 +52,8 @@ int main() {
     //找出每个可能的终点,推入p
     for (int i = 0; i < N + 1; i++) {
         Point a = p[N + 1], b = p[i];//a是sculpture的坐标
-        if ((b - a).Len() < EPS) {
-            p.push_back(b);
+        if ((b - a).Len() < EPS)
             continue;
-        }
         b = (b - a) / (b - a).Len() + a;//从sculpture出发指向polygon端点的单位向量
         //找出sculpture向各个顶点出发, 不被遮挡能走的最远距离maxd，即视野不被遮挡的区域的终点(在多边形的边上)
         vector<pair<long double, int>> inter;
