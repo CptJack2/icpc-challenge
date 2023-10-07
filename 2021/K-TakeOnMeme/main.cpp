@@ -17,9 +17,7 @@ struct Point {
     Point ortho() const { return {-y, x}; }
     int64_t lensqr() const { return x*x+y*y; }
 };
-Point pminus(const Point& p,const Point& p2) { return {p.x-p2.x, p.y-p2.y}; }
 Point add(const Point& p,const Point& p2) { return {p2.x+p.x, p2.y+p.y}; }
-Point neg(const Point& p) { return {-p.x, -p.y}; }
 
 vector<vector<int>> ch;
 vector<Point> p;
@@ -58,11 +56,11 @@ void traceHull(Point a, Point b) {
 }
 
 //stringstream cin(R"(
-//3
+//4
 //3 2 3 4
-//0 0 1
-//0 0 2
-//0 1 0
+//0 10 1
+//0 3 6
+//0 2 7
 //)");
 
 int main() {
