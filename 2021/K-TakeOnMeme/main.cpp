@@ -33,8 +33,8 @@ pair<Point, Point> doit(int x) {
         auto[mn, mx] = doit(ch[x][i]);
         mntot += mn;
         mxtot += mx;
-        mndiff = min(mndiff, mx + mn);
-        mxdiff = max(mxdiff, mx + mn);
+        mndiff = min(mndiff, mx + mn);//后面计算当前的min total，要将max total里对应节点的max去除，然后替换成min，所以diff是用min+max的方式计算
+        mxdiff = max(mxdiff, mx + mn);//max total同理
     }
     return {-mxtot + mndiff, -mntot + mxdiff};
 }
@@ -58,11 +58,14 @@ void traceHull(Point a, Point b) {
 }
 
 //stringstream cin(R"(
-//4
-//3 2 3 4
-//0 10 1
-//0 3 6
-//0 2 7
+//7
+//2 2 5
+//2 3 4
+//0 1 0
+//0 -1 0
+//2 6 7
+//0 1 0
+//0 -2 0
 //)");
 
 int main() {
