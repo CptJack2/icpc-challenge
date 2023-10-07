@@ -1,9 +1,7 @@
-#include <algorithm>
-#include <cstdio>
-#include <functional>
-#include <iostream>
-#include <vector>
+#include "bits/stdc++.h"
+
 using namespace std;
+
 int K, M;
 
 vector<int> markedNum;//M个种类各自的牌数量
@@ -15,7 +13,10 @@ void calaculateProbability(){
     vector<double> fact(K);
     //从M类牌中各取cardType指定的数目，计算组合数
     for (int ii = 0, last = -1, n = 1; ii < K; ii++) {
-        if (cardType[ii] == last) n++; else n = 1;
+        if (cardType[ii] == last)
+            n++;
+        else
+            n = 1;
         last = cardType[ii];
         fact[ii] = double(markedNum[cardType[ii]] - (n - 1)) / n;
         h *= fact[ii];
@@ -27,7 +28,8 @@ void calaculateProbability(){
             m += h / fact[ii];
         }
     //乘K-1全排列
-    for (int ii = 1; ii <= K - 1; ii++) m *= ii;
+    for (int ii = 1; ii <= K - 1; ii++)
+        m *= ii;
     hands += h;
     matched += min(h, m);
 }
