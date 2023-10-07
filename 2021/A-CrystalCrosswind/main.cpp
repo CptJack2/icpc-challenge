@@ -41,6 +41,7 @@ void dfsReplace(int x, int y){
     }
 }
 
+//dfs可能要改一下自己的栈空间大小，否则有可能爆栈
 void dfsSolution(){
     //因为−dx ≤ wx ≤ dx，−dy ≤ wy ≤ dy，所以x可能的距离为0-dx到dx+dx
     for(int x=-dx; x<=2*dx; ++x)
