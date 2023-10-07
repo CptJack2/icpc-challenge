@@ -37,7 +37,7 @@ long double RayIntersect(const Point& a, const Point& b, const Point& c, const P
 
 bool PointOnLine(const Point& a, const Point& b, const Point& p) {
     long double ln = (b-a).Len(), cp = CrossProd(b-a, p-a), dp = DotProd(b-a, p-a);
-    return abs(cp/ln) < EPS && dp/ln > -EPS && dp/ln < ln+EPS;//cp=0 0<dp<ln^2
+    return abs(cp/ln) < EPS && dp/ln > -EPS && dp/ln < ln+EPS;//cp=0 && 0<dp<ln^2
 }
 
 int N;
@@ -57,10 +57,11 @@ int main() {
             continue;
         }
         b = (b - a) / (b - a).Len() + a;//从sculpture出发指向polygon端点的单位向量
+        //找出sculpture向各个顶点出发, 不被遮挡能走的最远距离maxd，即视野不被遮挡的区域的终点(在多边形的边上)
         vector<pair<long double, int>> inter;
         for (int j = 0; j < N; j++) {
             int sides = 0;
-            long double rd = RayIntersect(a, b, p[j], p[(j + 1) % N], &sides);//由于ab是单位向量,rd就是a到交点的距离
+            long double rd = RayIntersect(a, b, p[j], p[(j + 1) % N], &sides);//由于ab是单位向量,rd就是a到射线ab和边pjpj+1的交点的距离
             if (rd < 0) continue;//两线段不相交或者交点方向相反
             inter.push_back({rd, sides});
         }
@@ -71,8 +72,8 @@ int main() {
             maxd = inter[j].first;
             sides |= inter[j].second;
         }
-        p.push_back((b - a) * maxd + a);//sculpture到交点的距离,
-        //计算顶点j到sculpture发出穿过顶点i的射线的距离,以及交点
+        p.push_back((b - a) * maxd + a);//从sculpture出发,沿着射线,视野不被遮挡的区域的终点(在多边形的边上)
+        //计算顶点j，到sculpture发出的穿过顶点i的射线，的距离,以及交点
         for (int j = 0; j <= N; j++) {
             //与ab垂直的两个方向的向量
             long double rd = RayIntersect(a, b, p[j], p[j] + Point(b.y - a.y, a.x - b.x) * 1.1e3);
@@ -82,9 +83,9 @@ int main() {
     }
 
     //dijkstra算法求最短长度
-    vector<long double> dist(p.size(), 1e10);
+    vector<long double> dist(p.size(), 1e10);//从g到每个节点的最短路径长度
     priority_queue<pair<long double, int>> q;//priority_queue是大根堆,为了让最小的排前面,推进去的是乘-1的
-    q.push({0.0, N});
+    q.push({0.0, N});//从N号guard的起始位置出发
     for (;;) {
         int i = q.top().second;
         if (i > N) break;//只要到达了任意的非polygon顶点肯定就是终点
@@ -98,16 +99,16 @@ int main() {
             int ni = 0;
             if (ln < EPS) goto pass;
             //判断ij是否被poly完全包含
-            //如果j在poly顶点i关联的两条poly边上,可能是邻接顶点或者其它特殊点
+            //如果j在poly顶点i关联的两条poly边上,可以直接沿着poly边走到j,不需要后面的包含性判断
             if (i < N && PointOnLine(p[i], p[(i + 1) % N], p[j])) goto pass;
             if (i < N && PointOnLine(p[i], p[(i + N - 1) % N], p[j])) goto pass;
             b = (b - a) / ln + a;
+            //判断从i到j中间有无poly边遮挡
             for (int k = 0; k < N; k++) {
-                //从i到j中间有poly边遮挡
                 long double rd = RayIntersect(a, b, p[k], p[(k + 1) % N]);
                 if (rd > EPS && rd < ln - EPS) goto fail;
             }
-            //判断一下ij的中点(或者ij上任意一点）是不是在poly内部，来保证ij全段都在poly内部。通过ij中点划斜线看穿过poly为奇数偶数次
+            //判断一下ij的中点(或者ij上任意一点）是不是在poly内部，来保证ij全段都在poly内部。通过ij中点画一任意射线, 看穿过poly为奇数还是偶数次
             a = p[i]*2/3 + p[j]/ 3;
             b = a + Point(cos(10), sin(10));
             for (int k = 0; k < N; k++) {
