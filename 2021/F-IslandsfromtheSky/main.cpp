@@ -49,7 +49,7 @@ int main() {
     for (int i = 0; i < M; i++) cin >> F1[i].x >> F1[i].y >> FZ1[i] >> F2[i].x >> F2[i].y >> FZ2[i];
 
     long double lo = 0.0, hi = PI / 2;
-    for (int rep = 0; rep < 64; rep++) {
+    for (int rep = 0; rep < 27; rep++) {
         long double th = (hi + lo) / 2;
         vector<bool> seen(N);
         for (int f = 0; f < M; f++) {
