@@ -72,7 +72,9 @@ n个节点，n-1条边，所以这个dungeon是一棵树，树边的权值是通
 
 #G Mosaic Browsing
 ##题目大意
-
+有一个rq x cq大小的方块mosiac,每一块都是一种颜色,还有一个rp x cp的pattern motif,里面的一些块有颜色,还有一些没颜色的通配符,现在要在mosiac里找出所有能和motif匹配上的位置.
+##
+这是一个二维的匹配问题,如果用滑动窗口逐一匹配的话,复杂度达到O(rpxcpxrqxcq),运行太久了。注意到问题限定只有100种颜色，可以采用通过颜色区分的图层去匹配。并每次用motif的一列去匹配mosaic的列的部分。
 
 #K Take on Meme
 minkowski sum
