@@ -24,7 +24,7 @@ int main() {
             ::cin >> color;
             mxC=max(mxC, color);
             if (!color) continue;//0是wildcard
-            //转置，并且上下左右对称反转. 转置是因为逐行读入mosiac，每读入一个色格，应用motif的一列去匹配mosiac一列的部分，转置后motif的一列放入一个bitset中。反转是因为要通过当前列的判断结果，回溯到前面的起始位置的fail结果。
+            //转置（其实是为了按列存储），并且上下左右对称反转. 转置是因为逐行读入mosiac，每读入一个色格，应用motif的一列去匹配mosiac一列的部分，转置后motif的一列放入一个bitset中。反转是因为要通过当前列的判断结果，回溯到前面的起始位置的fail结果。
             motifColorOrWild[cp - 1 - x].set(rp - 1 - y);
             motifColorLayers[color][cp - 1 - x].set(rp - 1 - y);
         }
