@@ -27,7 +27,7 @@ pnt pinf{2*1e6,2*1e6};//坐标绝对值<10^6
 bool pntInTrapz(const vector<pnt>& trapz, pnt p){
     int intersectCnt=0;
     for(int i=0;i<4;++i){
-        auto p1=trapz[i], p2=trapz[i+1%4];
+        auto p1=trapz[i], p2=trapz[(i+1)%4];
         auto cp1=crossProduct(p2-p1,p-p1),cp2=crossProduct(p2-p1,pinf-p1),
             cp3=crossProduct(pinf-p,p1-p),cp4=crossProduct(pinf-p,p2-p);
         //通过叉积是否同号判断p点向无穷远的射线是否穿过梯形边
@@ -55,7 +55,7 @@ int main(){
         cin>>flights[i].first.x>>flights[i].first.y>>fheights[i].first;
         cin>>flights[i].second.x>>flights[i].second.y>>fheights[i].second;
     }
-    double lo=0, hi=pi/2;// todo long double
+    double lo=0, hi=pi/2;
     //27次二分后精度就达到要求
     for(int rep=0;rep<27;++rep){
         double theta=(lo+hi)/2;
