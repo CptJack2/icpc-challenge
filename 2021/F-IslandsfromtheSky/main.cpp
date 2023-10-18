@@ -1,92 +1,95 @@
-#include <cmath>
-#include <iomanip>
-#include <iostream>
-#include <vector>
+#include "bits/stdc++.h"
+
 using namespace std;
 
-const long double PI = 2*acosl(0);
+const double pi=2* asin(1);
 
-struct Point {
-    long double x, y;
-    Point operator-(const Point& p) const { return {x-p.x, y-p.y}; }
-    Point operator+(const Point& p) const { return {x+p.x, y+p.y}; }
-    Point operator*(long double c) const { return {x*c, y*c}; }
-    Point operator/(long double c) const { return {x/c, y/c}; }
-    long double len() const { return hypot(x, y); }
+int n,m;
+
+struct pnt{
+    double x,y;
+    pnt operator-(const pnt& p) const{return pnt{x-p.x,y-p.y};}
+    pnt operator-() const{return pnt{-x,-y};}
+    pnt operator+(const pnt& p) const{return pnt{x+p.x,y+p.y};}
+    pnt perpendicular(){return pnt{-y,x};}
+    pnt operator/(double k) const{return pnt{x/k,y/k};}
+    pnt operator*(double k) const{return pnt{x*k,y*k};}
+    double len() const{return hypot(x,y);}
 };
 
-inline long double DotProd(const Point& a, const Point& b) {
-    return a.x*b.x + a.y*b.y;
+double crossProduct(const pnt& a,const pnt& b){
+    return a.x*b.y-a.y*b.x;
 }
 
-inline long double CrossProd(const Point& a, const Point& b) {
-    return a.x*b.y - a.y*b.x;
-}
+pnt pinf{2*1e6,2*1e6};//坐标绝对值<10^6
 
-bool LineSegIntersection(const Point& a1, const Point& a2, const Point& b1, const Point& b2) {
-    long double cp1 = CrossProd(b2-b1, a1-b1);
-    long double cp2 = CrossProd(b2-b1, a2-b1);
-    if (cp1 > 0 && cp2 > 0) return false;
-    if (cp1 < 0 && cp2 < 0) return false;
-    cp1 = CrossProd(a2-a1, b1-a1);
-    cp2 = CrossProd(a2-a1, b2-a1);
-    if (cp1 > 0 && cp2 > 0) return false;
-    if (cp1 < 0 && cp2 < 0) return false;
-    return true;
-}
-//二分查找确定θ
-int main() {
-    int N, M, NI;
-    cin >> N >> M;
-    vector<vector<Point>> I(N);
-    for (auto &island : I) {
-        cin >> NI;
-        island.resize(NI);
-        for (int i = 0; i < NI; i++) cin >> island[i].x >> island[i].y;
+//通过p向任意方向做一无穷远射线穿过梯形的次数判断p在梯形内还是外，在梯形边上也返回true
+bool pntInTrapz(const vector<pnt>& trapz, pnt p){
+    int intersectCnt=0;
+    for(int i=0;i<4;++i){
+        auto p1=trapz[i], p2=trapz[i+1%4];
+        auto cp1=crossProduct(p2-p1,p-p1),cp2=crossProduct(p2-p1,pinf-p1),
+            cp3=crossProduct(pinf-p,p1-p),cp4=crossProduct(pinf-p,p2-p);
+        //通过叉积是否同号判断p点向无穷远的射线是否穿过梯形边
+        if(cp1>0&&cp2>0 || cp1<0&&cp2<0 || cp3>0&&cp4>0 || cp3<0&&cp4<0)
+            continue;
+        ++intersectCnt;
     }
-    vector<Point> F1(M), F2(M);
-    vector<long double> FZ1(M), FZ2(M);
-    for (int i = 0; i < M; i++) cin >> F1[i].x >> F1[i].y >> FZ1[i] >> F2[i].x >> F2[i].y >> FZ2[i];
+    //如果射线穿过奇数次，p在梯形内，否则在外
+    return intersectCnt%2==1;
+}
 
-    long double lo = 0.0, hi = PI / 2;
-    for (int rep = 0; rep < 27; rep++) {
-        long double th = (hi + lo) / 2;
-        vector<bool> seen(N);
-        for (int f = 0; f < M; f++) {
-            vector<Point> poly;
-            Point ortho{F1[f].y - F2[f].y, F2[f].x - F1[f].x};
-            ortho = ortho / ortho.len();//航线垂直单位向量
-            poly.push_back(F1[f] - ortho * (FZ1[f] * tan(th)));//计算θ下能扫描的宽度
-            poly.push_back(F2[f] - ortho * (FZ2[f] * tan(th)));
-            poly.push_back(F2[f] + ortho * (FZ2[f] * tan(th)));
-            poly.push_back(F1[f] + ortho * (FZ1[f] * tan(th)));
-            long double mxx = 1e7;
-            for (auto[x, _] : poly) mxx = max(mxx, x);
-            for (int i = 0; i < I.size(); i++)
-                if (!seen[i]) {
-                    bool fail = false;
-                    for (auto const &p : I[i]) {//判断这个岛的每一个点是不是都被梯形包含
-                        int cnt = 0;
-                        for (int i = 0; i < poly.size(); i++) {
-                            Point &a = poly[i];
-                            Point &b = poly[(i + 1) % poly.size()];
-                            cnt += LineSegIntersection(a, b, p, Point{mxx + 1337, p.y + 7331});
-                        }
-                        if (cnt % 2 == 0) {
-                            fail = true;
-                            break;
-                        }
+int main(){
+    cin>>n>>m;
+    vector<vector<pnt>> islands(n);
+    for(int i=0;i<n;++i){
+        int ni;
+        cin>>ni;
+        islands[i].resize(ni);
+        for(int j=0;j<ni;++j)
+            cin>>islands[i][j].x>>islands[i][j].y;
+    }
+    vector<pair<pnt,pnt>>flights(m);
+    vector<pair<int,int>>fheights(m);
+    for(int i=0;i<m;++i){
+        cin>>flights[i].first.x>>flights[i].first.y>>fheights[i].first;
+        cin>>flights[i].second.x>>flights[i].second.y>>fheights[i].second;
+    }
+    double lo=0, hi=pi/2;// todo long double
+    //27次二分后精度就达到要求
+    for(int rep=0;rep<27;++rep){
+        double theta=(lo+hi)/2;
+        vector<bool> covered(n,false);
+        //m条航线根据当前θ算出覆盖的梯形范围
+        for(int i=0;i<m;++i){
+            const pnt& p1=flights[i].first, p2=flights[i].second;
+            auto z1=fheights[i].first, z2=fheights[i].second;
+            pnt ortho=(p2 - p1).perpendicular();
+            ortho= ortho / ortho.len();
+            vector<pnt> trapezoid(4);
+            trapezoid[0]= p1 + ortho * z1 * tan(theta);
+            trapezoid[1]= p2 + ortho * z2 * tan(theta),
+            trapezoid[2]= p2 - ortho * z2 * tan(theta);
+            trapezoid[3]= p1 - ortho * z1 * tan(theta);
+            for(int is=0;is<n;++is){
+                //判断梯形是否包含一个完整的island
+                bool co=true;
+                for(const auto& p:islands[is])
+                    if (!pntInTrapz(trapezoid, p)) {
+                        co=false;
+                        break;
                     }
-                    if (!fail) seen[i] = true;
-                }
+                if(!covered[is] && co)
+                    covered[is]=true;
+            }
         }
-        if (seen == vector<bool>(N, true)) hi = th; else lo = th;
+        if(covered==vector<bool>(n,true))
+            hi=theta;
+        else
+            lo=theta;
     }
-
-
-    if (hi == PI / 2) {
-        cout << "impossible" << endl;
-    } else {
-        cout << fixed << setprecision(9) << (hi + lo) / 2 * 180 / PI << endl;
-    }
+    if(hi==pi/2)
+        cout<<"impossible"<<endl;
+    else
+        cout<<setprecision(9)<<(lo+hi)/2*90/(pi/2)<<endl;
 }
