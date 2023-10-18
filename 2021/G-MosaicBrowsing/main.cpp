@@ -11,24 +11,24 @@ typedef bitset<1000> bs;
 //3 1 2 1
 //1 2 1 2)");
 int main() {
-//    std::ios_base::sync_with_stdio(false);
-//    std::cin.tie(nullptr);
     int rp, cp, rq, cq, color;//motif和mosiac最大1000x1000
     ::cin >> rp >> cp;
     //g和cg是根据motif构造的pattern
-    vector<bs> motifColorOrWild(cp);//col用数组下标表示,row用bitset位表示, 有颜色grid
-    vector<vector<bs>> motifColorLayers(101, vector<bs>(cp));//color，每个颜色层grid，∑cg=~b
+    vector<bs> motifColorOrWild(cp);
+    vector<vector<bs>> motifColorLayers(101, vector<bs>(cp));
     int mxC=0;
-    for (int y = 0; y < rp; y++)//motif是PYxPX，g和cg是PXxPY
+    for (int y = 0; y < rp; y++)
         for (int x = 0; x < cp; x++) {
             ::cin >> color;
             mxC=max(mxC, color);
-            if (!color) continue;//0是wildcard
+            //0是wildcard
+            if (color==0)
+                continue;
             //转置（其实是为了按列存储），并且上下左右对称反转. 转置是因为逐行读入mosiac，每读入一个色格，应用motif的一列去匹配mosiac一列的部分，转置后motif的一列放入一个bitset中。反转是因为要通过当前列的判断结果，回溯到前面的起始位置的fail结果。
             motifColorOrWild[cp - 1 - x].set(rp - 1 - y);
             motifColorLayers[color][cp - 1 - x].set(rp - 1 - y);
         }
-    //motif颜色反转
+    //motif颜色图层反转
     for (auto &v : motifColorLayers)
         for (auto &b : v)
             b = ~b;
