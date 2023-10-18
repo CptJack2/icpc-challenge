@@ -42,11 +42,11 @@ int main() {
                 if (fx > cq - cp) break;//motif是否超出mosiac右边界
                 if (colorMet[color][px] != y) {//这里每次比对motif的px列
                     colorMet[color][px] = y;
-                    //motif颜色图层反转
+                    //匹配当前color的1位置都是能作为起始点的，0位置都是不满足的，fail矩阵语义相反，需要取反；和motifColorOrWild&后（避免取反后超出motif边界的1干扰）
                     auto rev=~motifColorLayers[color][px]&motifColorOrWild[px];
                     //左右移,去匹配mosiac对应位置
-                    if (y < rp) {//g[px] & cg[QC][px] 有色且色不对,&出来那个位置才是1, motif的px列,每一格是否match当前这个QC
-                        matchResult[color][px]=rev>> (rp - 1) - y;
+                    if (y < rp) {
+                        matchResult[color][px]=rev>> (rp - 1) - y;//左右移补的都是0,fail语义更容易实现
                     } else {
                         matchResult[color][px]=rev<< y - (rp - 1);
                     }
