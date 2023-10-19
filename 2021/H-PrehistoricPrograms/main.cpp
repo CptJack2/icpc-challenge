@@ -1,19 +1,9 @@
 #include "bits/stdc++.h"
 
 using namespace std;
-//stringstream ::cin(R"(
-//4
-//((
-//(
-//))
-//)))((()
-//)");
-//fstream cin("/mnt/e/code/icpc-challenge/2021/H-PrehistoricPrograms/data/sample-3.in");
-//fstream cin("/mnt/e/code/icpc-challenge/2021/H-PrehistoricPrograms/data/secret-01.in");
-//fstream cin("/mnt/e/code/icpc-challenge/2021/H-PrehistoricPrograms/data/secret-more47.in");
 struct greed{
-    int diff;//左括号和右括号的差
-    int maxdiff;//上一个串需要匹配的右括号数量
+    int surplus;//顺差,左括号比右括号多的数量
+    int deficit;//逆差,上一个串需要匹配的右括号数量
     int index;//在strs中的index
 };
 int main() {
@@ -49,20 +39,22 @@ int main() {
         cout << "impossible" << endl;
         return 0;
     }
+    //先按逆差从小到大排序, 然后顺差从大到小
     auto cmp=[&](const greed& v1, const greed& v2){
-        return v1.maxdiff < v2.maxdiff || v1.maxdiff == v2.maxdiff && v1.diff > v2.diff;
+        return v1.deficit < v2.deficit || v1.deficit == v2.deficit && v1.surplus > v2.surplus;
     };
     sort(lstr.begin(),lstr.end(),cmp);
+    //右串可以当成从右往左读,以达到和左串同样的贪心处理
     sort(rstr.begin(),rstr.end(),cmp);
     for(int i=0;i<2;++i){
         int cnt=0;
         auto& vec=i?lstr:rstr;
         for (auto v:vec) {
-            if (cnt < v.maxdiff) {
+            if (cnt < v.deficit) {
                 cout << "impossible" << endl;
                 return 0;
             }
-            cnt += v.diff;
+            cnt += v.surplus;
         }
     }
     reverse(rstr.begin(),rstr.end());
