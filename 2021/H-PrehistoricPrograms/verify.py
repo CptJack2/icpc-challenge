@@ -3,7 +3,7 @@
 import subprocess
 import sys
 
-FN="sample-1"
+# FN="sample-1"
 
 if len(sys.argv)>=2 or "FN" in globals():
     if len(sys.argv)>=2:
