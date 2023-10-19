@@ -23,19 +23,6 @@ for inf in $input;do
 #  if(( $count >= 2 ));then exit; fi
   echo $inf
   filename=$(basename -- "$inf")
-  #if [ "$filename" == "01.in" ];then continue ;fi
-  extension="${filename##*.}"
-  ans_filename="${filename%.*}"".ans"
-  ans=$(cat $inf |./main)
-  echo "$ans" > ./data/my_ans
-  correct=$(cat ./data/$ans_filename)
-  if [ "$ans" != "$correct" ];then
-    echo "failed"
-#    echo "correct " $correct
-#    echo "ans " $ans
-    exit
-  else
-    echo "succ"
-  fi
-  count=$(( $count + 1 ))
+  ./verify.py "${filename%.*}"
+#  exit
 done
