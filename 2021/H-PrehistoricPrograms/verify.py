@@ -3,7 +3,7 @@
 import subprocess
 import sys
 
-# FN="secret-01"
+FN="sample-1"
 
 if len(sys.argv)>=2 or "FN" in globals():
     if len(sys.argv)>=2:
@@ -36,21 +36,19 @@ else:
     strs=['((','(',')))((()','))']
     indexs=[2,1,3,4]
 
-str=""
+stack=[]
 for i in indexs:
     if i-1>=len(strs):
         print("failed")
         exit()
-    str+=strs[i-1]
-stack=[]
-for c in str:
-    if c=='(':
-        stack.append(0)
-    else:
-        if len(stack)==0:
-            print("failed")
-            exit()
-        stack.pop()
+    for c in strs[i-1]:
+        if c=='(':
+            stack.append(0)
+        else:
+            if len(stack)==0:
+                print("failed")
+                exit()
+            stack.pop()
 if len(stack)==0:
     print("succ")
 else:
