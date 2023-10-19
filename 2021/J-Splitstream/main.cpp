@@ -34,9 +34,6 @@ int main() {
         }
     };
     rec(1, M);
-//    for (int i = 2; i <= mx; i++)//多余
-//        if (!oout[i])//为什么会有没有从node输出的stream?
-//            rec(i, 0);
 
     for (int q = 0; q < Q; q++) {
         int x, k;

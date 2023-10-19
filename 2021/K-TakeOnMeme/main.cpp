@@ -1,12 +1,6 @@
 #include "bits/stdc++.h"
 using namespace std;
 
-//void Init() {
-//    srand(time(0));
-//    ios::sync_with_stdio(false);
-//    ::cin.tie(NULL);
-//}
-
 int64_t cmpx = 1, cmpy = 0;//一个随机向量
 
 struct Point {
@@ -57,20 +51,7 @@ void traceHull(Point a, Point b) {
     }
 }
 
-//stringstream cin(R"(
-//7
-//2 2 5
-//2 3 4
-//0 1 0
-//0 -1 0
-//2 6 7
-//0 1 0
-//0 -2 0
-//)");
-
 int main() {
-//    Init();
-
     int N, M;
     ::cin >> N;
     ch.resize(N + 1);
