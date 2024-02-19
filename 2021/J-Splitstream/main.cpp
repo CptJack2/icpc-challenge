@@ -60,7 +60,7 @@ int main(){
         streamSize[x] = sz;
         if (inputToNode[x] == 0) return;//这个stream没有input到node了
         auto const &v = nodes[inputToNode[x]];//x输入到的node
-        if (streamSize[v.input1] == -1 || streamSize[v.input2] == -1) return;//v的任意一个输入是空stream
+        if (streamSize[v.input1] == -1 || streamSize[v.input2] == -1) return;//v的任意一个input stream是未处理状态，先返回，等到第二次来，两个input stream都处理好了再继续
         if (v.type=='M') {//v是merge node
             rec(v.output1, streamSize[v.input1] + streamSize[v.input2]);
         } else {//split node
