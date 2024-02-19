@@ -54,21 +54,21 @@ int main(){
         node.onode2=inputToNode[node.output2];
     }
     //通过一次dfs计算每个stream的size
-    vector<int> streamSize(2*n+2);
-    streamSize[1]=m;
-    function<void(Node*)> dfsCalcStreamSize=[&](Node* p){
-        if(!p)return;
-        if(p->type=='S'){
-            streamSize[p->output1]=streamSize[p->input1]/2+streamSize[p->input1]%2;
-            streamSize[p->output2]=streamSize[p->input1]/2;
-        }else{
-            streamSize[p->output1]=streamSize[p->input1]+streamSize[p->input2];
+    vector<int> streamSize(2*n+2, -1);
+    streamSize[0] = 0;
+    function<void(int, int)> dfsCalcStream = [&](int x, int sz) {//stream num and size
+        streamSize[x] = sz;
+        if (inputToNode[x] == 0) return;//这个stream没有input到node了
+        auto const &v = *inputToNode[x];//x输入到的node
+        if (streamSize[v.input1] == -1 || streamSize[v.input2] == -1) return;//v的任意一个input stream是未处理状态，先返回，等到第二次来，两个input stream都处理好了再继续
+        if (v.type=='M') {//v是merge node
+            dfsCalcStream(v.output1, streamSize[v.input1] + streamSize[v.input2]);
+        } else {//split node
+            dfsCalcStream(v.output1, (streamSize[v.input1] + 1) / 2);
+            dfsCalcStream(v.output2, (streamSize[v.input1]) / 2);
         }
-        dfsCalcStreamSize(p->onode1);
-        dfsCalcStreamSize(p->onode2);
     };
-    Node* root=inputToNode[1];
-    dfsCalcStreamSize(root);
+    dfsCalcStream(1, m);
     //读入查询, 通过在树上回溯,计算出原来的编号
     for(int i=0;i<q;++i){
         int x,k;
