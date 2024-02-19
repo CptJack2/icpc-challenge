@@ -15,20 +15,13 @@ struct Node{
 };
 
 int n,m,q;
-vector<Node> nodes;
-vector<int> inputToNode;
-vector<int> outputToNode;
-vector<int> streamSize;
-auto printNode(int x){
-    auto const &v = nodes[x];//x输入到的node
-    return tuple(x, v.input1,streamSize[v.input1],v.input2,streamSize[v.input2]);
-};
+
 int main(){
     cin>>m>>n>>q;
     //n个node最多有2*n个流
-    inputToNode.resize(2*n+2);
-    outputToNode.resize(2*n+2);
-    nodes.resize(n+1);
+    vector<int> inputToNode(2*n+2);
+    vector<int> outputToNode(2*n+2);
+    vector<Node> nodes(n+1);
     for(int i=1;i<=n;++i){
         char type;
         int x,y,z;
@@ -61,17 +54,13 @@ int main(){
         node.onode2=inputToNode[node.output2];
     }
     //通过一次dfs计算每个stream的size
-    streamSize.resize(2*n+2, -1);
+    vector<int> streamSize(2*n+2, -1);
     streamSize[0] = 0;
-
     function<void(int, int)> rec = [&](int x, int sz) {//stream num and size
         streamSize[x] = sz;
         if (inputToNode[x] == 0) return;//这个stream没有input到node了
         auto const &v = nodes[inputToNode[x]];//x输入到的node
-        if (streamSize[v.input1] == -1 || streamSize[v.input2] == -1){
-            fprintf(stderr,"end of stream, node index %d, input1 %d sz %d, input2 %d size %d\n", inputToNode[x], v.input1,streamSize[v.input1],v.input2,streamSize[v.input2]);
-            return;//v的任意一个输入是空stream
-        }
+        if (streamSize[v.input1] == -1 || streamSize[v.input2] == -1) return;//v的任意一个输入是空stream
         if (v.type=='M') {//v是merge node
             rec(v.output1, streamSize[v.input1] + streamSize[v.input2]);
         } else {//split node
