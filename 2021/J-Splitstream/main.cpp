@@ -56,6 +56,7 @@ int main(){
     //通过一次dfs计算每个stream的size
     vector<int> streamSize(2*n+2, -1);
     streamSize[0] = 0;
+    //必须要以stream为主导去计算，以node为主导去计算，总会碰到merge node其中一个stream未计算，导致必须重复遍历的问题
     function<void(int, int)> dfsCalcStream = [&](int x, int sz) {//stream num and size
         streamSize[x] = sz;
         if (inputToNode[x] == 0) return;//这个stream没有input到node了
