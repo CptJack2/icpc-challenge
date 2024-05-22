@@ -19,24 +19,24 @@ vector<vector<int>> ch;
 vector<Point> p;
 int64_t ret = 0;
 
-pair<Point, Point> doit(int x) {
+pair<Point, Point> dfsTournamentTree(int x) {
     if (ch[x].size() == 0) return {p[x], p[x]};
-    auto[mntot, mxtot] = doit(ch[x][0]);
-    Point mndiff = mxtot+mntot, mxdiff = mndiff;
+    auto[minTotal, maxTotal] = dfsTournamentTree(ch[x][0]);
+    Point minDiff = maxTotal + minTotal, maxDiff = minDiff;
     for (int i = 1; i < ch[x].size(); i++) {
-        auto[mn, mx] = doit(ch[x][i]);
-        mntot += mn;
-        mxtot += mx;
-        mndiff = min(mndiff, mx + mn);//后面计算当前的min total，要将max total里对应节点的max去除，然后替换成min，所以diff是用min+max的方式计算
-        mxdiff = max(mxdiff, mx + mn);//max total同理
+        auto[mn, mx] = dfsTournamentTree(ch[x][i]);
+        minTotal += mn;
+        maxTotal += mx;
+        minDiff = min(minDiff, mx + mn);//后面计算当前的min total，要将max total里对应节点的max去除，然后替换成min，所以diff是用min+max的方式计算
+        maxDiff = max(maxDiff, mx + mn);//max total同理
     }
-    return {-mxtot + mndiff, -mntot + mxdiff};
+    return {-maxTotal + minDiff, -minTotal + maxDiff};
 }
 
 pair<Point, Point> tryAngle(Point dir) {
     cmpx = dir.x;
     cmpy = dir.y;
-    auto[mn, mx] = doit(1);
+    auto[mn, mx] = dfsTournamentTree(1);
     ret = max(ret, mx.lensqr());
     ret = max(ret, mn.lensqr());
     return {mn, mx};
@@ -66,7 +66,7 @@ int main() {
         }
     }
 
-    auto[left, right] = tryAngle({1, 0});
+    auto[left, right] = tryAngle({1, 1});
     traceHull(left, right);
     traceHull(right, left);
 

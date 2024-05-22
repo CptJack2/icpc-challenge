@@ -3,4 +3,4 @@ project(untitled)
 
 set(CMAKE_CXX_STANDARD 20)
 
-add_executable(exe J-Splitstream/main.cpp)
+add_executable(exe K-TakeOnMeme/main.cpp)
