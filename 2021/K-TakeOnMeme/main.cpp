@@ -54,7 +54,6 @@ pair<Point,Point> tryDirection(Point dir){
 }
 
 void traceHull(Point a,Point b){
-//    if(a==b)return;
     auto [_,c]= tryDirection((b-a).ortho());
     if(a<c){
         traceHull(a,c);
