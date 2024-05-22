@@ -1,74 +1,87 @@
 #include "bits/stdc++.h"
 using namespace std;
 
-int64_t cmpx = 1, cmpy = 0;//一个随机向量
+int64_t searchDirectionX = 1, searchDirectionY = 1; //搜索方向向量
+int64_t ans=0;//求出的最大欧式距离
 
 struct Point {
-    int64_t x, y;
+    int64_t x=0, y=0;
     Point operator-() const { return {-x, -y}; }
     Point& operator+=(const Point& p) { x += p.x; y += p.y; return *this; }
     Point operator-(const Point& p) const { return {x-p.x, y-p.y}; }
     Point operator+(const Point& p) const { return {x+p.x, y+p.y}; }
-    bool operator<(const Point& p) const { return x*cmpx + y*cmpy < p.x*cmpx + p.y*cmpy; }
+    //通过在searchDirection上的投影长度（点积）来给点排序，以找到searchDirection上最远的两点
+    bool operator<(const Point& p) const { return x*searchDirectionX + y*searchDirectionY < p.x*searchDirectionX + p.y*searchDirectionY; }
     bool operator==(const Point& p) const { return x == p.x && y == p.y; }
     Point ortho() const { return {-y, x}; }
     int64_t lensqr() const { return x*x+y*y; }
 };
 
-vector<vector<int>> ch;
-vector<Point> p;
-int64_t ret = 0;
 
-pair<Point, Point> dfsTournamentTree(int x) {
-    if (ch[x].size() == 0) return {p[x], p[x]};
-    auto[minTotal, maxTotal] = dfsTournamentTree(ch[x][0]);
-    Point minDiff = maxTotal + minTotal, maxDiff = minDiff;
-    for (int i = 1; i < ch[x].size(); i++) {
-        auto[mn, mx] = dfsTournamentTree(ch[x][i]);
-        minTotal += mn;
-        maxTotal += mx;
-        minDiff = min(minDiff, mx + mn);//后面计算当前的min total，要将max total里对应节点的max去除，然后替换成min，所以diff是用min+max的方式计算
-        maxDiff = max(maxDiff, mx + mn);//max total同理
-    }
-    return {-maxTotal + minDiff, -minTotal + maxDiff};
-}
+vector<vector<int>> tournamentTree;
+vector<Point> memes;
 
-pair<Point, Point> tryAngle(Point dir) {
-    cmpx = dir.x;
-    cmpy = dir.y;
-    auto[mn, mx] = dfsTournamentTree(1);
-    ret = max(ret, mx.lensqr());
-    ret = max(ret, mn.lensqr());
-    return {mn, mx};
-}
-
-void traceHull(Point a, Point b) {
-    if (a == b) return;
-    auto[_, c] = tryAngle((b - a).ortho());
-    if (a < c) {
-        traceHull(a, c);
-        traceHull(c, b);
-    }
-}
-
-int main() {
-    int N, M;
-    ::cin >> N;
-    ch.resize(N + 1);
-    p.resize(N + 1);
-    for (int i = 1; i <= N; i++) {
-        ::cin >> M;
-        if (M == 0) {
-            ::cin >> p[i].x >> p[i].y;
-        } else {
-            ch[i].resize(M);
-            for (auto &x : ch[i]) ::cin >> x;
+//返回searchDirection上极小和极大的两点
+pair<Point,Point> dfsTournamentTreeGetMinMax(int p){
+    if(tournamentTree[p].empty())
+        return {memes[p],memes[p]};
+    Point minTotal, maxTotal;
+    Point minDiff, maxDiff;
+    bool diffInited=false;
+    for(auto ch:tournamentTree[p]){
+        auto [mn,mx]= dfsTournamentTreeGetMinMax(ch);
+        minTotal+=mn;
+        maxTotal+=mx;
+        if(!diffInited){
+            minDiff=mx+mn;
+            maxDiff=mx+mn;
+            diffInited=true;
+        }else{
+            minDiff=min(minDiff,mx+mn);
+            maxDiff=max(maxDiff,mx+mn);
         }
     }
+    return {-maxTotal+minDiff, -minTotal+maxDiff};
+}
 
-    auto[left, right] = tryAngle({1, 1});
-    traceHull(left, right);
-    traceHull(right, left);
+pair<Point,Point> tryDirection(Point dir){
+    searchDirectionX =dir.x;
+    searchDirectionY =dir.y;
+    auto [mn,mx]= dfsTournamentTreeGetMinMax(1);
+    ans=max(ans,mx.lensqr());
+    ans=max(ans,mn.lensqr());
+    return {mn,mx};
+}
 
-    cout<<ret<<endl;
+void traceHull(Point a,Point b){
+//    if(a==b)return;
+    auto [_,c]= tryDirection((b-a).ortho());
+    if(a<c){
+        traceHull(a,c);
+        traceHull(c,b);
+    }
+}
+
+int main(){
+    int n;
+    cin>>n;
+    tournamentTree.resize(n+1);
+    memes.resize(n+1);
+    for(int i=1;i<=n;++i){
+        int k,x,y;
+        cin>>k;
+        if(k==0){
+            cin>>memes[i].x>>memes[i].y;
+        }else{
+            int j;
+            for(int i2=0; i2 < k; ++i2) {
+                cin>>j;
+                tournamentTree[i].push_back(j);
+            }
+        }
+    }
+    auto [a,b]= tryDirection({1,1});
+    traceHull(a,b);
+    traceHull(b,a);
+    cout<<ans<<endl;
 }
