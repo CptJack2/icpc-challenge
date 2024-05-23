@@ -1,83 +1,97 @@
-#include <algorithm>
-#include <iomanip>
-#include <iostream>
-#include <string>
-#include <vector>
+#include "bits/stdc++.h"
+
 using namespace std;
 
-int main() {
-    int X, Y;
-    cin >> X >> Y;
-    vector<string> g(Y);
-    vector<pair<int,int>> XCords;
-    int numX=0;
-    for (int y = Y - 1; y >= 0; y--) {
-        cin >> g[y];
-        for(int x=0;x<X;++x)if(g[y][x]=='X'){
-            XCords.emplace_back(x,y);
-            ++numX;
-        }
-    }
+vector<vector<char>> grid;
+int dx,dy;
 
-    vector<vector<int>> dist(201, vector<int>(201));//螺旋矩阵,对应距离
-    //生成螺旋矩阵
-    for (int x = 100, y = 100, dx = 0, dy = 1, step = 0, stepn = 1, cur = 0; y < 201; cur++) {
-        dist[y][x] = cur;
-        x += dx;
-        y += dy;
-        if (++step == stepn) {
-            //切换方向
+int main(){
+    cin>>dx>>dy;
+    grid.resize(dy+1);
+    for(int y=dy; y >=1; --y) {
+        grid[y].resize(dx+1);
+        for (int x = 1; x <= dx; ++x)
+            cin >>grid[y][x];
+    }
+    //生成螺旋距离矩阵
+    vector<vector<int>> distance(201,vector<int>(201));
+    for(int x=100,y=100,dx=0,dy=1,step=0,stepn=1,cur=0 ; x>=0&&x<=201&&y>=0&&y<=201 ; x+=dx,y+=dy,++cur){
+        distance[y][x]=cur;
+        ++step;
+        if(step==stepn){
+            step = 0;
             swap(dx, dy);
             dy = -dy;
-            step = 0;
-            if (dy) stepn++;
+            if(dy!=0)
+                ++stepn;
         }
     }
-    //通过dist生成obs
-    vector<vector<int>> obs(40001);//下标是dist, 内容是格子序号(按先x后y排列), < X*Y
-    for (int y = 0; y < Y; y++)
-        for (int x = 0; x < X; x++)
-            if (g[y][x] == 'X')
-                for (int sy = 0, i = 0; sy < Y; sy++)
-                    for (int sx = 0; sx < X; sx++, i++) {//找出通过X距离编码, 每个格子对应的每个X的dist
-                        obs[dist[y - sy + 100][x - sx + 100]].push_back(i);
-                    }
-    //obs到comp
-    //comp每一个序号的格子属于哪一类；compt每一类的前缀长度；compsz每一类的格子数目
-    vector<int> comp(X * Y), compt(X * Y), compsz{X * Y};
-    for (int t = 0; compsz.size() < X * Y; t++)//逐渐增大dist,直至所有X*Y个格都能区分
-        if (obs[t].size()) {
-            vector<int> &v = obs[t];//编码中所有存在距离t的格子
-            sort(v.begin(), v.end(),
-                 [&](int x, int y) { return comp[x] < comp[y]; });//根据comp category排一下序
-            for (int i = 0, j = 0; i < v.size(); i = j) {
-                for (j++; j < v.size() && comp[v[j]] == comp[v[i]]; j++);//找出类边界
-                int &sz = compsz[comp[v[i]]];
-                if (j - i == sz) continue;//当前comp category的所有格子编码都是一样的,靠这个X无法区分
-                if (j - i == 1)
-                    compt[compsz.size()] = t;//当前X可以唯一区分一个格子
-                sz -= j - i;
-                if (sz == 1)
-                    compt[comp[v[i]]] = t;//当前X的位置是.的格子只有一个,它可以被区分
-                for (int k = i; k < j; k++) comp[v[k]] = compsz.size();
-                compsz.push_back(j - i);
+    //对每个格子生成对应的X距离编码，按照X距离分类
+    vector<vector<int>> gridDistances(40001); //下标是dist, 内容是格子序号(按先x后y排列, 1 -- dx*dy)
+    for(int y=1;y<=dy;++y)
+    for(int x=1;x<=dx;++x)
+        if(grid[y][x]=='X')
+            for(int y2=1;y2<=dy;++y2)
+            for(int x2=1;x2<=dx;++x2){
+                auto dist=distance[y-y2+100][x-x2+100];
+                gridDistances[dist].push_back(x2+(y2-1)*dx);
             }
+    //根据距离编码区分格子
+    vector<int> gridCategory(dx*dy, 0), //每一个格子属于的类别，动态更新
+        gridCategorySteps(dx*dy, 0), //每一类格子的step数量
+        categorySize = {dx*dy}; //每个类别的格子数
+    for(int dist=0;categorySize.size()<dx*dy;++dist){
+        auto& gridAtDist=gridDistances[dist];
+        //按照category顺序排序
+        sort(gridAtDist.begin(), gridAtDist.end(), [&](int a, int b){return gridCategory[a] < gridCategory[b];});
+        for(int i=0,j=0; i < gridAtDist.size(); i=j){
+            for(; j < gridAtDist.size() && gridCategory[j] == gridCategory[i]; ++j);
+            int& sz=categorySize[gridCategory[gridAtDist[i]]];
+            if (j - i == sz) continue;//当前comp category的所有格子编码都是一样的,靠这个X无法区分
+            if (j - i == 1)
+                gridCategorySteps[categorySize.size()] = dist;//当前X可以唯一区分一个格子，新建一类
+            sz-=j-i;
+            if (sz == 1)
+                gridCategorySteps[gridCategory[gridAtDist[i]]] = dist;//当前X的位置是.的格子只有一个,它可以被区分
+            //当前距离的category分裂开来，继续流程
+            for (int k = i; k < j; k++) gridCategory[gridAtDist[k]] = categorySize.size();
+            categorySize.push_back(j - i);
         }
-
+    }
+    //统计数据
     int mx = 0, tot = 0;
-    for (int i = 0; i < X * Y; i++) {
-        mx = max(mx, compt[i]);
-        tot += compt[i];
+    for (int i = 0; i < dx * dy; i++) {
+        mx = max(mx, gridCategorySteps[i]);
+        tot += gridCategorySteps[i];
     }
 
-    cout << fixed << setprecision(9) << double(tot) / X / Y << endl;
+    cout << fixed << setprecision(9) << double(tot) / dx / dy << endl;
     cout << mx << endl;
     bool first = true;
-    for (int i = 0; i < X * Y; i++)
-        if (compt[comp[i]] == mx) {
+    for (int i = 1; i <= dx * dy; i++)
+        if (gridCategorySteps[gridCategory[i]] == mx) {
             if (!first) cout << ' ';
             first = false;
-            cout << '(' << i % X + 1 << ',' << i / X + 1 << ')';
+            cout << '(' << (i-1) % dx + 1 << ',' << (i-1) / dx + 1 << ')';
         }
     cout << endl;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
